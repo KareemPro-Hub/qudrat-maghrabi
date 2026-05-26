@@ -28,6 +28,9 @@ export default function Dashboard() {
   }
 
   if (!user) return <Navigate to="/login" />
+  if (profile && ['admin', 'teacher', 'content_manager', 'student_manager'].includes(profile.role)) {
+    return <Navigate to="/admin" />
+  }
 
   const stats = [
     { icon: BookOpen, label: 'كورساتي', value: enrollments.length, color: 'text-brand-pink' },
