@@ -1,12 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Play, Star, Users, Trophy, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react'
-
-const stats = [
-  { value: '+٥٠٠٠', label: 'طالب مسجل' },
-  { value: '+٢٠٠', label: 'درس مرئي' },
-  { value: '٩٥٪', label: 'نسبة النجاح' },
-  { value: '+١٢٠٠', label: 'سؤال تدريبي' },
-]
+import { Play, Star, BookOpen } from 'lucide-react'
+import StatsCounter from '../components/StatsCounter'
 
 const features = [
   {
@@ -105,16 +99,7 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="max-w-5xl mx-auto px-4 -mt-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl shadow-brand p-5 text-center border border-purple-50">
-              <div className="text-3xl font-black gradient-text mb-1">{s.value}</div>
-              <div className="text-sm font-semibold text-gray-500">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <StatsCounter />
 
       {/* Features */}
       <section className="max-w-7xl mx-auto px-4 py-20">
