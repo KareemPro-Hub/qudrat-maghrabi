@@ -7,6 +7,11 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Courses from './pages/Courses'
 import Dashboard from './pages/Dashboard'
+import AdminLayout from './components/AdminLayout'
+import AdminOverview from './pages/admin/AdminOverview'
+import AdminCourses from './pages/admin/AdminCourses'
+import AdminStudents from './pages/admin/AdminStudents'
+import AdminEnrollments from './pages/admin/AdminEnrollments'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,6 +48,10 @@ export default function App() {
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+        <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
+        <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
+        <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />
+        <Route path="/admin/enrollments" element={<AdminLayout><AdminEnrollments /></AdminLayout>} />
       </Routes>
     </BrowserRouter>
   )
