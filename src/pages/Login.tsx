@@ -16,12 +16,24 @@ export default function Login() {
     e.preventDefault()
     if (!email || !password) return toast.error('يرجى تعبئة جميع الحقول')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة')
     } else {
+      // جلب الـ role وتوجيه المستخدم للمكان الصح
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user!.id)
+        .single()
+
       toast.success('مرحباً بك!')
-      navigate('/dashboard')
+      const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager']
+      if (profile && adminRoles.includes(profile.role)) {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
     }
     setLoading(false)
   }
