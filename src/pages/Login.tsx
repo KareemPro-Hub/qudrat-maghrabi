@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
+  const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -34,10 +35,8 @@ export default function Login() {
 
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-white font-black text-xl mx-auto mb-3 shadow-brand">
-              QM
-            </div>
-            <h1 className="text-2xl font-black text-brand-navy">تسجيل الدخول</h1>
+            <img src="/logo.png" alt="قدرات المغربي" className="h-20 w-auto object-contain mx-auto mb-4" />
+            <h1 className="text-2xl font-extrabold text-brand-navy">تسجيل الدخول</h1>
             <p className="text-gray-500 text-sm mt-1">أهلاً بعودتك في منصة قدرات المغربي</p>
           </div>
 
@@ -78,7 +77,23 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="text-left">
+            {/* Remember me + Forgot */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div
+                  onClick={() => setRemember(!remember)}
+                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 cursor-pointer
+                    ${remember ? 'border-brand-pink' : 'border-gray-300'}`}
+                  style={remember ? {background: 'linear-gradient(135deg, #FF8008, #E91E8C)'} : {}}
+                >
+                  {remember && (
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-gray-600">تذكرني</span>
+              </label>
               <Link to="/forgot-password" className="text-sm text-brand-pink hover:underline font-semibold">
                 نسيت كلمة المرور؟
               </Link>
