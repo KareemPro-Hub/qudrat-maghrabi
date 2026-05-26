@@ -31,9 +31,7 @@ export function useAuth() {
 
   async function fetchProfile(userId: string) {
     const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .rpc('get_my_profile')
       .single()
     setProfile(data)
     setLoading(false)
