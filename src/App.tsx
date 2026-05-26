@@ -6,6 +6,10 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Courses from './pages/Courses'
+import CourseDetail from './pages/CourseDetail'
+import Checkout from './pages/Checkout'
+import PaymentSuccess from './pages/PaymentSuccess'
+import PaymentFailed from './pages/PaymentFailed'
 import Dashboard from './pages/Dashboard'
 import AdminLayout from './components/AdminLayout'
 import AdminOverview from './pages/admin/AdminOverview'
@@ -34,7 +38,7 @@ export default function App() {
         position="top-center"
         toastOptions={{
           style: {
-            fontFamily: 'Cairo, sans-serif',
+            fontFamily: 'Almarai, sans-serif',
             fontWeight: '600',
             borderRadius: '12px',
             direction: 'rtl',
@@ -45,6 +49,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/courses" element={<Layout><Courses /></Layout>} />
+        <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
+        <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
+        <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
+        <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
