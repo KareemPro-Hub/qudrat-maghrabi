@@ -30,10 +30,9 @@ export function useAuth() {
   }, [])
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .rpc('get_my_profile')
-      .single()
-    setProfile(data)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.rpc('get_my_profile') as any).single()
+    setProfile(data as Profile | null)
     setLoading(false)
   }
 
