@@ -19,11 +19,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center text-white font-black text-sm">
-              QM
-            </div>
-            <span className="font-black text-xl gradient-text hidden sm:block">قدرات المغربي</span>
+          <Link to="/" className="flex items-center">
+            <img src="/logo.png" alt="قدرات المغربي" className="h-12 w-auto object-contain" />
           </Link>
 
           {/* Desktop Links */}

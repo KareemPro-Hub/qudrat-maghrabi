@@ -73,25 +73,32 @@ export default function Home() {
           <div className="absolute bottom-10 left-10 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle, #8B35C4, transparent)'}} />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-2 mb-6 text-sm font-semibold">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 mb-8 text-sm font-bold tracking-wide">
             <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse" />
-            الوجهة الأولى لطلاب القدرات في السعودية
+            ✦ الوجهة الأولى لطلاب القدرات في المملكة العربية السعودية ✦
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-            تفوّق في
-            <span className="gradient-text mx-3">القدرات الكمي</span>
-            <br />مع أفضل شرح
+
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+            درجتك في القدرات
+            <br />
+            <span className="gradient-text">تبدأ من هنا</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-            منصة متكاملة بفيديوهات شاملة واختبارات تفاعلية وتتبع للتقدم — كل ما تحتاجه لتحقيق درجتك المستهدفة
+
+          <p className="text-xl md:text-2xl text-gray-200 mb-5 max-w-2xl mx-auto leading-relaxed font-bold">
+            شرح احترافي · اختبارات ذكية · نتائج حقيقية
           </p>
+
+          <p className="text-base text-gray-400 mb-10 max-w-xl mx-auto leading-loose">
+            انضم لآلاف الطلاب الذين حققوا درجاتهم المستهدفة مع أسلوب المغربي المميز في تبسيط القدرات الكمي
+          </p>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register" className="btn-primary text-lg py-4 px-10">
-              ابدأ مجاناً الآن ←
+              🚀 ابدأ رحلتك الآن — مجاناً
             </Link>
-            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200">
+            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 border border-white/20">
               <Play size={18} fill="white" />
-              شاهد الكورسات
+              استعرض الكورسات
             </Link>
           </div>
         </div>
