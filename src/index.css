@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+body {
+  direction: rtl;
+  background-color: #f8f9ff;
+  color: #1B1B5E;
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(135deg, #FF8008 0%, #E91E8C 50%, #8B35C4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, #FF8008 0%, #E91E8C 50%, #8B35C4 100%);
+  }
+
+  .gradient-border {
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply text-white font-bold py-3 px-7 rounded-2xl transition-all duration-200 shadow-brand hover:shadow-brand-lg active:scale-95;
+    background: linear-gradient(135deg, #FF8008 0%, #E91E8C 50%, #8B35C4 100%);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #e67200 0%, #d01a7e 50%, #7a2eb0 100%);
+  }
+
+  .btn-outline {
+    @apply font-bold py-3 px-7 rounded-2xl border-2 transition-all duration-200 active:scale-95;
+    border-color: #E91E8C;
+    color: #E91E8C;
+    background: transparent;
+  }
+
+  .btn-outline:hover {
+    background: linear-gradient(135deg, #FF8008 0%, #E91E8C 50%, #8B35C4 100%);
+    color: white;
+    border-color: transparent;
+  }
+
+  .btn-navy {
+    @apply bg-brand-navy hover:bg-opacity-90 text-white font-bold py-3 px-7 rounded-2xl transition-all duration-200 active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-purple-50 p-6 hover:shadow-brand transition-shadow duration-300;
+  }
+
+  .input-field {
+    @apply w-full border-2 border-purple-100 rounded-xl px-4 py-3 text-brand-navy placeholder-gray-400 focus:outline-none focus:border-brand-pink transition-all duration-200 bg-white;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-black text-brand-navy mb-3;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-gray-500 mb-10;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#E91E8C, #8B35C4);
+  border-radius: 3px;
+}

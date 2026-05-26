@@ -1,0 +1,176 @@
+import { Link } from 'react-router-dom'
+import { Play, Star, Users, Trophy, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react'
+
+const stats = [
+  { value: '+٥٠٠٠', label: 'طالب مسجل' },
+  { value: '+٢٠٠', label: 'درس مرئي' },
+  { value: '٩٥٪', label: 'نسبة النجاح' },
+  { value: '+١٢٠٠', label: 'سؤال تدريبي' },
+]
+
+const features = [
+  {
+    icon: '🎯',
+    title: 'منهج مُنظَّم',
+    desc: 'شرح شامل لكل أبواب القدرات الكمي بأسلوب مبسط ومتدرج من السهل للصعب',
+  },
+  {
+    icon: '🎬',
+    title: 'فيديوهات محمية',
+    desc: 'محتوى مرئي عالي الجودة محمي بالكامل، لا يمكن تنزيله أو مشاركته',
+  },
+  {
+    icon: '📊',
+    title: 'تتبع التقدم',
+    desc: 'لوحة تحكم شخصية تتابع مستواك ودرجاتك وتقدمك في كل باب',
+  },
+  {
+    icon: '📝',
+    title: 'اختبارات تفاعلية',
+    desc: 'اختبارات على نمط الاختبار الحقيقي مع تحليل دقيق لنقاط ضعفك وقوتك',
+  },
+  {
+    icon: '💬',
+    title: 'دعم مستمر',
+    desc: 'فريق متخصص للإجابة على أسئلتك ومتابعة مسيرتك التعليمية',
+  },
+  {
+    icon: '📱',
+    title: 'تطبيق الجوال',
+    desc: 'ادرس من أي مكان في أي وقت عبر تطبيق iOS وAndroid',
+  },
+]
+
+const testimonials = [
+  {
+    name: 'أحمد الغامدي',
+    score: '٩٥',
+    text: 'بفضل منصة قدرات المغربي حصلت على ٩٥ في اختبار القدرات. الشرح واضح جداً والاختبارات تساعد كثيراً.',
+    city: 'الرياض',
+  },
+  {
+    name: 'سارة العتيبي',
+    score: '٩٢',
+    text: 'أفضل منصة تعليمية جربتها للقدرات. المنهج منظم وفريق الدعم متجاوب ومحترف.',
+    city: 'جدة',
+  },
+  {
+    name: 'محمد القحطاني',
+    score: '٩٨',
+    text: 'ما توقعت أوصل لـ٩٨ في القدرات الكمي! المنصة غيرت أسلوب مذاكرتي كلياً.',
+    city: 'الدمام',
+  },
+]
+
+export default function Home() {
+  return (
+    <div className="min-h-screen">
+
+      {/* Hero */}
+      <section className="relative bg-hero-gradient text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 right-10 w-64 h-64 rounded-full" style={{background: 'radial-gradient(circle, #FF8008, transparent)'}} />
+          <div className="absolute bottom-10 left-10 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle, #8B35C4, transparent)'}} />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-2 mb-6 text-sm font-semibold">
+            <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse" />
+            الوجهة الأولى لطلاب القدرات في السعودية
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+            تفوّق في
+            <span className="gradient-text mx-3">القدرات الكمي</span>
+            <br />مع أفضل شرح
+          </h1>
+          <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+            منصة متكاملة بفيديوهات شاملة واختبارات تفاعلية وتتبع للتقدم — كل ما تحتاجه لتحقيق درجتك المستهدفة
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/register" className="btn-primary text-lg py-4 px-10">
+              ابدأ مجاناً الآن ←
+            </Link>
+            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200">
+              <Play size={18} fill="white" />
+              شاهد الكورسات
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="max-w-5xl mx-auto px-4 -mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-white rounded-2xl shadow-brand p-5 text-center border border-purple-50">
+              <div className="text-3xl font-black gradient-text mb-1">{s.value}</div>
+              <div className="text-sm font-semibold text-gray-500">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="max-w-7xl mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <h2 className="section-title">لماذا قدرات المغربي؟</h2>
+          <p className="section-subtitle">كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((f) => (
+            <div key={f.title} className="card group">
+              <div className="text-4xl mb-4">{f.icon}</div>
+              <h3 className="text-xl font-black text-brand-navy mb-2 group-hover:gradient-text transition-all">{f.title}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="max-w-7xl mx-auto px-4 mb-20">
+        <div className="gradient-bg rounded-3xl p-10 md:p-14 text-white text-center shadow-brand-lg">
+          <h2 className="text-3xl md:text-4xl font-black mb-4">جاهز تبدأ رحلتك للتفوق؟</h2>
+          <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
+            انضم لأكثر من ٥٠٠٠ طالب حققوا درجاتهم المستهدفة مع منصة قدرات المغربي
+          </p>
+          <Link to="/register" className="inline-block bg-white text-brand-purple font-black py-4 px-10 rounded-2xl hover:bg-gray-100 transition-all duration-200 shadow-lg text-lg" style={{color: '#8B35C4'}}>
+            سجّل الآن مجاناً ←
+          </Link>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="section-title">قالوا عنّا</h2>
+            <p className="section-subtitle">آراء طلابنا الذين حققوا نتائج مميزة</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.name} className="card">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={16} fill="#E91E8C" color="#E91E8C" />
+                  ))}
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-brand-navy">{t.name}</div>
+                    <div className="text-xs text-gray-400">{t.city}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-black gradient-text">{t.score}</div>
+                    <div className="text-xs text-gray-400">درجته</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </div>
+  )
+}
