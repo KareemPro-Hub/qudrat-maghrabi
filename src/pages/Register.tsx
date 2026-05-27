@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Phone, GraduationCap, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
 export default function Register() {
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm: '' })
+  const [role, setRole] = useState<'student' | 'parent'>('student')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -20,11 +21,11 @@ export default function Register() {
     if (form.password.length < 8) return toast.error('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
 
     setLoading(true)
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        data: { full_name: form.full_name, phone: form.phone, role: 'student' },
+        data: { full_name: form.full_name, phone: form.phone, role },
         emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     })
@@ -44,12 +45,43 @@ export default function Register() {
         <div className="bg-white rounded-3xl shadow-brand-lg p-8 md:p-10">
 
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-white font-black text-xl mx-auto mb-3 shadow-brand">
-              QM
-            </div>
+          <div className="text-center mb-6">
+            <img src="/logo.png" alt="قدرات المغربي" className="h-16 w-auto object-contain mx-auto mb-3" />
             <h1 className="text-2xl font-black text-brand-navy">إنشاء حساب جديد</h1>
             <p className="text-gray-500 text-sm mt-1">ابدأ رحلتك نحو التفوق في القدرات</p>
+          </div>
+
+          {/* Role Selection */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => setRole('student')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 ${
+                role === 'student'
+                  ? 'border-brand-pink bg-pink-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'student' ? 'gradient-bg' : 'bg-gray-100'}`}>
+                <GraduationCap size={20} className={role === 'student' ? 'text-white' : 'text-gray-400'} />
+              </div>
+              <span className={`text-sm font-black ${role === 'student' ? 'text-brand-pink' : 'text-gray-500'}`}>طالب</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRole('parent')}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 ${
+                role === 'parent'
+                  ? 'border-brand-purple bg-purple-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'parent' ? 'bg-brand-purple' : 'bg-gray-100'}`}>
+                <Users size={20} className={role === 'parent' ? 'text-white' : 'text-gray-400'} />
+              </div>
+              <span className={`text-sm font-black ${role === 'parent' ? 'text-brand-purple' : 'text-gray-500'}`}>ولي أمر</span>
+            </button>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">

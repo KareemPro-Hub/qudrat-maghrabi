@@ -11,6 +11,8 @@ import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentFailed from './pages/PaymentFailed'
 import Dashboard from './pages/Dashboard'
+import ParentDashboard from './pages/ParentDashboard'
+import ParentLink from './pages/ParentLink'
 import AdminLayout from './components/AdminLayout'
 import AdminOverview from './pages/admin/AdminOverview'
 import AdminCourses from './pages/admin/AdminCourses'
@@ -47,15 +49,26 @@ export default function App() {
         }}
       />
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/courses" element={<Layout><Courses /></Layout>} />
         <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
+
+        {/* Auth */}
+        <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
+        <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+
+        {/* Student */}
+        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
-        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-        <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
-        <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+
+        {/* Parent */}
+        <Route path="/parent" element={<Layout><ParentDashboard /></Layout>} />
+        <Route path="/parent/link" element={<AuthLayout><ParentLink /></AuthLayout>} />
+
+        {/* Admin */}
         <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
         <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
         <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />

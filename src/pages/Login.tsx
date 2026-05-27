@@ -31,6 +31,8 @@ export default function Login() {
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager']
       if (profile && adminRoles.includes(profile.role)) {
         navigate('/admin')
+      } else if (profile && profile.role === 'parent') {
+        navigate('/parent')
       } else {
         navigate('/dashboard')
       }
