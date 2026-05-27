@@ -18,6 +18,9 @@ import AdminOverview from './pages/admin/AdminOverview'
 import AdminCourses from './pages/admin/AdminCourses'
 import AdminStudents from './pages/admin/AdminStudents'
 import AdminEnrollments from './pages/admin/AdminEnrollments'
+import AdminQuizzes from './pages/admin/AdminQuizzes'
+import Quiz from './pages/Quiz'
+import QuizResult from './pages/QuizResult'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -73,6 +76,9 @@ export default function App() {
         <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
         <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />
         <Route path="/admin/enrollments" element={<AdminLayout><AdminEnrollments /></AdminLayout>} />
+        <Route path="/admin/quizzes" element={<AdminLayout><AdminQuizzes /></AdminLayout>} />
+        <Route path="/quiz/:quizId" element={<Layout><Quiz /></Layout>} />
+        <Route path="/quiz/:quizId/result/:resultId" element={<Layout><QuizResult /></Layout>} />
       </Routes>
     </BrowserRouter>
   )

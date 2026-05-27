@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'نظرة عامة', exact: true },
   { to: '/admin/courses', icon: BookOpen, label: 'الكورسات' },
+  { to: '/admin/quizzes', icon: GraduationCap, label: 'الاختبارات' },
   { to: '/admin/students', icon: Users, label: 'الطلاب' },
   { to: '/admin/enrollments', icon: CreditCard, label: 'الاشتراكات' },
   { to: '/admin/notifications', icon: Bell, label: 'الإشعارات' },
