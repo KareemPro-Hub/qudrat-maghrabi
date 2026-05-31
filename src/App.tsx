@@ -21,6 +21,11 @@ import AdminEnrollments from './pages/admin/AdminEnrollments'
 import AdminQuizzes from './pages/admin/AdminQuizzes'
 import Quiz from './pages/Quiz'
 import QuizResult from './pages/QuizResult'
+import Learn from './pages/Learn'
+import Profile from './pages/Profile'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import AdminLessons from './pages/admin/AdminLessons'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -60,9 +65,13 @@ export default function App() {
         {/* Auth */}
         <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
         <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+        <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+        <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
 
         {/* Student */}
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/profile" element={<Layout><Profile /></Layout>} />
+        <Route path="/learn/:courseId" element={<Layout><Learn /></Layout>} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
@@ -74,6 +83,7 @@ export default function App() {
         {/* Admin */}
         <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
         <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
+        <Route path="/admin/lessons/:courseId" element={<AdminLayout><AdminLessons /></AdminLayout>} />
         <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />
         <Route path="/admin/enrollments" element={<AdminLayout><AdminEnrollments /></AdminLayout>} />
         <Route path="/admin/quizzes" element={<AdminLayout><AdminQuizzes /></AdminLayout>} />

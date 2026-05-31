@@ -42,9 +42,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-brand-navy">
+                <Link to="/profile" className="flex items-center gap-1 text-sm font-semibold text-brand-navy hover:text-brand-pink transition-colors">
+                  <User size={16} />
                   {profile?.full_name || user.email}
-                </span>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm font-semibold"
@@ -81,6 +82,11 @@ export default function Navbar() {
           {user && (
             <Link to="/dashboard" className="block font-semibold text-gray-700 py-2" onClick={() => setOpen(false)}>
               <LayoutDashboard size={16} className="inline ml-2" /> لوحة التحكم
+            </Link>
+          )}
+          {user && (
+            <Link to="/profile" className="block font-semibold text-gray-700 py-2" onClick={() => setOpen(false)}>
+              <User size={16} className="inline ml-2" /> الملف الشخصي
             </Link>
           )}
           {user ? (

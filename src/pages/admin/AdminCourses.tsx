@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
@@ -7,6 +8,7 @@ import toast from 'react-hot-toast'
 const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '' }
 
 export default function AdminCourses() {
+  const navigate = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -110,6 +112,7 @@ export default function AdminCourses() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
+                      <button onClick={() => navigate(`/admin/lessons/${c.id}`)} className="flex items-center gap-1 px-3 py-2 text-brand-purple bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-xs font-bold"><Video size={14} /> الدروس</button>
                       <button onClick={() => openEdit(c)} className="p-2 text-gray-400 hover:text-brand-purple hover:bg-purple-50 rounded-lg transition-colors"><Edit size={16} /></button>
                       <button onClick={() => togglePublish(c)} className="p-2 text-gray-400 hover:text-brand-pink hover:bg-pink-50 rounded-lg transition-colors">{c.is_published ? <EyeOff size={16} /> : <Eye size={16} />}</button>
                       <button onClick={() => deleteCourse(c.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
