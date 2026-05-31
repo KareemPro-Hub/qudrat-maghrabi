@@ -115,8 +115,14 @@ export default function CourseDetail() {
 
             {/* Card */}
             <div className="bg-white rounded-3xl shadow-brand-lg p-8">
-              <div className="gradient-bg rounded-2xl h-36 flex items-center justify-center mb-6">
-                <Play size={40} className="text-white" />
+              <div className="rounded-2xl h-36 overflow-hidden mb-6 relative">
+                {(course as any).thumbnail_url ? (
+                  <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="gradient-bg w-full h-full flex items-center justify-center">
+                    <Play size={40} className="text-white" />
+                  </div>
+                )}
               </div>
               <div className="text-3xl font-black gradient-text mb-2">{course.price} ر.س</div>
               <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
