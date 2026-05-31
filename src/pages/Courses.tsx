@@ -50,10 +50,7 @@ export default function Courses() {
               <Link key={course.id} to={`/courses/${course.id}`} className="card hover:shadow-brand-lg transition-all duration-300 flex flex-col cursor-pointer">
                 {/* Thumbnail */}
                 <div className="gradient-bg rounded-xl h-40 mb-5 flex items-center justify-center relative overflow-hidden">
-                  <BookOpen size={48} className="text-white/60" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-black text-lg text-center px-4">{course.title}</span>
-                  </div>
+                  <span className="text-white font-black text-lg text-center px-4">{course.title}</span>
                 </div>
 
                 <div className="flex-1">
