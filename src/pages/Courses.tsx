@@ -47,7 +47,7 @@ export default function Courses() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {displayCourses.map((course) => (
-              <div key={course.id} className="card hover:shadow-brand-lg transition-all duration-300 flex flex-col">
+              <Link key={course.id} to={`/courses/${course.id}`} className="card hover:shadow-brand-lg transition-all duration-300 flex flex-col cursor-pointer">
                 {/* Thumbnail */}
                 <div className="gradient-bg rounded-xl h-40 mb-5 flex items-center justify-center relative overflow-hidden">
                   <BookOpen size={48} className="text-white/60" />
@@ -69,11 +69,11 @@ export default function Courses() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="text-2xl font-black gradient-text">{course.price} ر.س</div>
-                  <Link to={`/courses/${course.id}`} className="btn-primary py-2 px-6 text-sm">
+                  <span className="btn-primary py-2 px-6 text-sm">
                     اشترك الآن
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
