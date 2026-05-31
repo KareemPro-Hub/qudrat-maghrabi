@@ -49,9 +49,9 @@ export default function Courses() {
             {displayCourses.map((course) => (
               <Link key={course.id} to={`/courses/${course.id}`} className="card hover:shadow-brand-lg transition-all duration-300 flex flex-col cursor-pointer">
                 {/* Thumbnail */}
-                <div className="rounded-xl h-40 mb-5 relative overflow-hidden">
+                <div className="rounded-xl mb-5 relative overflow-hidden" style={{aspectRatio: '16/9'}}>
                   {(course as any).thumbnail_url ? (
-                    <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
+                    <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-contain bg-black" />
                   ) : (
                     <div className="gradient-bg w-full h-full flex items-center justify-center">
                       <span className="text-white font-black text-lg text-center px-4">{course.title}</span>
