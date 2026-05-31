@@ -20,10 +20,39 @@ export default function PaymentSuccess() {
   }, [])
 
   async function activateEnrollment() {
+    // تفعيل الاشتراك
     await supabase
       .from('enrollments')
-      .update({ payment_status: 'paid', amount_paid: null })
+      .update({ payment_status: 'paid' })
       .eq('id', enrollmentId!)
+
+    // جلب بيانات الطالب والكورس لإرسال الإيميل
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('*, profiles(full_name, email), courses(title)')
+      .eq('id', enrollmentId!)
+      .single()
+
+    if (enrollment?.profiles?.email) {
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: enrollment.profiles.email,
+            type: 'enrollment',
+            data: {
+              studentName: enrollment.profiles.full_name,
+              courseName: enrollment.courses?.title,
+            }
+          })
+        })
+      } catch (e) {
+        // الإيميل اختياري — مش هيوقف التفعيل لو فشل
+        console.log('Email notification skipped')
+      }
+    }
+
     setDone(true)
   }
 
@@ -37,14 +66,13 @@ export default function PaymentSuccess() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #1B1B5E 0%, #3D1070 100%)' }}>
       <div className="bg-white rounded-3xl shadow-brand-lg p-10 max-w-md w-full text-center">
 
-        {/* Icon */}
         <div className="w-20 h-20 rounded-full gradient-bg flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={40} className="text-white" />
         </div>
 
         <h1 className="text-2xl font-black text-brand-navy mb-2">تم الاشتراك بنجاح! 🎉</h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          مبروك! تم تفعيل الكورس في حسابك. يمكنك البدء في الدراسة الآن.
+          مبروك! تم تفعيل الكورس في حسابك. تحقق من بريدك للتأكيد.
         </p>
 
         {paymentId && (
