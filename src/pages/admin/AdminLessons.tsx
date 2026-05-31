@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 const emptyForm = {
-  title: '', description: '', video_id: '', duration_minutes: '', order_index: 0, is_free_preview: false
+  title: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
 }
 
 export default function AdminLessons() {
@@ -43,6 +43,7 @@ export default function AdminLessons() {
       title: lesson.title,
       description: lesson.description || '',
       video_id: lesson.video_id || '',
+      thumbnail_url: lesson.thumbnail_url || '',
       duration_minutes: String(lesson.duration_minutes || ''),
       order_index: lesson.order_index,
       is_free_preview: lesson.is_free_preview || false,
@@ -58,6 +59,7 @@ export default function AdminLessons() {
       title: form.title,
       description: form.description,
       video_id: form.video_id,
+      thumbnail_url: form.thumbnail_url || null,
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       order_index: Number(form.order_index),
       is_free_preview: form.is_free_preview,
@@ -186,6 +188,12 @@ export default function AdminLessons() {
                 <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })}
                   className="input-field" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
                 <p className="text-xs text-gray-400 mt-1">من لوحة VdoCipher → Videos → نسخ الـ ID</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">رابط صورة الغلاف (Thumbnail URL)</label>
+                <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
+                  className="input-field" placeholder="https://..." dir="ltr" />
+                <p className="text-xs text-gray-400 mt-1">ارفع الصورة على Google Drive أو Imgur وضع الرابط هنا</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

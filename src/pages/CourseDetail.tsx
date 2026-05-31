@@ -31,7 +31,7 @@ export default function CourseDetail() {
     if (data) {
       const { data: lessonsData } = await supabase
         .from('lessons')
-        .select('id, title, duration_minutes, is_free_preview, order_index, video_id')
+        .select('id, title, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
         .eq('course_id', id)
         .order('order_index')
       setLessons(lessonsData || [])
@@ -145,9 +145,7 @@ export default function CourseDetail() {
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               {lessons.map((lesson, i) => {
                 const canWatch = enrolled || lesson.is_free_preview
-                const thumbnail = lesson.video_id
-                  ? `https://dev.vdocipher.com/api/images/${lesson.video_id}/thumbnails/thumbnail.png`
-                  : null
+                const thumbnail = lesson.thumbnail_url || null
                 return (
                   <div
                     key={lesson.id}
