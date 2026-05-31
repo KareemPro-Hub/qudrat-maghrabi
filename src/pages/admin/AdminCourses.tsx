@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video, Upload } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
 
-const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '' }
+const CLOUDINARY_CLOUD = 'dzgfvs0gi'
+const CLOUDINARY_PRESET = 'qudrat_thumbnails'
+
+const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '', thumbnail_url: '' }
 
 export default function AdminCourses() {
   const navigate = useNavigate()
@@ -15,6 +18,7 @@ export default function AdminCourses() {
   const [editing, setEditing] = useState<Course | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => { fetchCourses() }, [])
 
@@ -27,15 +31,47 @@ export default function AdminCourses() {
   function openAdd() { setEditing(null); setForm(emptyForm); setShowModal(true) }
   function openEdit(c: Course) {
     setEditing(c)
-    setForm({ title: c.title, description: c.description || '', price: String(c.price), level: (c as any).level || 'beginner', duration_hours: String((c as any).duration_hours || '') })
+    setForm({
+      title: c.title,
+      description: c.description || '',
+      price: String(c.price),
+      level: (c as any).level || 'beginner',
+      duration_hours: String((c as any).duration_hours || ''),
+      thumbnail_url: (c as any).thumbnail_url || ''
+    })
     setShowModal(true)
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const data = new FormData()
+    data.append('file', file)
+    data.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+    const json = await res.json()
+    if (json.secure_url) {
+      setForm(f => ({ ...f, thumbnail_url: json.secure_url }))
+      toast.success('تم رفع الصورة ✅')
+    } else {
+      toast.error('فشل رفع الصورة')
+    }
+    setUploading(false)
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!form.title || !form.price) return toast.error('يرجى تعبئة العنوان والسعر')
     setSaving(true)
-    const payload = { title: form.title, description: form.description, price: Number(form.price), level: form.level, duration_hours: Number(form.duration_hours) || null }
+    const payload = {
+      title: form.title,
+      description: form.description,
+      price: Number(form.price),
+      level: form.level,
+      duration_hours: Number(form.duration_hours) || null,
+      thumbnail_url: form.thumbnail_url || null
+    }
 
     if (editing) {
       const { error } = await supabase.from('courses').update(payload).eq('id', editing.id)
@@ -96,8 +132,17 @@ export default function AdminCourses() {
               {courses.map((c) => (
                 <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-5 py-4">
-                    <div className="font-bold text-brand-navy">{c.title}</div>
-                    <div className="text-gray-400 text-xs mt-0.5 line-clamp-1">{c.description}</div>
+                    <div className="flex items-center gap-3">
+                      {(c as any).thumbnail_url ? (
+                        <img src={(c as any).thumbnail_url} className="w-12 h-8 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-12 h-8 rounded-lg gradient-bg flex-shrink-0" />
+                      )}
+                      <div>
+                        <div className="font-bold text-brand-navy">{c.title}</div>
+                        <div className="text-gray-400 text-xs mt-0.5 line-clamp-1">{c.description}</div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-5 py-4 font-bold text-brand-pink">{c.price} ر.س</td>
                   <td className="px-5 py-4">
@@ -128,12 +173,40 @@ export default function AdminCourses() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-brand-lg">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-brand-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <h2 className="text-xl font-extrabold text-brand-navy">{editing ? 'تعديل الكورس' : 'إضافة كورس جديد'}</h2>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">×</button>
             </div>
             <form onSubmit={handleSave} className="p-5 space-y-4">
+
+              {/* Thumbnail Upload */}
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">صورة الغلاف</label>
+                <div className="relative">
+                  {form.thumbnail_url ? (
+                    <div className="relative rounded-xl overflow-hidden h-36 mb-2">
+                      <img src={form.thumbnail_url} className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setForm(f => ({ ...f, thumbnail_url: '' }))}
+                        className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg">حذف</button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-brand-pink transition-colors">
+                      {uploading ? (
+                        <div className="w-8 h-8 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
+                      ) : (
+                        <>
+                          <Upload size={24} className="text-gray-300 mb-2" />
+                          <span className="text-sm text-gray-400 font-bold">اضغط لرفع صورة الغلاف</span>
+                          <span className="text-xs text-gray-300 mt-1">PNG, JPG — حتى 5MB</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-bold text-brand-navy mb-2">عنوان الكورس *</label>
                 <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field" placeholder="مثال: القدرات الكمي — المستوى الأساسي" />
@@ -157,7 +230,7 @@ export default function AdminCourses() {
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 text-center py-3">
+                <button type="submit" disabled={saving || uploading} className="btn-primary flex-1 text-center py-3">
                   {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="btn-outline flex-1 py-3">إلغاء</button>
