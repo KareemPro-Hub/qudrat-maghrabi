@@ -76,7 +76,13 @@ export default function Home() {
 
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img src="/logo.png" alt="قدرات المغربي" className="h-24 md:h-32 w-auto object-contain drop-shadow-2xl" />
+            <div className="relative inline-flex items-center justify-center">
+              {/* Glow layers */}
+              <div className="absolute w-64 h-64 rounded-full opacity-30" style={{background: 'radial-gradient(circle, #E91E8C 0%, #8B35C4 40%, transparent 70%)', filter: 'blur(32px)'}} />
+              <div className="absolute w-48 h-48 rounded-full opacity-20" style={{background: 'radial-gradient(circle, #FF8008 0%, transparent 70%)', filter: 'blur(20px)'}} />
+              {/* Logo */}
+              <img src="/logo.png" alt="قدرات المغربي" className="relative h-28 md:h-36 w-auto object-contain" style={{filter: 'drop-shadow(0 0 20px rgba(233,30,140,0.5))'}} />
+            </div>
           </div>
 
           {/* Headline */}
