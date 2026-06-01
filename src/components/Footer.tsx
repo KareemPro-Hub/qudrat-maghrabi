@@ -22,9 +22,11 @@ export default function Footer() {
             <ul className="space-y-2">
               {[
                 { to: '/courses', label: 'الكورسات' },
-                { to: '/about', label: 'عن المنصة' },
-                { to: '/register', label: 'التسجيل' },
-                { to: '/login', label: 'تسجيل الدخول' },
+                { to: '/about', label: 'من نحن' },
+                { to: '/contact', label: 'تواصل معنا' },
+                { to: '/privacy', label: 'سياسة الخصوصية' },
+                { to: '/terms', label: 'الشروط والأحكام' },
+                { to: '/refund', label: 'سياسة الاسترداد' },
               ].map(link => (
                 <li key={link.to}>
                   <Link to={link.to} className="text-gray-400 hover:text-brand-pink transition-colors text-sm font-medium">
@@ -39,15 +41,20 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4 gradient-text">تواصل معنا</h3>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li>📧 info@qudratmaghrabi.com</li>
+              <li>📧 Qudrat.Maghrabi.Pro@gmail.com</li>
               <li>🐦 @QudratMaghrabi</li>
               <li>📺 YouTube: قدرات المغربي</li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-6 text-center text-gray-500 text-sm">
+        <div className="border-t border-white/10 pt-6 text-center text-gray-500 text-sm flex flex-col md:flex-row justify-between items-center gap-2">
           <p>© {new Date().getFullYear()} منصة قدرات المغربي — جميع الحقوق محفوظة</p>
+          <div className="flex gap-4">
+            <Link to="/privacy" className="hover:text-brand-pink transition-colors">سياسة الخصوصية</Link>
+            <Link to="/terms" className="hover:text-brand-pink transition-colors">الشروط والأحكام</Link>
+            <Link to="/refund" className="hover:text-brand-pink transition-colors">سياسة الاسترداد</Link>
+          </div>
         </div>
       </div>
     </footer>

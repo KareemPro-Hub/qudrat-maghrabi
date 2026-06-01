@@ -26,6 +26,11 @@ import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import AdminLessons from './pages/admin/AdminLessons'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
+import Refund from './pages/Refund'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -89,6 +94,11 @@ export default function App() {
         <Route path="/admin/quizzes" element={<AdminLayout><AdminQuizzes /></AdminLayout>} />
         <Route path="/quiz/:quizId" element={<Layout><Quiz /></Layout>} />
         <Route path="/quiz/:quizId/result/:resultId" element={<Layout><QuizResult /></Layout>} />
+        <Route path="/about" element={<Layout><About /></Layout>} />
+        <Route path="/contact" element={<Layout><Contact /></Layout>} />
+        <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
+        <Route path="/terms" element={<Layout><Terms /></Layout>} />
+        <Route path="/refund" element={<Layout><Refund /></Layout>} />
       </Routes>
     </BrowserRouter>
   )
