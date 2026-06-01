@@ -69,21 +69,21 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 mb-8 text-sm font-bold tracking-wide">
             <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse" />
-            ✦ الوجهة الأولى لطلاب القدرات في المملكة العربية السعودية ✦
+            ✦ طريقك المختصر لتجاوز عقبة الكمي في المملكة ✦
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-            درجتك في القدرات
+            درجتك الكاملة في الكمي..
             <br />
-            <span className="gradient-text">تبدأ من هنا</span>
+            <span className="gradient-text">مكانها هنا!</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 mb-5 max-w-2xl mx-auto leading-relaxed font-bold">
-            شرح احترافي · اختبارات ذكية · نتائج حقيقية
+            تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
           </p>
 
           <p className="text-base text-gray-400 mb-10 max-w-xl mx-auto leading-loose">
-            انضم لآلاف الطلاب الذين حققوا درجاتهم المستهدفة مع أسلوب المغربي المميز في تبسيط القدرات الكمي
+            انضم لدفعة التميز واكتشف أسرار وتكنيكات "المغربي" التي حوّلت أعقد مسائل الرياضيات إلى خطوات بسيطة ومضمونة للـ +95
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
