@@ -69,9 +69,14 @@ export default function Home() {
         <div className="relative max-w-4xl mx-auto px-4 py-24 md:py-32 text-center">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-10 text-sm font-bold tracking-wide">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-8 text-sm font-bold tracking-wide">
             <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse flex-shrink-0" />
             طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
+          </div>
+
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img src="/logo.png" alt="قدرات المغربي" className="h-24 md:h-32 w-auto object-contain drop-shadow-2xl" />
           </div>
 
           {/* Headline */}
