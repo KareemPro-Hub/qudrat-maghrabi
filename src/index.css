@@ -1,11 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Montserrat:wght@400;600;700;800;900&display=swap');
+@font-face {
+  font-family: 'FrutigerArabic';
+  src: url('/fonts/FrutigerLTArabic45Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FrutigerArabic';
+  src: url('/fonts/FrutigerLTArabic55Roman.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FrutigerArabic';
+  src: url('/fonts/FrutigerLTArabic65Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FrutigerArabic';
+  src: url('/fonts/frutigerltarabic75black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 * {
-  font-family: 'Almarai', sans-serif;
+  font-family: 'FrutigerArabic', sans-serif;
 }
 
 body {

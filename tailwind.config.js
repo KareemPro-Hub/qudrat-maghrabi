@@ -18,8 +18,9 @@ export default {
         'hero-gradient': 'linear-gradient(135deg, #1B1B5E 0%, #3D1070 50%, #1B1B5E 100%)',
       },
       fontFamily: {
-        arabic: ['Almarai', 'sans-serif'],
-        display: ['Montserrat', 'Almarai', 'sans-serif'],
+        sans: ['FrutigerArabic', 'sans-serif'],
+        arabic: ['FrutigerArabic', 'sans-serif'],
+        display: ['FrutigerArabic', 'sans-serif'],
       },
       boxShadow: {
         'brand': '0 4px 24px rgba(233, 30, 140, 0.25)',
