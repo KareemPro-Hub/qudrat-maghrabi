@@ -69,13 +69,13 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 mb-8 text-base font-bold tracking-wide">
             <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse" />
-            طريقك المختصر لتجاوز عقبة الكمي في المملكة
+            طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-            طريـقك للـ +95
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6" style={{lineHeight: '1.4'}}>
+            تبي الكامل بالكمي ؟
             <br />
-            <span className="gradient-text">يبدأ من هنا</span>
+            <span className="gradient-text">ابدأ رحلتك من هنا 🚀</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 mb-5 max-w-2xl mx-auto leading-relaxed font-bold">
