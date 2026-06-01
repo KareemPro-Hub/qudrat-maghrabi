@@ -81,7 +81,7 @@ export default function Home() {
               <div className="absolute w-64 h-64 rounded-full opacity-30" style={{background: 'radial-gradient(circle, #E91E8C 0%, #8B35C4 40%, transparent 70%)', filter: 'blur(32px)'}} />
               <div className="absolute w-48 h-48 rounded-full opacity-20" style={{background: 'radial-gradient(circle, #FF8008 0%, transparent 70%)', filter: 'blur(20px)'}} />
               {/* Logo */}
-              <img src="/logo.png" alt="قدرات المغربي" className="relative h-28 md:h-36 w-auto object-contain" style={{mixBlendMode: 'screen', filter: 'drop-shadow(0 0 24px rgba(233,30,140,0.6))'}} />
+              <img src="/logo.png" alt="قدرات المغربي" className="relative h-28 md:h-36 w-auto object-contain" style={{filter: 'drop-shadow(0 0 24px rgba(233,30,140,0.5))'}} />
             </div>
           </div>
 
