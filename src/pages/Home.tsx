@@ -66,31 +66,37 @@ export default function Home() {
           <div className="absolute top-10 right-10 w-64 h-64 rounded-full" style={{background: 'radial-gradient(circle, #FF8008, transparent)'}} />
           <div className="absolute bottom-10 left-10 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle, #8B35C4, transparent)'}} />
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 mb-8 text-base font-bold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse" />
+        <div className="relative max-w-4xl mx-auto px-4 py-24 md:py-32 text-center">
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-10 text-sm font-bold tracking-wide">
+            <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse flex-shrink-0" />
             طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6" style={{lineHeight: '1.6'}}>
+          {/* Headline */}
+          <h1 className="font-extrabold mb-8 text-center" style={{fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', lineHeight: '1.5'}}>
             تبي الكامل بالكمي ؟
             <br />
-            <span className="gradient-text">ابدأ رحلتك من هنا &nbsp;🚀</span>
+            <span className="gradient-text">ابدأ رحلتك من هنا</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-gray-200 mb-5 max-w-2xl mx-auto leading-relaxed font-bold">
-            تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
+          {/* Sub-headline */}
+          <p className="text-lg md:text-2xl text-gray-200 mb-6 font-bold tracking-wide">
+            تأسيس ذكي &nbsp;•&nbsp; تجميعات حديثة &nbsp;•&nbsp; حلول بثوانٍ
           </p>
 
-          <p className="text-base text-gray-400 mb-10 max-w-xl mx-auto leading-loose">
+          {/* Description */}
+          <p className="text-base md:text-lg text-gray-400 mb-12 max-w-2xl mx-auto leading-loose">
             انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register" className="btn-primary text-lg py-4 px-10">
-              🚀 ابدأ رحلتك الآن — مجاناً
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/register" className="btn-primary text-lg py-4 px-12 w-full sm:w-auto">
+              ابدأ رحلتك الآن — مجانًا
             </Link>
-            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 border border-white/20">
+            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 border border-white/20 w-full sm:w-auto">
               <Play size={18} fill="white" />
               استعرض الكورسات
             </Link>
@@ -126,7 +132,7 @@ export default function Home() {
             انضم لأكثر من ٥٠٠٠ طالب حققوا درجاتهم المستهدفة مع منصة قدرات المغربي
           </p>
           <Link to="/register" className="inline-block bg-white text-brand-purple font-black py-4 px-10 rounded-2xl hover:bg-gray-100 transition-all duration-200 shadow-lg text-lg" style={{color: '#8B35C4'}}>
-            سجّل الآن مجاناً ←
+            سجّل الآن مجانًا ←
           </Link>
         </div>
       </section>
