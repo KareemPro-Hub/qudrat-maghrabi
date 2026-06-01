@@ -72,10 +72,10 @@ export default function Home() {
             طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6" style={{lineHeight: '1.4'}}>
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6" style={{lineHeight: '1.6'}}>
             تبي الكامل بالكمي ؟
             <br />
-            <span className="gradient-text">ابدأ رحلتك من هنا 🚀</span>
+            <span className="gradient-text">ابدأ رحلتك من هنا &nbsp;🚀</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 mb-5 max-w-2xl mx-auto leading-relaxed font-bold">
@@ -83,7 +83,7 @@ export default function Home() {
           </p>
 
           <p className="text-base text-gray-400 mb-10 max-w-xl mx-auto leading-loose">
-            انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات بسيطة ومضمونة للـ +95</span>
+            انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
