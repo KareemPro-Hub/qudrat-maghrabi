@@ -5,13 +5,13 @@ import StatsCounter from '../components/StatsCounter'
 const features = [
   {
     icon: '🎯',
-    title: 'منهج مُنظَّم',
-    desc: 'شرح شامل لكل أبواب القدرات الكمي بأسلوب مبسط ومتدرج من السهل للصعب',
+    title: 'تأسيس وتجميع متدرج',
+    desc: 'شرح شامل لكل أبواب الكمي يبدأ معك من الصفر، ويسير معك خطوة بخطوة حتى تتقن حل أصعب أسئلة الاختبار.',
   },
   {
     icon: '🎬',
-    title: 'فيديوهات محمية',
-    desc: 'محتوى مرئي عالي الجودة محمي بالكامل، لا يمكن تنزيله أو مشاركته',
+    title: 'شرح احترافي بجودة عالية',
+    desc: 'محتوى مرئي متميز بجودة عالية يضمن لك رؤية واضحة بدون إطالة أو تشتيت؛ لتوفر وقتك وجهدك.',
   },
   {
     icon: '📊',
@@ -76,14 +76,14 @@ export default function Home() {
 
           {/* Headline */}
           <h1 className="font-extrabold mb-8 text-center" style={{fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', lineHeight: '1.5'}}>
-            تبي الكامل بالكمي ؟
+            تبي الكامل بالكمي .. ؟
             <br />
             <span className="gradient-text">ابدأ رحلتك من هنا</span>
           </h1>
 
           {/* Sub-headline */}
           <p className="text-lg md:text-2xl text-gray-200 mb-6 font-bold tracking-wide">
-            تأسيس ذكي &nbsp;•&nbsp; تجميعات حديثة &nbsp;•&nbsp; حلول بثوانٍ
+            شرح متكامل وتكنيكات ذكية تختصر عليك وقت الحل
           </p>
 
           {/* Description */}
@@ -110,7 +110,7 @@ export default function Home() {
       {/* Features */}
       <section className="max-w-7xl mx-auto px-4 py-20">
         <div className="text-center mb-12">
-          <h2 className="section-title">لماذا قدرات المغربي؟</h2>
+          <h2 className="section-title">لماذا قدرات المغربي ؟</h2>
           <p className="section-subtitle">كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

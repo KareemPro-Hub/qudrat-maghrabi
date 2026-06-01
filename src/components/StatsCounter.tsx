@@ -50,9 +50,9 @@ const stats = [
   {
     svg: (
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <path d="M24 4l4.5 9.1 10 1.5-7.2 7 1.7 10L24 27l-9 4.7 1.7-10L9.5 14.6l10-1.5L24 4z" fill="url(#g3)" opacity="0.9"/>
-        <path d="M8 38h32M14 44h20" stroke="url(#g3)" strokeWidth="2.5" strokeLinecap="round"/>
-        <path d="M16 38v-6M24 38v-8M32 38v-5" stroke="url(#g3)" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M24 6C14.059 6 6 14.059 6 24s8.059 18 18 18 18-8.059 18-18S33.941 6 24 6z" fill="url(#g3)" opacity="0.15"/>
+        <path d="M24 6C14.059 6 6 14.059 6 24s8.059 18 18 18 18-8.059 18-18S33.941 6 24 6z" stroke="url(#g3)" strokeWidth="2.5"/>
+        <path d="M16 24l5.5 5.5L33 18" stroke="url(#g3)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
         <defs>
           <linearGradient id="g3" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
             <stop stopColor="#8B35C4"/>
@@ -63,7 +63,7 @@ const stats = [
     ),
     value: 95,
     suffix: '%',
-    label: 'نسبة النجاح',
+    label: 'هدفنا لدرجتك',
     bg: 'bg-purple-50',
     gradFrom: '#8B35C4',
     gradTo: '#1B1B5E',
@@ -71,10 +71,11 @@ const stats = [
   {
     svg: (
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <path d="M24 4C15.163 4 8 11.163 8 20c0 5.5 2.7 10.4 6.9 13.5L13 42l8-3c1 .3 2 .5 3 .5 8.837 0 16-7.163 16-16S32.837 4 24 4z" fill="url(#g4)" opacity="0.15"/>
-        <path d="M24 4C15.163 4 8 11.163 8 20c0 5.5 2.7 10.4 6.9 13.5L13 42l8-3c1 .3 2 .5 3 .5 8.837 0 16-7.163 16-16S32.837 4 24 4z" stroke="url(#g4)" strokeWidth="2.5" strokeLinejoin="round"/>
-        <path d="M18 18h.01M24 18h.01M30 18h.01" stroke="url(#g4)" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M18 24h8" stroke="url(#g4)" strokeWidth="2.5" strokeLinecap="round"/>
+        <ellipse cx="24" cy="12" rx="14" ry="5" fill="url(#g4)" opacity="0.2"/>
+        <ellipse cx="24" cy="12" rx="14" ry="5" stroke="url(#g4)" strokeWidth="2.5"/>
+        <path d="M10 12v8c0 2.761 6.268 5 14 5s14-2.239 14-5v-8" stroke="url(#g4)" strokeWidth="2.5"/>
+        <path d="M10 20v8c0 2.761 6.268 5 14 5s14-2.239 14-5v-8" stroke="url(#g4)" strokeWidth="2.5"/>
+        <path d="M17 28l3 3 7-7" stroke="url(#g4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         <defs>
           <linearGradient id="g4" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
             <stop stopColor="#FF8008"/>
@@ -84,9 +85,9 @@ const stats = [
         </defs>
       </svg>
     ),
-    value: 1200,
+    value: 10000,
     suffix: '+',
-    label: 'سؤال تدريبي',
+    label: 'بنك أسئلة تجميعات',
     bg: 'bg-indigo-50',
     gradFrom: '#FF8008',
     gradTo: '#8B35C4',
