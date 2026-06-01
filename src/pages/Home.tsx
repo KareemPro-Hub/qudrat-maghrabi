@@ -20,8 +20,8 @@ const features = [
   },
   {
     icon: '📝',
-    title: 'اختبارات تفاعلية',
-    desc: 'اختبارات على نمط الاختبار الحقيقي مع تحليل دقيق لنقاط ضعفك وقوتك',
+    title: 'اختبارات تحاكي الواقع',
+    desc: 'تمرّن بأسئلة حقيقية واكسر حاجز الرهبة قبل الاختبار؛ لتعرف نقاط قوتك وتضمن جاهزيتك الكاملة ليوم الاختبار.',
   },
   {
     icon: '💬',
@@ -76,14 +76,14 @@ export default function Home() {
 
           {/* Headline */}
           <h1 className="font-extrabold mb-8 text-center" style={{fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', lineHeight: '1.5'}}>
-            تبي الكامل بالكمي .. ؟
+            تبي الكامل بالكمي ؟
             <br />
             <span className="gradient-text">ابدأ رحلتك من هنا</span>
           </h1>
 
           {/* Sub-headline */}
           <p className="text-lg md:text-2xl text-gray-200 mb-6 font-bold tracking-wide">
-            شرح متكامل وتكنيكات ذكية تختصر عليك وقت الحل
+            تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
           </p>
 
           {/* Description */}
