@@ -199,9 +199,11 @@ export default function CourseDetail() {
               })()}
             </div>
             {!enrolled && (
-              <p className="text-center text-gray-400 text-sm mt-4">
-                اشترك لتفتح جميع الدروس 🔓
-              </p>
+              <div className="text-center mt-4">
+                <button onClick={handleBuy} className="btn-primary py-3 px-10 text-sm">
+                  🔓 اشترك لتفتح جميع الدروس
+                </button>
+              </div>
             )}
           </div>
         </div>
