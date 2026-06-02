@@ -172,7 +172,12 @@ export default function CourseDetail() {
                       const canWatch = enrolled || lesson.is_free_preview
                       const thumbnail = lesson.thumbnail_url || null
                       return (
-                        <div key={lesson.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0">
+                        <div key={lesson.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-0">
+                          {/* رقم الدرس */}
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-black text-xs">
+                            {i + 1}
+                          </div>
+                          {/* الغلاف */}
                           <div className="relative flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden bg-gray-100">
                             {thumbnail ? (
                               <img src={thumbnail} alt={lesson.title} className="w-full h-full object-cover" />
@@ -188,7 +193,6 @@ export default function CourseDetail() {
                             <div className="flex items-center justify-end gap-2 mt-1">
                               {lesson.is_free_preview && <span className="text-xs bg-green-100 text-green-600 font-bold px-2 py-0.5 rounded-full">مجاني</span>}
                               {lesson.duration_minutes && <span className="flex items-center gap-1 text-xs text-gray-400"><Clock size={11} /> {lesson.duration_minutes} د</span>}
-                              <span className="text-xs text-gray-300">{i + 1}</span>
                             </div>
                           </div>
                         </div>
