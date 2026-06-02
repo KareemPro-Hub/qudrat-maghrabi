@@ -1,17 +1,26 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, LogOut, User, BookOpen, LayoutDashboard } from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Menu, X, LogOut, User, BookOpen, LayoutDashboard, Info, Phone } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+
+const navLinks = [
+  { to: '/courses', label: 'الكورسات', icon: BookOpen },
+  { to: '/about', label: 'من نحن', icon: Info },
+  { to: '/contact', label: 'تواصل معنا', icon: Phone },
+]
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
+
+  const isActive = (path: string) => location.pathname === path
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-purple-50">
@@ -24,16 +33,36 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/courses" className="text-gray-600 hover:text-brand-pink font-semibold transition-colors">
-              الكورسات
-            </Link>
-            <Link to="/about" className="text-gray-600 hover:text-brand-pink font-semibold transition-colors">
-              عن المنصة
-            </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`relative px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 group
+                  ${isActive(link.to)
+                    ? 'text-brand-pink bg-pink-50'
+                    : 'text-gray-600 hover:text-brand-pink hover:bg-pink-50/50'
+                  }`}
+              >
+                {link.label}
+                <span className={`absolute bottom-0 right-1/2 translate-x-1/2 h-0.5 rounded-full transition-all duration-300
+                  ${isActive(link.to) ? 'w-1/2 gradient-bg' : 'w-0 group-hover:w-1/2 gradient-bg'}`}
+                />
+              </Link>
+            ))}
             {user && (
-              <Link to="/dashboard" className="text-gray-600 hover:text-brand-pink font-semibold transition-colors">
+              <Link
+                to="/dashboard"
+                className={`relative px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 group
+                  ${isActive('/dashboard')
+                    ? 'text-brand-pink bg-pink-50'
+                    : 'text-gray-600 hover:text-brand-pink hover:bg-pink-50/50'
+                  }`}
+              >
                 لوحة التحكم
+                <span className={`absolute bottom-0 right-1/2 translate-x-1/2 h-0.5 rounded-full transition-all duration-300
+                  ${isActive('/dashboard') ? 'w-1/2 gradient-bg' : 'w-0 group-hover:w-1/2 gradient-bg'}`}
+                />
               </Link>
             )}
           </div>
@@ -42,13 +71,13 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-3">
-                <Link to="/profile" className="flex items-center gap-1 text-sm font-semibold text-brand-navy hover:text-brand-pink transition-colors">
+                <Link to="/profile" className="flex items-center gap-1.5 text-sm font-semibold text-brand-navy hover:text-brand-pink transition-colors px-3 py-1.5 rounded-xl hover:bg-pink-50">
                   <User size={16} />
                   {profile?.full_name || user.email}
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors text-sm font-semibold"
+                  className="flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors text-sm font-semibold px-3 py-1.5 rounded-xl hover:bg-red-50"
                 >
                   <LogOut size={16} />
                   خروج
@@ -67,7 +96,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Toggle */}
-          <button className="md:hidden p-2" onClick={() => setOpen(!open)}>
+          <button className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors" onClick={() => setOpen(!open)}>
             {open ? <X size={24} className="text-brand-navy" /> : <Menu size={24} className="text-brand-navy" />}
           </button>
         </div>
@@ -75,30 +104,48 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden bg-white border-t border-purple-50 px-4 py-4 space-y-3">
-          <Link to="/courses" className="block font-semibold text-gray-700 py-2" onClick={() => setOpen(false)}>
-            <BookOpen size={16} className="inline ml-2" /> الكورسات
-          </Link>
+        <div className="md:hidden bg-white border-t border-purple-50 px-4 py-4 space-y-1">
+          {navLinks.map(link => {
+            const Icon = link.icon
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200
+                  ${isActive(link.to) ? 'text-brand-pink bg-pink-50' : 'text-gray-700 hover:text-brand-pink hover:bg-pink-50/50'}`}
+              >
+                <Icon size={18} />
+                {link.label}
+              </Link>
+            )
+          })}
           {user && (
-            <Link to="/dashboard" className="block font-semibold text-gray-700 py-2" onClick={() => setOpen(false)}>
-              <LayoutDashboard size={16} className="inline ml-2" /> لوحة التحكم
+            <Link to="/dashboard" onClick={() => setOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200
+                ${isActive('/dashboard') ? 'text-brand-pink bg-pink-50' : 'text-gray-700 hover:text-brand-pink hover:bg-pink-50/50'}`}>
+              <LayoutDashboard size={18} /> لوحة التحكم
             </Link>
           )}
           {user && (
-            <Link to="/profile" className="block font-semibold text-gray-700 py-2" onClick={() => setOpen(false)}>
-              <User size={16} className="inline ml-2" /> الملف الشخصي
+            <Link to="/profile" onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-gray-700 hover:text-brand-pink hover:bg-pink-50/50 transition-all duration-200">
+              <User size={18} /> الملف الشخصي
             </Link>
           )}
-          {user ? (
-            <button onClick={handleSignOut} className="block w-full text-right font-semibold text-red-500 py-2">
-              <LogOut size={16} className="inline ml-2" /> تسجيل الخروج
-            </button>
-          ) : (
-            <div className="flex flex-col gap-2 pt-2">
-              <Link to="/login" className="btn-outline text-center" onClick={() => setOpen(false)}>تسجيل الدخول</Link>
-              <Link to="/register" className="btn-primary text-center" onClick={() => setOpen(false)}>ابدأ الآن</Link>
-            </div>
-          )}
+          <div className="pt-2 border-t border-gray-100 mt-2">
+            {user ? (
+              <button onClick={handleSignOut}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl font-semibold text-red-500 hover:bg-red-50 transition-all duration-200">
+                <LogOut size={18} /> تسجيل الخروج
+              </button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Link to="/login" className="btn-outline text-center" onClick={() => setOpen(false)}>تسجيل الدخول</Link>
+                <Link to="/register" className="btn-primary text-center" onClick={() => setOpen(false)}>ابدأ الآن</Link>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </nav>
