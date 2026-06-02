@@ -21,15 +21,6 @@ export default function Courses() {
       })
   }, [])
 
-  // Placeholder courses for demo
-  const demoCourses = [
-    { id: '1', title: 'القدرات الكمي — المستوى الأساسي', description: 'أساسيات الرياضيات والأنماط الرقمية وأساليب الحل السريع للمبتدئين', price: 199, lessons_count: 40, enrolled_count: 1200 },
-    { id: '2', title: 'القدرات الكمي — المستوى المتوسط', description: 'تعمق في مسائل الجبر والهندسة والاحتمالات مع أسلوب اختصار الوقت', price: 249, lessons_count: 55, enrolled_count: 980 },
-    { id: '3', title: 'القدرات الكمي — المستوى المتقدم', description: 'كل الأبواب بمستوى متقدم مع اختبارات على نمط الاختبار الحقيقي', price: 299, lessons_count: 70, enrolled_count: 750 },
-    { id: '4', title: 'باقة القدرات الكاملة', description: 'الكورسات الثلاثة مجتمعة بسعر مخفض — من الصفر حتى التفوق', price: 599, lessons_count: 165, enrolled_count: 2300 },
-  ]
-
-  const displayCourses = courses.length > 0 ? courses : demoCourses
 
   return (
     <div className="min-h-screen py-12">
@@ -45,9 +36,15 @@ export default function Courses() {
           <div className="flex justify-center py-20">
             <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
           </div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <BookOpen size={48} className="mx-auto mb-4 text-gray-200" />
+            <p className="font-bold text-lg">لا توجد كورسات منشورة حالياً</p>
+            <p className="text-sm mt-2">تابعنا قريباً لإطلاق الكورسات</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {displayCourses.map((course) => (
+            {courses.map((course) => (
               <Link key={course.id} to={`/courses/${course.id}`} className="card hover:shadow-brand-lg transition-all duration-300 flex flex-col cursor-pointer">
                 {/* Thumbnail */}
                 <div className="rounded-xl mb-5 relative overflow-hidden" style={{aspectRatio: '16/9'}}>
