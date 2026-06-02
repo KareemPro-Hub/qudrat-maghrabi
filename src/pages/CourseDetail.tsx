@@ -32,7 +32,7 @@ export default function CourseDetail() {
     if (data) {
       const { data: lessonsData } = await supabase
         .from('lessons')
-        .select('id, title, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
+        .select('id, title, chapter, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
         .eq('course_id', id)
         .order('order_index')
       setLessons(lessonsData || [])
@@ -149,51 +149,54 @@ export default function CourseDetail() {
         <div className="py-14 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-2xl font-black text-brand-navy mb-8 text-right">محتوى الكورس</h2>
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              {lessons.map((lesson, i) => {
-                const canWatch = enrolled || lesson.is_free_preview
-                const thumbnail = lesson.thumbnail_url || null
-                return (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0"
-                  >
-                    {/* Thumbnail */}
-                    <div className="relative flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden bg-gray-100">
-                      {thumbnail ? (
-                        <img src={thumbnail} alt={lesson.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full gradient-bg" />
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        {canWatch ? (
-                          <Play size={16} className="text-white" fill="white" />
-                        ) : (
-                          <Lock size={14} className="text-white" />
-                        )}
+            <div className="space-y-4">
+              {(() => {
+                // Group lessons by chapter
+                const chapters: { name: string; lessons: any[] }[] = []
+                lessons.forEach(lesson => {
+                  const chapterName = lesson.chapter || ''
+                  const existing = chapters.find(c => c.name === chapterName)
+                  if (existing) existing.lessons.push(lesson)
+                  else chapters.push({ name: chapterName, lessons: [lesson] })
+                })
+                let globalIndex = 0
+                return chapters.map(chapter => (
+                  <div key={chapter.name} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    {chapter.name && (
+                      <div className="px-5 py-3 bg-gradient-to-l from-purple-50 to-pink-50 border-b border-purple-100">
+                        <h3 className="font-black text-brand-navy text-sm">{chapter.name}</h3>
                       </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 text-right">
-                      <p className={`font-bold text-sm ${canWatch ? 'text-brand-navy' : 'text-gray-500'}`}>
-                        {lesson.title}
-                      </p>
-                      <div className="flex items-center justify-end gap-2 mt-1">
-                        {lesson.is_free_preview && (
-                          <span className="text-xs bg-green-100 text-green-600 font-bold px-2 py-0.5 rounded-full">مجاني</span>
-                        )}
-                        {lesson.duration_minutes && (
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <Clock size={11} /> {lesson.duration_minutes} د
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-300">{i + 1}</span>
-                      </div>
-                    </div>
+                    )}
+                    {chapter.lessons.map(lesson => {
+                      const i = globalIndex++
+                      const canWatch = enrolled || lesson.is_free_preview
+                      const thumbnail = lesson.thumbnail_url || null
+                      return (
+                        <div key={lesson.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0">
+                          <div className="relative flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden bg-gray-100">
+                            {thumbnail ? (
+                              <img src={thumbnail} alt={lesson.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full gradient-bg" />
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                              {canWatch ? <Play size={16} className="text-white" fill="white" /> : <Lock size={14} className="text-white" />}
+                            </div>
+                          </div>
+                          <div className="flex-1 text-right">
+                            <p className={`font-bold text-sm ${canWatch ? 'text-brand-navy' : 'text-gray-500'}`}>{lesson.title}</p>
+                            <div className="flex items-center justify-end gap-2 mt-1">
+                              {lesson.is_free_preview && <span className="text-xs bg-green-100 text-green-600 font-bold px-2 py-0.5 rounded-full">مجاني</span>}
+                              {lesson.duration_minutes && <span className="flex items-center gap-1 text-xs text-gray-400"><Clock size={11} /> {lesson.duration_minutes} د</span>}
+                              <span className="text-xs text-gray-300">{i + 1}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
+                ))
+              })()}
             </div>
             {!enrolled && (
               <p className="text-center text-gray-400 text-sm mt-4">

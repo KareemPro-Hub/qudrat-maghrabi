@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 const emptyForm = {
-  title: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
+  title: '', chapter: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
 }
 
 export default function AdminLessons() {
@@ -41,6 +41,7 @@ export default function AdminLessons() {
     setEditing(lesson)
     setForm({
       title: lesson.title,
+      chapter: lesson.chapter || '',
       description: lesson.description || '',
       video_id: lesson.video_id || '',
       thumbnail_url: lesson.thumbnail_url || '',
@@ -57,6 +58,7 @@ export default function AdminLessons() {
     setSaving(true)
     const payload = {
       title: form.title,
+      chapter: form.chapter || null,
       description: form.description,
       video_id: form.video_id,
       thumbnail_url: form.thumbnail_url || null,
@@ -175,6 +177,12 @@ export default function AdminLessons() {
                 <label className="block text-sm font-bold text-brand-navy mb-2">عنوان الدرس *</label>
                 <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
                   className="input-field" placeholder="مثال: مقدمة في النسب والتناسب" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">الباب</label>
+                <input value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })}
+                  className="input-field" placeholder="مثال: الباب الأول — النسب والتناسب" />
+                <p className="text-xs text-gray-400 mt-1">الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائياً</p>
               </div>
               <div>
                 <label className="block text-sm font-bold text-brand-navy mb-2">الوصف</label>
