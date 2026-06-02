@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video, Upload } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video, Upload, GripVertical } from 'lucide-react'
 import SarSymbol from '../../components/SarSymbol'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
@@ -20,13 +20,30 @@ export default function AdminCourses() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const dragIndex = useRef<number | null>(null)
 
   useEffect(() => { fetchCourses() }, [])
 
   async function fetchCourses() {
-    const { data } = await supabase.from('courses').select('*').order('created_at', { ascending: false })
+    const { data } = await supabase.from('courses').select('*').order('order_index', { ascending: true })
     setCourses(data || [])
     setLoading(false)
+  }
+
+  function handleDragStart(i: number) { dragIndex.current = i }
+
+  async function handleDrop(dropIndex: number) {
+    if (dragIndex.current === null || dragIndex.current === dropIndex) return
+    const reordered = [...courses]
+    const [moved] = reordered.splice(dragIndex.current, 1)
+    reordered.splice(dropIndex, 0, moved)
+    setCourses(reordered)
+    dragIndex.current = null
+    // Save new order to DB
+    await Promise.all(reordered.map((c, i) =>
+      supabase.from('courses').update({ order_index: i }).eq('id', c.id)
+    ))
+    toast.success('تم حفظ الترتيب ✅')
   }
 
   function openAdd() { setEditing(null); setForm(emptyForm); setShowModal(true) }
@@ -130,10 +147,18 @@ export default function AdminCourses() {
               </tr>
             </thead>
             <tbody>
-              {courses.map((c) => (
-                <tr key={c.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+              {courses.map((c, i) => (
+                <tr
+                  key={c.id}
+                  draggable
+                  onDragStart={() => handleDragStart(i)}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={() => handleDrop(i)}
+                  className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors cursor-default"
+                >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
+                      <GripVertical size={18} className="text-gray-300 cursor-grab flex-shrink-0" />
                       {(c as any).thumbnail_url ? (
                         <img src={(c as any).thumbnail_url} className="w-12 h-8 rounded-lg object-cover flex-shrink-0" />
                       ) : (

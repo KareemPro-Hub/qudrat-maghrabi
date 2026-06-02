@@ -14,7 +14,7 @@ export default function Courses() {
       .from('courses')
       .select('*')
       .eq('is_published', true)
-      .order('created_at', { ascending: false })
+      .order('order_index', { ascending: true })
       .then(({ data }) => {
         setCourses(data || [])
         setLoading(false)
