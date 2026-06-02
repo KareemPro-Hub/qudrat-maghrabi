@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video, Upload } from 'lucide-react'
+import SarSymbol from '../../components/SarSymbol'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
@@ -144,7 +145,7 @@ export default function AdminCourses() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 font-bold text-brand-pink">{c.price} ر.س</td>
+                  <td className="px-5 py-4 font-bold text-brand-pink">{c.price} <SarSymbol /></td>
                   <td className="px-5 py-4">
                     <span className="bg-purple-50 text-brand-purple text-xs font-bold px-2 py-1 rounded-lg">
                       {({'beginner': 'مبتدئ', 'intermediate': 'متوسط', 'advanced': 'متقدم'} as Record<string,string>)[(c as any).level] || 'مبتدئ'}
@@ -217,7 +218,7 @@ export default function AdminCourses() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-brand-navy mb-2">السعر (ر.س) *</label>
+                  <label className="block text-sm font-bold text-brand-navy mb-2">السعر *</label>
                   <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="input-field" placeholder="199" />
                 </div>
                 <div>

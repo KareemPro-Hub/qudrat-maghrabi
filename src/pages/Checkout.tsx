@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ShieldCheck, Lock } from 'lucide-react'
+import SarSymbol from '../components/SarSymbol'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Course } from '../types'
@@ -152,7 +153,7 @@ export default function Checkout() {
 
               <div className="space-y-3 text-sm text-right">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-brand-navy">{course.price} ر.س</span>
+                  <span className="font-black text-brand-navy">{course.price} <SarSymbol /></span>
                   <span className="text-gray-500">سعر الكورس</span>
                 </div>
                 <div className="flex justify-between items-center text-green-600">
@@ -160,7 +161,7 @@ export default function Checkout() {
                   <span>ضريبة القيمة المضافة</span>
                 </div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                  <span className="font-black text-xl gradient-text">{course.price} ر.س</span>
+                  <span className="font-black text-xl gradient-text">{course.price} <SarSymbol /></span>
                   <span className="font-black text-brand-navy">الإجمالي</span>
                 </div>
               </div>

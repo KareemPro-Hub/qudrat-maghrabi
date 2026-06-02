@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { BookOpen, Clock, Users, Star, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Course } from '../types'
+import SarSymbol from '../components/SarSymbol'
 
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -71,7 +72,7 @@ export default function Courses() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-2xl font-black gradient-text">{course.price} ر.س</div>
+                  <div className="text-2xl font-black gradient-text">{course.price} <SarSymbol /></div>
                   <span className="btn-primary py-2 px-6 text-sm">
                     اشترك الآن
                   </span>

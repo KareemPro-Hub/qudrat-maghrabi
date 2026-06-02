@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CreditCard, Search } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import SarSymbol from '../../components/SarSymbol'
 
 export default function AdminEnrollments() {
   const [enrollments, setEnrollments] = useState<any[]>([])
@@ -39,7 +40,7 @@ export default function AdminEnrollments() {
     <div className="p-6 md:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-brand-navy">الاشتراكات</h1>
-        <p className="text-gray-500 mt-1">إجمالي الإيرادات: <span className="gradient-text font-extrabold">{totalRevenue.toLocaleString('en')} ر.س</span></p>
+        <p className="text-gray-500 mt-1">إجمالي الإيرادات: <span className="gradient-text font-extrabold">{totalRevenue.toLocaleString('en')} <SarSymbol /></span></p>
       </div>
 
       <div className="relative mb-6 max-w-md">
@@ -71,7 +72,7 @@ export default function AdminEnrollments() {
                 <tr key={e.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-5 py-4 font-bold text-brand-navy">{e.profiles?.full_name || '—'}</td>
                   <td className="px-5 py-4 text-gray-600">{e.courses?.title || '—'}</td>
-                  <td className="px-5 py-4 font-bold text-brand-pink">{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} ر.س</td>
+                  <td className="px-5 py-4 font-bold text-brand-pink">{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} <SarSymbol /></td>
                   <td className="px-5 py-4">
                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${statusColors[e.payment_status] || 'bg-gray-100 text-gray-500'}`}>
                       {statusLabels[e.payment_status] || e.payment_status}
