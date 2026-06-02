@@ -147,8 +147,14 @@ export default function Checkout() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
               <h2 className="text-lg font-black text-brand-navy mb-5 text-right">ملخص الطلب</h2>
 
-              <div className="gradient-bg rounded-xl h-24 flex items-center justify-center mb-4">
-                <span className="text-white font-black text-center px-4 text-sm">{course.title}</span>
+              <div className="rounded-xl overflow-hidden mb-4" style={{aspectRatio: '16/9'}}>
+                {(course as any).thumbnail_url ? (
+                  <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-contain bg-black" />
+                ) : (
+                  <div className="gradient-bg w-full h-full flex items-center justify-center">
+                    <span className="text-white font-black text-center px-4 text-sm">{course.title}</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 text-sm text-right">
