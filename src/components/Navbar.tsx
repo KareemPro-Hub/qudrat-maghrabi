@@ -34,7 +34,12 @@ export default function Navbar() {
 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(link => (
+            {[
+              { to: '/courses', label: 'الكورسات' },
+              ...(user ? [{ to: '/dashboard', label: 'لوحة التحكم' }] : []),
+              { to: '/about', label: 'من نحن' },
+              { to: '/contact', label: 'تواصل معنا' },
+            ].map(link => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -50,21 +55,6 @@ export default function Navbar() {
                 />
               </Link>
             ))}
-            {user && (
-              <Link
-                to="/dashboard"
-                className={`relative px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 group
-                  ${isActive('/dashboard')
-                    ? 'text-brand-pink bg-pink-50'
-                    : 'text-gray-600 hover:text-brand-pink hover:bg-pink-50/50'
-                  }`}
-              >
-                لوحة التحكم
-                <span className={`absolute bottom-0 right-1/2 translate-x-1/2 h-0.5 rounded-full transition-all duration-300
-                  ${isActive('/dashboard') ? 'w-1/2 gradient-bg' : 'w-0 group-hover:w-1/2 gradient-bg'}`}
-                />
-              </Link>
-            )}
           </div>
 
           {/* Auth Buttons */}
