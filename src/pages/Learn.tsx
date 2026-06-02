@@ -99,43 +99,63 @@ export default function Learn() {
             </div>
           </div>
 
-          {/* Lessons List */}
+          {/* Lessons List grouped by chapter */}
           <div className="flex-1 overflow-y-auto">
-            {lessons.map((lesson, i) => {
-              const isCompleted = progress[lesson.id]
-              const isCurrent = currentLesson?.id === lesson.id
-              const isLocked = !enrolled && !lesson.is_free_preview
-              return (
-                <button
-                  key={lesson.id}
-                  onClick={() => !isLocked && setCurrentLesson(lesson)}
-                  disabled={isLocked}
-                  className={`w-full flex items-start gap-3 p-4 text-right border-b border-gray-50 transition-all duration-200
-                    ${isCurrent ? 'bg-pink-50 border-r-4 border-r-brand-pink' : 'hover:bg-gray-50'}
-                    ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <div className="flex-shrink-0 mt-0.5">
-                    {isLocked ? (
-                      <Lock size={18} className="text-gray-300" />
-                    ) : isCompleted ? (
-                      <CheckCircle size={18} className="text-green-500" />
-                    ) : (
-                      <Circle size={18} className={isCurrent ? 'text-brand-pink' : 'text-gray-300'} />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-bold truncate ${isCurrent ? 'text-brand-pink' : isCompleted ? 'text-green-600' : 'text-brand-navy'}`}>
-                      {i + 1}. {lesson.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                      <Clock size={10} />
-                      {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
-                      {lesson.is_free_preview && <span className="text-green-500 font-bold mr-1">مجاني</span>}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
+            {(() => {
+              const chapters: { name: string; lessons: any[] }[] = []
+              lessons.forEach(lesson => {
+                const ch = lesson.chapter || ''
+                const existing = chapters.find(c => c.name === ch)
+                if (existing) existing.lessons.push(lesson)
+                else chapters.push({ name: ch, lessons: [lesson] })
+              })
+              let globalIndex = 0
+              return chapters.map(chapter => (
+                <div key={chapter.name}>
+                  {chapter.name && (
+                    <div className="px-4 py-2 bg-gradient-to-l from-purple-50 to-pink-50 border-b border-purple-100 sticky top-0 z-10">
+                      <p className="text-xs font-black text-brand-navy">{chapter.name}</p>
+                    </div>
+                  )}
+                  {chapter.lessons.map(lesson => {
+                    const i = globalIndex++
+                    const isCompleted = progress[lesson.id]
+                    const isCurrent = currentLesson?.id === lesson.id
+                    const isLocked = !enrolled && !lesson.is_free_preview
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => !isLocked && setCurrentLesson(lesson)}
+                        disabled={isLocked}
+                        className={`w-full flex items-start gap-3 p-4 text-right border-b border-gray-50 transition-all duration-200
+                          ${isCurrent ? 'bg-pink-50 border-r-4 border-r-brand-pink' : 'hover:bg-gray-50'}
+                          ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {isLocked ? (
+                            <Lock size={18} className="text-gray-300" />
+                          ) : isCompleted ? (
+                            <CheckCircle size={18} className="text-green-500" />
+                          ) : (
+                            <Circle size={18} className={isCurrent ? 'text-brand-pink' : 'text-gray-300'} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-bold truncate ${isCurrent ? 'text-brand-pink' : isCompleted ? 'text-green-600' : 'text-brand-navy'}`}>
+                            {i + 1}. {lesson.title}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                            <Clock size={10} />
+                            {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
+                            {lesson.is_free_preview && <span className="text-green-500 font-bold mr-1">مجاني</span>}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              ))
+            })()}
           </div>
         </aside>
 
