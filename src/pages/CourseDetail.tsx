@@ -116,9 +116,9 @@ export default function CourseDetail() {
 
             {/* Card */}
             <div className="bg-white rounded-3xl shadow-brand-lg p-8">
-              <div className="rounded-2xl h-36 overflow-hidden mb-6 relative">
+              <div className="rounded-2xl overflow-hidden mb-6 relative" style={{aspectRatio: '16/9'}}>
                 {(course as any).thumbnail_url ? (
-                  <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
+                  <img src={(course as any).thumbnail_url} alt={course.title} className="w-full h-full object-contain bg-black" />
                 ) : (
                   <div className="gradient-bg w-full h-full flex items-center justify-center">
                     <Play size={40} className="text-white" />
