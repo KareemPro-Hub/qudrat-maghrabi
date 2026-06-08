@@ -41,9 +41,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           {sidebarOpen && (
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="قدرات المغربي" className="h-9 w-auto object-contain" />
-            </div>
+            </Link>
           )}
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
             {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
