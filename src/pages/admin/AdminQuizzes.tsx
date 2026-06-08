@@ -12,8 +12,9 @@ export default function AdminQuizzes() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [questions, setQuestions] = useState<Record<string, any[]>>({})
 
-  const emptyQuiz = { title: '', course_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
-  const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '' }
+  const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
+  const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '' }
+  const [lessons, setLessons] = useState<any[]>([])
   const [quizForm, setQuizForm] = useState(emptyQuiz)
   const [qForm, setQForm] = useState(emptyQ)
   const [saving, setSaving] = useState(false)
@@ -38,12 +39,18 @@ export default function AdminQuizzes() {
     setQuestions(prev => ({ ...prev, [quizId]: data || [] }))
   }
 
+  async function fetchLessons(courseId: string) {
+    const { data } = await supabase.from('lessons').select('id, title').eq('course_id', courseId).order('order_index')
+    setLessons(data || [])
+  }
+
   async function handleSaveQuiz(e: React.FormEvent) {
     e.preventDefault()
     if (!quizForm.title || !quizForm.course_id) return toast.error('عنوان الاختبار والكورس مطلوبان')
     setSaving(true)
     const { error } = await supabase.from('quizzes').insert({
       ...quizForm,
+      lesson_id: quizForm.lesson_id || null,
       time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null
     })
     if (error) toast.error('حدث خطأ')
@@ -186,10 +193,18 @@ export default function AdminQuizzes() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-brand-navy mb-2">الكورس *</label>
-                <select value={quizForm.course_id} onChange={e => setQuizForm({...quizForm, course_id: e.target.value})} className="input-field">
+                <select value={quizForm.course_id} onChange={e => { setQuizForm({...quizForm, course_id: e.target.value, lesson_id: ''}); fetchLessons(e.target.value) }} className="input-field">
                   <option value="">اختر الكورس</option>
                   {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">الدرس المرتبط بالاختبار</label>
+                <select value={quizForm.lesson_id} onChange={e => setQuizForm({...quizForm, lesson_id: e.target.value})} className="input-field" disabled={!quizForm.course_id}>
+                  <option value="">بدون درس (اختبار عام للكورس)</option>
+                  {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">لو اخترت درس، الطالب لازم يجتاز الاختبار عشان يكمل للدرس اللي بعده</p>
               </div>
               <div>
                 <label className="block text-sm font-bold text-brand-navy mb-2">الوصف</label>
@@ -255,8 +270,13 @@ export default function AdminQuizzes() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">شرح الإجابة (اختياري)</label>
+                <label className="block text-sm font-bold text-brand-navy mb-2">شرح الإجابة — نص (اختياري)</label>
                 <input value={qForm.explanation} onChange={e => setQForm({...qForm, explanation: e.target.value})} className="input-field" placeholder="سيظهر للطالب بعد الاختبار" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">شرح الإجابة — فيديو VdoCipher ID (اختياري)</label>
+                <input value={qForm.explanation_video_id} onChange={e => setQForm({...qForm, explanation_video_id: e.target.value})} className="input-field" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+                <p className="text-xs text-gray-400 mt-1">الطالب يضغط "شرح الإجابة" بعد الاختبار فيشوف الفيديو</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="btn-primary flex-1 py-3 text-center">{saving ? 'جاري الحفظ...' : 'إضافة السؤال ✅'}</button>

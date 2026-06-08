@@ -100,6 +100,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         </div>
         ${footer}
       </div>`
+  } else if (type === 'quiz_passed') {
+    subject = `أحسنت! اجتزت اختبار "${data?.quizTitle || ''}" 🎉 — قدرات المغربي`
+    html = `
+      <div dir="rtl" style="${baseStyle}">
+        ${header}
+        <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #22c55e;">
+          <h2 style="color:#1B1B5E;">أحسنت! لقد اجتزت الاختبار 🏆</h2>
+          <p style="color:#444;line-height:1.8;">
+            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            لقد اجتزت اختبار <strong>${data?.quizTitle || ''}</strong> بدرجة <strong>${data?.score || ''} / ${data?.totalMarks || ''}</strong>.
+            يمكنك الآن الانتقال للدرس التالي.
+          </p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="https://qudrat-maghrabi.vercel.app/learn/${data?.courseId || ''}"
+               style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
+              تابع التعلم الآن ←
+            </a>
+          </div>
+          <p style="color:#888;font-size:13px;text-align:center;">استمر في التفوق ⭐</p>
+        </div>
+        ${footer}
+      </div>`
+
   } else {
     return res.status(400).json({ error: 'Unknown email type' })
   }

@@ -1,7 +1,57 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { CheckCircle, XCircle, Trophy, RotateCcw, Home } from 'lucide-react'
+import { CheckCircle, XCircle, Trophy, RotateCcw, Home, BookOpen, Play, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+
+declare global { interface Window { VdoPlayer: any } }
+
+function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoId: string, courseId: string, sessionToken: string, onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const playerRef = useRef<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let destroyed = false
+    async function init() {
+      try {
+        const res = await fetch('/api/vdocipher-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+          body: JSON.stringify({ videoId, courseId }),
+        })
+        const { otp, playbackInfo, error: apiError } = await res.json()
+        if (apiError || !otp) throw new Error(apiError || 'تعذّر تحميل الفيديو')
+        if (destroyed) return
+        if (!window.VdoPlayer) {
+          await new Promise<void>((resolve, reject) => {
+            const s = document.createElement('script')
+            s.src = 'https://player.vdocipher.com/v2/api.js'
+            s.onload = () => resolve(); s.onerror = () => reject(); document.head.appendChild(s)
+          })
+        }
+        if (destroyed) return
+        playerRef.current = new window.VdoPlayer({ otp, playbackInfo, theme: '9ae8bbe8dd964ddc9bdb932cca1cb59a', container: containerRef.current })
+        setLoading(false)
+      } catch (e: any) { if (!destroyed) { setError(e.message); setLoading(false) } }
+    }
+    init()
+    return () => { destroyed = true; playerRef.current?.destroy?.() }
+  }, [videoId])
+
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl bg-black rounded-2xl overflow-hidden relative">
+        <button onClick={onClose} className="absolute top-3 left-3 z-10 bg-white/20 hover:bg-white/40 rounded-full p-1.5 text-white transition-colors">
+          <X size={18} />
+        </button>
+        {loading && <div className="h-64 flex items-center justify-center"><div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" /></div>}
+        {error && <div className="h-64 flex items-center justify-center text-red-400 font-bold">{error}</div>}
+        <div ref={containerRef} style={{ aspectRatio: '16/9' }} />
+      </div>
+    </div>
+  )
+}
 
 export default function QuizResult() {
   const { quizId, resultId } = useParams<{ quizId: string; resultId: string }>()
@@ -9,19 +59,47 @@ export default function QuizResult() {
   const [quiz, setQuiz] = useState<any>(null)
   const [questions, setQuestions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [sessionToken, setSessionToken] = useState('')
+  const [explanationVideo, setExplanationVideo] = useState<{ videoId: string, courseId: string } | null>(null)
+  const emailSent = useRef(false)
 
-  useEffect(() => { fetchResult() }, [])
+  useEffect(() => {
+    fetchResult()
+    supabase.auth.getSession().then(({ data: { session } }) => setSessionToken(session?.access_token || ''))
+  }, [])
 
   async function fetchResult() {
     const [{ data: r }, { data: q }, { data: qs }] = await Promise.all([
       supabase.from('quiz_results').select('*').eq('id', resultId).single(),
-      supabase.from('quizzes').select('*, courses(title)').eq('id', quizId).single(),
+      supabase.from('quizzes').select('*, courses(title, id)').eq('id', quizId).single(),
       supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index')
     ])
     setResult(r)
     setQuiz(q)
     setQuestions(qs || [])
     setLoading(false)
+
+    // إرسال إيميل عند النجاح (مرة واحدة فقط)
+    if (r?.passed && !emailSent.current) {
+      emailSent.current = true
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', user!.id).single()
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: profile?.email || user?.email,
+          type: 'quiz_passed',
+          data: {
+            studentName: profile?.full_name,
+            quizTitle: q?.title,
+            score: r.score,
+            totalMarks: r.total_marks,
+            courseId: q?.course_id,
+          }
+        })
+      })
+    }
   }
 
   if (loading) return (
@@ -36,6 +114,7 @@ export default function QuizResult() {
   const optionLabels: Record<string, string> = { a: 'أ', b: 'ب', c: 'ج', d: 'د' }
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-2xl mx-auto px-4">
 
@@ -76,13 +155,20 @@ export default function QuizResult() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 mb-8">
-          <Link to="/dashboard" className="btn-outline flex-1 py-3 flex items-center justify-center gap-2">
+        <div className="flex gap-3 mb-8 flex-wrap">
+          <Link to="/dashboard" className="btn-outline py-3 px-4 flex items-center justify-center gap-2">
             <Home size={16} /> لوحتي
           </Link>
-          <Link to={`/quiz/${quizId}`} className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
-            <RotateCcw size={16} /> إعادة الاختبار
-          </Link>
+          {quiz?.course_id && (
+            <Link to={`/learn/${quiz.course_id}`} className="btn-outline py-3 px-4 flex items-center justify-center gap-2 flex-1">
+              <BookOpen size={16} /> العودة للكورس
+            </Link>
+          )}
+          {!result.passed && (
+            <Link to={`/quiz/${quizId}`} className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
+              <RotateCcw size={16} /> إعادة الاختبار
+            </Link>
+          )}
         </div>
 
         {/* Review Answers */}
@@ -127,6 +213,13 @@ export default function QuizResult() {
                       💡 <span className="font-semibold">الشرح:</span> {q.explanation}
                     </p>
                   )}
+                  {q.explanation_video_id && (
+                    <button
+                      onClick={() => setExplanationVideo({ videoId: q.explanation_video_id, courseId: quiz.course_id })}
+                      className="mt-2 flex items-center gap-2 text-xs font-bold text-brand-purple bg-purple-50 hover:bg-purple-100 px-3 py-2 rounded-lg transition-colors w-full justify-center">
+                      <Play size={13} /> شرح الإجابة بالفيديو
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -135,5 +228,16 @@ export default function QuizResult() {
 
       </div>
     </div>
+
+    {/* مشغّل فيديو الشرح */}
+    {explanationVideo && (
+      <ExplanationVideo
+        videoId={explanationVideo.videoId}
+        courseId={explanationVideo.courseId}
+        sessionToken={sessionToken}
+        onClose={() => setExplanationVideo(null)}
+      />
+    )}
+    </>
   )
 }

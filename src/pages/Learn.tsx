@@ -1,41 +1,148 @@
-import { useEffect, useState } from 'react'
-import { useParams, Navigate, Link } from 'react-router-dom'
-import { CheckCircle, Circle, Lock, Play, Clock, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
+import { CheckCircle, Circle, Lock, Clock, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+
+declare global {
+  interface Window { VdoPlayer: any }
+}
+
+function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string, courseId: string, sessionToken: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const playerRef = useRef<any>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let destroyed = false
+
+    async function init() {
+      setLoading(true)
+      setError('')
+
+      try {
+        // طلب OTP من الـ API
+        const res = await fetch('/api/vdocipher-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`,
+          },
+          body: JSON.stringify({ videoId, courseId }),
+        })
+        const { otp, playbackInfo, error: apiError } = await res.json()
+        if (apiError || !otp) throw new Error(apiError || 'Failed to load video')
+        if (destroyed) return
+
+        // تحميل VdoCipher SDK
+        if (!window.VdoPlayer) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement('script')
+            script.src = 'https://player.vdocipher.com/v2/api.js'
+            script.onload = () => resolve()
+            script.onerror = () => reject(new Error('Failed to load VdoCipher SDK'))
+            document.head.appendChild(script)
+          })
+        }
+        if (destroyed) return
+
+        // تهيئة المشغّل
+        playerRef.current = new window.VdoPlayer({
+          otp,
+          playbackInfo,
+          theme: '9ae8bbe8dd964ddc9bdb932cca1cb59a',
+          container: containerRef.current,
+        })
+        setLoading(false)
+      } catch (e: any) {
+        if (!destroyed) { setError(e.message); setLoading(false) }
+      }
+    }
+
+    init()
+    return () => { destroyed = true; playerRef.current?.destroy?.() }
+  }, [videoId])
+
+  return (
+    <div className="w-full h-full bg-black relative">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
+        </div>
+      )}
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3">
+          <p className="text-red-400 font-bold">{error}</p>
+        </div>
+      )}
+      <div ref={containerRef} className="w-full h-full" />
+    </div>
+  )
+}
 
 export default function Learn() {
   const { courseId } = useParams<{ courseId: string }>()
   const { user, loading: authLoading } = useAuth()
+  const [sessionToken, setSessionToken] = useState<string>('')
   const [course, setCourse] = useState<any>(null)
   const [lessons, setLessons] = useState<any[]>([])
   const [progress, setProgress] = useState<Record<string, boolean>>({})
   const [currentLesson, setCurrentLesson] = useState<any>(null)
   const [enrolled, setEnrolled] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [quizByLesson, setQuizByLesson] = useState<Record<string, any>>({}) // lesson_id → quiz
+  const [passedQuizIds, setPassedQuizIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (!authLoading && user && courseId) fetchData()
+    if (!authLoading && user && courseId) {
+      fetchData()
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSessionToken(session?.access_token || '')
+      })
+    }
   }, [user, authLoading, courseId])
 
   async function fetchData() {
-    const [{ data: c }, { data: l }, { data: e }, { data: p }] = await Promise.all([
+    const [{ data: c }, { data: l }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index'),
       supabase.from('enrollments').select('id').eq('student_id', user!.id).eq('course_id', courseId!).eq('payment_status', 'paid').single(),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
+      supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
+      supabase.from('quiz_results').select('quiz_id').eq('student_id', user!.id).eq('passed', true),
     ])
     setCourse(c)
     setLessons(l || [])
     setEnrolled(!!e)
+
     const progressMap: Record<string, boolean> = {}
     p?.forEach((item: any) => { progressMap[item.lesson_id] = item.completed })
     setProgress(progressMap)
+
+    // ربط الاختبارات بالدروس
+    const quizMap: Record<string, any> = {}
+    q?.forEach((quiz: any) => { if (quiz.lesson_id) quizMap[quiz.lesson_id] = quiz })
+    setQuizByLesson(quizMap)
+
+    // الاختبارات التي اجتازها الطالب
+    const passed = new Set<string>(qr?.map((r: any) => r.quiz_id) || [])
+    setPassedQuizIds(passed)
+
     if (l && l.length > 0) {
       const firstIncomplete = l.find((lesson: any) => !progressMap[lesson.id]) || l[0]
       setCurrentLesson(firstIncomplete)
     }
     setLoading(false)
+  }
+
+  // هل الدرس محجوب بسبب اختبار الدرس السابق؟
+  function isBlockedByQuiz(index: number): boolean {
+    if (index === 0) return false
+    const prevLesson = lessons[index - 1]
+    const prevQuiz = quizByLesson[prevLesson?.id]
+    if (!prevQuiz) return false
+    return !passedQuizIds.has(prevQuiz.id)
   }
 
   async function markComplete(lessonId: string) {
@@ -121,7 +228,9 @@ export default function Learn() {
                     const i = globalIndex++
                     const isCompleted = progress[lesson.id]
                     const isCurrent = currentLesson?.id === lesson.id
-                    const isLocked = !enrolled && !lesson.is_free_preview
+                    const isNotEnrolled = !enrolled && !lesson.is_free_preview
+                    const isQuizBlocked = isBlockedByQuiz(lessons.findIndex(l => l.id === lesson.id))
+                    const isLocked = isNotEnrolled || isQuizBlocked
                     return (
                       <button
                         key={lesson.id}
@@ -133,7 +242,7 @@ export default function Learn() {
                       >
                         <div className="flex-shrink-0 mt-0.5">
                           {isLocked ? (
-                            <Lock size={18} className="text-gray-300" />
+                            <Lock size={18} className={isQuizBlocked ? 'text-orange-300' : 'text-gray-300'} />
                           ) : isCompleted ? (
                             <CheckCircle size={18} className="text-green-500" />
                           ) : (
@@ -148,6 +257,7 @@ export default function Learn() {
                             <Clock size={10} />
                             {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
                             {lesson.is_free_preview && <span className="text-green-500 font-bold mr-1">مجاني</span>}
+                            {isQuizBlocked && <span className="text-orange-400 font-bold mr-1">اجتز الاختبار أولاً</span>}
                           </p>
                         </div>
                       </button>
@@ -166,15 +276,12 @@ export default function Learn() {
               {/* Video Area */}
               <div className="bg-black flex-shrink-0" style={{ aspectRatio: '16/9', maxHeight: '60vh' }}>
                 {currentLesson.video_id ? (
-                  // VdoCipher Player — سيتم ربطه لاحقاً
-                  <div className="w-full h-full flex flex-col items-center justify-center text-white">
-                    <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                      <Play size={36} className="text-white ml-1" />
-                    </div>
-                    <p className="text-lg font-bold mb-2">{currentLesson.title}</p>
-                    <p className="text-white/60 text-sm">VdoCipher Video ID: {currentLesson.video_id}</p>
-                    <p className="text-white/40 text-xs mt-2">سيتم تفعيل مشغّل الفيديو بعد ربط VdoCipher</p>
-                  </div>
+                  <VdoCipherPlayer
+                    key={currentLesson.id}
+                    videoId={currentLesson.video_id}
+                    courseId={courseId!}
+                    sessionToken={sessionToken}
+                  />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-white">
                     <BookOpen size={48} className="text-white/30 mb-4" />
@@ -207,23 +314,51 @@ export default function Learn() {
                 </div>
 
                 {/* Navigation */}
-                <div className="flex gap-3 mt-6 border-t border-gray-100 pt-6">
-                  <button
-                    onClick={() => currentIndex > 0 && setCurrentLesson(lessons[currentIndex - 1])}
-                    disabled={currentIndex === 0}
-                    className="btn-outline flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
-                    <ChevronRight size={16} /> الدرس السابق
-                  </button>
-                  <button
-                    onClick={() => {
-                      markComplete(currentLesson.id)
-                      if (currentIndex < lessons.length - 1) setCurrentLesson(lessons[currentIndex + 1])
-                    }}
-                    disabled={currentIndex === lessons.length - 1}
-                    className="btn-primary flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
-                    الدرس التالي <ChevronLeft size={16} />
-                  </button>
-                </div>
+                {(() => {
+                  const currentQuiz = quizByLesson[currentLesson.id]
+                  const quizPassed = currentQuiz ? passedQuizIds.has(currentQuiz.id) : true
+                  const isLastLesson = currentIndex === lessons.length - 1
+                  return (
+                    <div className="mt-6 border-t border-gray-100 pt-6 space-y-3">
+                      {/* زر الاختبار — يظهر لو في اختبار للدرس الحالي */}
+                      {currentQuiz && (
+                        <div className={`rounded-xl p-4 flex items-center justify-between gap-4 ${quizPassed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+                          <div>
+                            <p className={`font-black text-sm ${quizPassed ? 'text-green-700' : 'text-orange-700'}`}>
+                              {quizPassed ? '✅ اجتزت اختبار هذا الدرس' : '📝 يجب اجتياز الاختبار للمتابعة'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">{currentQuiz.title}</p>
+                          </div>
+                          {!quizPassed && (
+                            <Link
+                              to={`/quiz/${currentQuiz.id}`}
+                              className="btn-primary text-sm py-2 px-4 flex-shrink-0 flex items-center gap-1">
+                              ابدأ الاختبار <ChevronLeft size={14} />
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => currentIndex > 0 && setCurrentLesson(lessons[currentIndex - 1])}
+                          disabled={currentIndex === 0}
+                          className="btn-outline flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
+                          <ChevronRight size={16} /> الدرس السابق
+                        </button>
+                        <button
+                          onClick={() => {
+                            markComplete(currentLesson.id)
+                            if (!isLastLesson) setCurrentLesson(lessons[currentIndex + 1])
+                          }}
+                          disabled={isLastLesson || !quizPassed}
+                          title={!quizPassed ? 'اجتز اختبار هذا الدرس أولاً' : ''}
+                          className="btn-primary flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
+                          الدرس التالي <ChevronLeft size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             </>
           ) : (
