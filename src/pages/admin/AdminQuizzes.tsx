@@ -13,7 +13,7 @@ export default function AdminQuizzes() {
   const [questions, setQuestions] = useState<Record<string, any[]>>({})
 
   const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
-  const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '' }
+  const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
   const [lessons, setLessons] = useState<any[]>([])
   const [quizForm, setQuizForm] = useState(emptyQuiz)
   const [qForm, setQForm] = useState(emptyQ)
@@ -245,6 +245,23 @@ export default function AdminQuizzes() {
               <div>
                 <label className="block text-sm font-bold text-brand-navy mb-2">نص السؤال *</label>
                 <textarea value={qForm.question_text} onChange={e => setQForm({...qForm, question_text: e.target.value})} className="input-field" rows={3} placeholder="اكتب السؤال هنا..." />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">صورة السؤال (رابط URL)</label>
+                <input value={qForm.question_image_url} onChange={e => setQForm({...qForm, question_image_url: e.target.value})} className="input-field" placeholder="https://..." dir="ltr" />
+                {qForm.question_image_url && (
+                  <img src={qForm.question_image_url} alt="preview" className="mt-2 rounded-xl max-h-40 object-contain border border-gray-200" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-bold text-brand-navy mb-2">رابط إضافي (URL)</label>
+                  <input value={qForm.question_link_url} onChange={e => setQForm({...qForm, question_link_url: e.target.value})} className="input-field" placeholder="https://..." dir="ltr" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-brand-navy mb-2">نص الرابط</label>
+                  <input value={qForm.question_link_text} onChange={e => setQForm({...qForm, question_link_text: e.target.value})} className="input-field" placeholder="مثال: اقرأ النص" />
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-3">
                 {(['a','b','c','d'] as const).map(opt => (

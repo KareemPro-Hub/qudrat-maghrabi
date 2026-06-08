@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
-import { Clock, ChevronRight, ChevronLeft, CheckCircle, Send } from 'lucide-react'
+import { Clock, ChevronRight, ChevronLeft, CheckCircle, Send, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -132,10 +132,26 @@ export default function Quiz() {
 
         {/* Question */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <p className="text-lg font-black text-brand-navy mb-6 leading-relaxed text-right">
+          <p className="text-lg font-black text-brand-navy mb-4 leading-relaxed text-right">
             <span className="text-brand-pink ml-2">{current + 1}.</span>
             {q.question_text}
           </p>
+
+          {/* صورة السؤال */}
+          {q.question_image_url && (
+            <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+              <img src={q.question_image_url} alt="صورة السؤال" className="w-full max-h-64 object-contain" />
+            </div>
+          )}
+
+          {/* رابط إضافي */}
+          {q.question_link_url && (
+            <a href={q.question_link_url} target="_blank" rel="noopener noreferrer"
+              className="mb-4 flex items-center gap-2 text-sm font-bold text-brand-purple bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-xl transition-colors w-fit">
+              <ExternalLink size={14} />
+              {q.question_link_text || q.question_link_url}
+            </a>
+          )}
 
           <div className="space-y-3">
             {(['a', 'b', 'c', 'd'] as const).map(opt => {
