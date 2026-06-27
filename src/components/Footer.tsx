@@ -57,13 +57,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-4 text-center text-xs text-gray-600">
-          نُسِجَت ملامح هذا الإبداع البصري والرقمي بأيدي{' '}
+        <div className="mt-4 text-center text-sm text-gray-300">
+          نُسِجَت ملامح هذا الإبداع البصري والرقمي بروح وإبداع{' '}
           <a
             href="https://kareempro.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="gradient-text font-bold hover:opacity-80 transition-opacity"
+            className="gradient-text font-extrabold hover:opacity-80 transition-opacity"
           >
             Kareem Pro
           </a>
