@@ -66,51 +66,75 @@ export default function Home() {
           <div className="absolute top-10 right-10 w-64 h-64 rounded-full" style={{background: 'radial-gradient(circle, #FF8008, transparent)'}} />
           <div className="absolute bottom-10 left-10 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle, #8B35C4, transparent)'}} />
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 py-24 md:py-32 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-8 text-sm font-bold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse flex-shrink-0" />
-            طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
-          </div>
+          {/* Text column */}
+          <div className="text-center lg:text-right order-2 lg:order-1">
 
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <div className="relative inline-flex items-center justify-center">
-              {/* Glow layers */}
-              <div className="absolute w-64 h-64 rounded-full opacity-30" style={{background: 'radial-gradient(circle, #E91E8C 0%, #8B35C4 40%, transparent 70%)', filter: 'blur(32px)'}} />
-              <div className="absolute w-48 h-48 rounded-full opacity-20" style={{background: 'radial-gradient(circle, #FF8008 0%, transparent 70%)', filter: 'blur(20px)'}} />
-              {/* Logo */}
-              <img src="/logo.png" alt="قدرات المغربي" className="relative h-20 md:h-28 w-auto object-contain" style={{filter: 'drop-shadow(0 0 24px rgba(233,30,140,0.5))'}} />
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-8 text-sm font-bold tracking-wide">
+              <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse flex-shrink-0" />
+              طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
+            </div>
+
+            {/* Headline */}
+            <h1 className="font-extrabold mb-6" style={{fontSize: 'clamp(2.2rem, 6vw, 4.2rem)', lineHeight: '1.4'}}>
+              تبي الكامل بالكمي ؟
+              <br />
+              <span className="gradient-text">ابدأ رحلتك من هنا</span>
+            </h1>
+
+            {/* Sub-headline */}
+            <p className="text-lg md:text-xl text-gray-200 mb-5 font-bold tracking-wide">
+              تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
+            </p>
+
+            {/* Description */}
+            <p className="text-base md:text-lg text-gray-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-loose">
+              انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</span>
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
+              <Link to="/register" className="btn-primary text-lg py-4 px-12 w-full sm:w-auto">
+                ابدأ رحلتك الآن — مجانًا
+              </Link>
+              <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 border border-white/20 w-full sm:w-auto">
+                <Play size={18} fill="white" />
+                استعرض الكورسات
+              </Link>
             </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="font-extrabold mb-8 text-center" style={{fontSize: 'clamp(2.5rem, 8vw, 5.5rem)', lineHeight: '1.5'}}>
-            تبي الكامل بالكمي ؟
-            <br />
-            <span className="gradient-text">ابدأ رحلتك من هنا</span>
-          </h1>
+          {/* Image column */}
+          <div className="relative flex justify-center items-center order-1 lg:order-2 py-6">
 
-          {/* Sub-headline */}
-          <p className="text-lg md:text-2xl text-gray-200 mb-6 font-bold tracking-wide">
-            تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
-          </p>
+            {/* Glow behind student */}
+            <div className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full opacity-40" style={{background: 'radial-gradient(circle, #E91E8C 0%, #8B35C4 45%, transparent 70%)', filter: 'blur(40px)'}} />
 
-          {/* Description */}
-          <p className="text-base md:text-lg text-gray-400 mb-12 max-w-2xl mx-auto leading-loose">
-            انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</span>
-          </p>
+            {/* Dashed orbit rings */}
+            <svg className="absolute w-[105%] h-[105%] animate-spin-slow pointer-events-none" viewBox="0 0 400 400" style={{animationDuration: '40s'}}>
+              <circle cx="200" cy="200" r="190" fill="none" stroke="#FF8008" strokeWidth="1.5" strokeDasharray="6 10" opacity="0.5" />
+            </svg>
+            <svg className="absolute w-[88%] h-[88%] pointer-events-none" viewBox="0 0 400 400" style={{animation: 'spin 30s linear infinite reverse'}}>
+              <circle cx="200" cy="200" r="190" fill="none" stroke="#E91E8C" strokeWidth="1.5" strokeDasharray="2 8" opacity="0.5" />
+            </svg>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/register" className="btn-primary text-lg py-4 px-12 w-full sm:w-auto">
-              ابدأ رحلتك الآن — مجانًا
-            </Link>
-            <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 border border-white/20 w-full sm:w-auto">
-              <Play size={18} fill="white" />
-              استعرض الكورسات
-            </Link>
+            {/* Floating badges */}
+            <div className="absolute top-2 left-0 md:left-4 bg-white text-brand-navy font-black text-sm md:text-base px-4 py-2 rounded-2xl shadow-brand-lg flex items-center gap-2 z-20 animate-float">
+              <span className="text-xl">🎯</span> فوق الـ 95٪
+            </div>
+            <div className="absolute bottom-8 right-0 md:right-2 bg-white text-brand-navy font-black text-sm md:text-base px-4 py-2 rounded-2xl shadow-brand-lg flex items-center gap-2 z-20 animate-float" style={{animationDelay: '1.2s'}}>
+              <span className="text-xl">📈</span> +5000 طالب
+            </div>
+
+            {/* Student image */}
+            <img
+              src="/hero-student.png"
+              alt="طالب يدرس في منصة قدرات المغربي"
+              className="relative z-10 w-64 sm:w-80 md:w-[26rem] h-auto object-contain"
+              style={{filter: 'drop-shadow(0 25px 35px rgba(0,0,0,0.45))'}}
+            />
           </div>
         </div>
       </section>

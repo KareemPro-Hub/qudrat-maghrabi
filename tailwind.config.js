@@ -26,6 +26,16 @@ export default {
         'brand': '0 4px 24px rgba(233, 30, 140, 0.25)',
         'brand-lg': '0 8px 40px rgba(139, 53, 196, 0.35)',
       },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+      },
+      animation: {
+        float: 'float 3.5s ease-in-out infinite',
+        'spin-slow': 'spin 40s linear infinite',
+      },
     },
   },
   plugins: [],
