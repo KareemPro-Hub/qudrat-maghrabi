@@ -56,6 +56,18 @@ export default function Footer() {
             <Link to="/refund" className="hover:text-brand-pink transition-colors">سياسة الاسترداد</Link>
           </div>
         </div>
+
+        <div className="mt-4 text-center text-xs text-gray-600">
+          نُسِجَت ملامح هذا الإبداع البصري والرقمي بأيدي{' '}
+          <a
+            href="https://kareempro.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="gradient-text font-bold hover:opacity-80 transition-opacity"
+          >
+            Kareem Pro
+          </a>
+        </div>
       </div>
     </footer>
   )
