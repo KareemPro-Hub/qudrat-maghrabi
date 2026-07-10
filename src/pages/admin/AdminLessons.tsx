@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, GripVertical } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import {
+  glassCard, TopSheen, primaryBtnStyle, outlineBtnStyle, inputStyle, labelStyle,
+  iconBtnStyle, GlassBadge, GlassSpinner, GlassEmptyState, GlassModal,
+} from '../../components/admin/glassKit'
 
 const emptyForm = {
   title: '', chapter: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
@@ -92,72 +96,56 @@ export default function AdminLessons() {
   }
 
   return (
-    <div className="p-6 md:p-8">
+    <div>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <button onClick={() => navigate('/admin/courses')} className="text-gray-400 hover:text-brand-navy transition-colors">
-          <ArrowRight size={20} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+        <button onClick={() => navigate('/admin/courses')} className="qm-icon-btn" style={iconBtnStyle()}>
+          <ArrowRight size={16} />
         </button>
-        <div className="flex-1">
-          <p className="text-gray-400 text-sm">الكورسات ← </p>
-          <h1 className="text-2xl font-extrabold text-brand-navy">{course?.title || 'دروس الكورس'}</h1>
+        <div style={{ flex: 1 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>الكورسات ← </p>
+          <h1 style={{ fontSize: 21, fontWeight: 700, color: '#fff', margin: '2px 0 0', textShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>{course?.title || 'دروس الكورس'}</h1>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> إضافة درس
+        <button onClick={openAdd} style={primaryBtnStyle}>
+          <Plus size={17} /> إضافة درس
         </button>
       </div>
-      <p className="text-gray-400 text-sm mb-8 mr-8">{lessons.length} درس</p>
+      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12.5, margin: '0 0 26px 0', paddingRight: 46 }}>{lessons.length} درس</p>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
-        </div>
+        <GlassSpinner />
       ) : lessons.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
-          <Video size={48} className="mx-auto text-gray-200 mb-3" />
-          <p className="text-gray-400 font-bold mb-4">لا توجد دروس بعد</p>
-          <button onClick={openAdd} className="btn-primary">أضف أول درس</button>
-        </div>
+        <GlassEmptyState
+          icon={<Video size={40} />}
+          text="لا توجد دروس بعد"
+          action={<button onClick={openAdd} style={{ ...primaryBtnStyle, marginTop: 4 }}>أضف أول درس</button>}
+        />
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {lessons.map((lesson, i) => (
-            <div key={lesson.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:border-brand-pink/30 transition-colors">
-              <div className="text-gray-300 flex-shrink-0"><GripVertical size={20} /></div>
-              <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white font-black text-sm flex-shrink-0">
+            <div key={lesson.id} className="qm-glass" style={{ ...glassCard, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <TopSheen />
+              <div style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}><GripVertical size={18} /></div>
+              <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#F97316,#EC4899 50%,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                 {i + 1}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-brand-navy">{lesson.title}</h3>
-                  {lesson.is_free_preview && (
-                    <span className="text-xs bg-green-100 text-green-600 font-bold px-2 py-0.5 rounded-full">مجاني</span>
-                  )}
-                  {lesson.video_id && (
-                    <span className="text-xs bg-purple-100 text-brand-purple font-bold px-2 py-0.5 rounded-full">
-                      <Video size={10} className="inline ml-1" />VdoCipher
-                    </span>
-                  )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <h3 style={{ fontWeight: 700, color: '#fff', fontSize: 13.5, margin: 0 }}>{lesson.title}</h3>
+                  {lesson.is_free_preview && <GlassBadge variant="success">مجاني</GlassBadge>}
+                  {lesson.video_id && <GlassBadge variant="accent"><Video size={10} style={{ display: 'inline', marginLeft: 4 }} />VdoCipher</GlassBadge>}
                 </div>
-                <p className="text-gray-400 text-xs mt-0.5">
+                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5, margin: '4px 0 0' }}>
                   {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
-                  {lesson.video_id && <span className="mr-2">· ID: {lesson.video_id.substring(0, 12)}...</span>}
+                  {lesson.video_id && <span style={{ marginRight: 8 }}>· ID: {lesson.video_id.substring(0, 12)}...</span>}
                 </p>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => toggleFreePreview(lesson)}
-                  className={`p-2 rounded-lg transition-colors text-sm font-bold ${lesson.is_free_preview ? 'text-green-500 bg-green-50 hover:bg-green-100' : 'text-gray-400 hover:text-green-500 hover:bg-green-50'}`}
-                  title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانياً'}>
-                  {lesson.is_free_preview ? <Eye size={16} /> : <EyeOff size={16} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <button onClick={() => toggleFreePreview(lesson)} className="qm-icon-btn" style={iconBtnStyle()} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانياً'}>
+                  {lesson.is_free_preview ? <Eye size={15} /> : <EyeOff size={15} />}
                 </button>
-                <button onClick={() => openEdit(lesson)}
-                  className="p-2 text-gray-400 hover:text-brand-purple hover:bg-purple-50 rounded-lg transition-colors">
-                  <Edit size={16} />
-                </button>
-                <button onClick={() => deleteLesson(lesson.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                  <Trash2 size={16} />
-                </button>
+                <button onClick={() => openEdit(lesson)} className="qm-icon-btn" style={iconBtnStyle()}><Edit size={15} /></button>
+                <button onClick={() => deleteLesson(lesson.id)} className="qm-icon-btn" style={iconBtnStyle(true)}><Trash2 size={15} /></button>
               </div>
             </div>
           ))}
@@ -166,81 +154,74 @@ export default function AdminLessons() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-brand-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-extrabold text-brand-navy">{editing ? 'تعديل الدرس' : 'إضافة درس جديد'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 text-xl font-bold">×</button>
+        <GlassModal title={editing ? 'تعديل الدرس' : 'إضافة درس جديد'} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>عنوان الدرس *</label>
+              <input className="qm-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+                style={inputStyle} placeholder="مثال: مقدمة في النسب والتناسب" />
             </div>
-            <form onSubmit={handleSave} className="p-5 space-y-4">
+            <div>
+              <label style={labelStyle}>الباب</label>
+              <input className="qm-input" value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })}
+                style={inputStyle} placeholder="مثال: الباب الأول — النسب والتناسب" />
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائياً</p>
+            </div>
+            <div>
+              <label style={labelStyle}>الوصف</label>
+              <textarea className="qm-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                style={{ ...inputStyle, resize: 'vertical' }} rows={2} placeholder="وصف مختصر للدرس..." />
+            </div>
+            <div>
+              <label style={labelStyle}>رقم الفيديو (VdoCipher Video ID)</label>
+              <input className="qm-input" value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })}
+                style={inputStyle} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>من لوحة VdoCipher → Videos → نسخ الـ ID</p>
+            </div>
+            <div>
+              <label style={labelStyle}>رابط صورة الغلاف (Thumbnail URL)</label>
+              <input className="qm-input" value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
+                style={inputStyle} placeholder="https://..." dir="ltr" />
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>ارفع الصورة على Google Drive أو Imgur وضع الرابط هنا</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">عنوان الدرس *</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                  className="input-field" placeholder="مثال: مقدمة في النسب والتناسب" />
+                <label style={labelStyle}>المدة (دقيقة)</label>
+                <input type="number" className="qm-input" value={form.duration_minutes}
+                  onChange={e => setForm({ ...form, duration_minutes: e.target.value })}
+                  style={inputStyle} placeholder="15" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">الباب</label>
-                <input value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })}
-                  className="input-field" placeholder="مثال: الباب الأول — النسب والتناسب" />
-                <p className="text-xs text-gray-400 mt-1">الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائياً</p>
+                <label style={labelStyle}>الترتيب</label>
+                <input type="number" className="qm-input" value={form.order_index}
+                  onChange={e => setForm({ ...form, order_index: Number(e.target.value) })}
+                  style={inputStyle} min={1} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)' }}>
+              <div
+                onClick={() => setForm({ ...form, is_free_preview: !form.is_free_preview })}
+                className="qm-check"
+                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${form.is_free_preview ? '#4ADE80' : 'rgba(255,255,255,0.3)'}`, background: form.is_free_preview ? '#22C55E' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                {form.is_free_preview && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">الوصف</label>
-                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  className="input-field" rows={2} placeholder="وصف مختصر للدرس..." />
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0 }}>درس مجاني (Preview)</p>
+                <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>يظهر للطلاب قبل الاشتراك كعينة مجانية</p>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">
-                  رقم الفيديو (VdoCipher Video ID)
-                </label>
-                <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })}
-                  className="input-field" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
-                <p className="text-xs text-gray-400 mt-1">من لوحة VdoCipher → Videos → نسخ الـ ID</p>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">رابط صورة الغلاف (Thumbnail URL)</label>
-                <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
-                  className="input-field" placeholder="https://..." dir="ltr" />
-                <p className="text-xs text-gray-400 mt-1">ارفع الصورة على Google Drive أو Imgur وضع الرابط هنا</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-brand-navy mb-2">المدة (دقيقة)</label>
-                  <input type="number" value={form.duration_minutes}
-                    onChange={e => setForm({ ...form, duration_minutes: e.target.value })}
-                    className="input-field" placeholder="15" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-brand-navy mb-2">الترتيب</label>
-                  <input type="number" value={form.order_index}
-                    onChange={e => setForm({ ...form, order_index: Number(e.target.value) })}
-                    className="input-field" min={1} />
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
-                <div
-                  onClick={() => setForm({ ...form, is_free_preview: !form.is_free_preview })}
-                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-all ${form.is_free_preview ? 'border-green-500 bg-green-500' : 'border-gray-300'}`}>
-                  {form.is_free_preview && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-brand-navy">درس مجاني (Preview)</p>
-                  <p className="text-xs text-gray-500">يظهر للطلاب قبل الاشتراك كعينة مجانية</p>
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="btn-primary flex-1 py-3 text-center">
-                  {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الدرس'}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-outline flex-1 py-3">إلغاء</button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <button type="submit" disabled={saving} style={{ ...primaryBtnStyle, flex: 1, justifyContent: 'center' }}>
+                {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الدرس'}
+              </button>
+              <button type="button" onClick={() => setShowModal(false)} className="qm-btn-outline" style={{ ...outlineBtnStyle, flex: 1 }}>إلغاء</button>
+            </div>
+          </form>
+        </GlassModal>
       )}
     </div>
   )

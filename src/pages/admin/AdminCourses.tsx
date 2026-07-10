@@ -5,11 +5,17 @@ import SarSymbol from '../../components/SarSymbol'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
+import {
+  glassCard, TopSheen, primaryBtnStyle, outlineBtnStyle, inputStyle, labelStyle,
+  iconBtnStyle, GlassBadge, GlassPageHeader, GlassSpinner, GlassEmptyState, GlassModal,
+  tableWrapStyle, thStyle, tdStyle, trStyle,
+} from '../../components/admin/glassKit'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 
 const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '', thumbnail_url: '' }
+const levelLabels: Record<string, string> = { beginner: 'مبتدئ', intermediate: 'متوسط', advanced: 'متقدم' }
 
 export default function AdminCourses() {
   const navigate = useNavigate()
@@ -39,7 +45,6 @@ export default function AdminCourses() {
     reordered.splice(dropIndex, 0, moved)
     setCourses(reordered)
     dragIndex.current = null
-    // Save new order to DB
     await Promise.all(reordered.map((c, i) =>
       supabase.from('courses').update({ order_index: i }).eq('id', c.id)
     ))
@@ -115,35 +120,35 @@ export default function AdminCourses() {
   }
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-brand-navy">الكورسات</h1>
-          <p className="text-gray-500 mt-1">إدارة كورسات المنصة</p>
-        </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> إضافة كورس
-        </button>
-      </div>
+    <div>
+      <GlassPageHeader
+        title="الكورسات"
+        subtitle="إدارة كورسات المنصة"
+        action={
+          <button onClick={openAdd} style={primaryBtnStyle}>
+            <Plus size={17} /> إضافة كورس
+          </button>
+        }
+      />
 
       {loading ? (
-        <div className="flex justify-center py-20"><div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" /></div>
+        <GlassSpinner />
       ) : courses.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
-          <BookOpen size={48} className="mx-auto text-gray-200 mb-3" />
-          <p className="text-gray-400 font-bold mb-4">لا يوجد كورسات بعد</p>
-          <button onClick={openAdd} className="btn-primary">أضف أول كورس</button>
-        </div>
+        <GlassEmptyState
+          icon={<BookOpen size={40} />}
+          text="لا يوجد كورسات بعد"
+          action={<button onClick={openAdd} style={{ ...primaryBtnStyle, marginTop: 4 }}>أضف أول كورس</button>}
+        />
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+        <div className="qm-glass" style={tableWrapStyle}>
+          <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+            <thead>
               <tr>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الكورس</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">السعر</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">المستوى</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الحالة</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الإجراءات</th>
+                <th style={thStyle}>الكورس</th>
+                <th style={thStyle}>السعر</th>
+                <th style={thStyle}>المستوى</th>
+                <th style={thStyle}>الحالة</th>
+                <th style={thStyle}>الإجراءات</th>
               </tr>
             </thead>
             <tbody>
@@ -154,39 +159,38 @@ export default function AdminCourses() {
                   onDragStart={() => handleDragStart(i)}
                   onDragOver={e => e.preventDefault()}
                   onDrop={() => handleDrop(i)}
-                  className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors cursor-default"
+                  className="qm-row"
+                  style={trStyle}
                 >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <GripVertical size={18} className="text-gray-300 cursor-grab flex-shrink-0" />
+                  <td style={tdStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <GripVertical size={16} style={{ color: 'rgba(255,255,255,0.3)', cursor: 'grab', flexShrink: 0 }} />
                       {(c as any).thumbnail_url ? (
-                        <img src={(c as any).thumbnail_url} className="w-12 h-8 rounded-lg object-cover flex-shrink-0" />
+                        <img src={(c as any).thumbnail_url} style={{ width: 48, height: 32, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                       ) : (
-                        <div className="w-12 h-8 rounded-lg gradient-bg flex-shrink-0" />
+                        <div style={{ width: 48, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#EC4899 50%,#7C3AED)', flexShrink: 0 }} />
                       )}
                       <div>
-                        <div className="font-bold text-brand-navy">{c.title}</div>
-                        <div className="text-gray-400 text-xs mt-0.5 line-clamp-1">{c.description}</div>
+                        <div style={{ fontWeight: 700, color: '#fff' }}>{c.title}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5, marginTop: 2, maxWidth: 320, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.description}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 font-bold text-brand-pink">{c.price} <SarSymbol /></td>
-                  <td className="px-5 py-4">
-                    <span className="bg-purple-50 text-brand-purple text-xs font-bold px-2 py-1 rounded-lg">
-                      {({'beginner': 'مبتدئ', 'intermediate': 'متوسط', 'advanced': 'متقدم'} as Record<string,string>)[(c as any).level] || 'مبتدئ'}
-                    </span>
+                  <td style={{ ...tdStyle, fontWeight: 700, color: '#F9A8D4' }}>{c.price} <SarSymbol /></td>
+                  <td style={tdStyle}>
+                    <GlassBadge variant="accent">{levelLabels[(c as any).level] || 'مبتدئ'}</GlassBadge>
                   </td>
-                  <td className="px-5 py-4">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${c.is_published ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                      {c.is_published ? '✅ منشور' : '⏸ مخفي'}
-                    </span>
+                  <td style={tdStyle}>
+                    <GlassBadge variant={c.is_published ? 'success' : 'neutral'}>{c.is_published ? '✅ منشور' : '⏸ مخفي'}</GlassBadge>
                   </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => navigate(`/admin/lessons/${c.id}`)} className="flex items-center gap-1 px-3 py-2 text-brand-purple bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-xs font-bold"><Video size={14} /> الدروس</button>
-                      <button onClick={() => openEdit(c)} className="p-2 text-gray-400 hover:text-brand-purple hover:bg-purple-50 rounded-lg transition-colors"><Edit size={16} /></button>
-                      <button onClick={() => togglePublish(c)} className="p-2 text-gray-400 hover:text-brand-pink hover:bg-pink-50 rounded-lg transition-colors">{c.is_published ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-                      <button onClick={() => deleteCourse(c.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                  <td style={tdStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <button onClick={() => navigate(`/admin/lessons/${c.id}`)} className="qm-btn-outline" style={{ ...outlineBtnStyle, padding: '7px 12px', fontSize: 11.5 }}>
+                        <Video size={13} /> الدروس
+                      </button>
+                      <button onClick={() => openEdit(c)} className="qm-icon-btn" style={iconBtnStyle()}><Edit size={15} /></button>
+                      <button onClick={() => togglePublish(c)} className="qm-icon-btn" style={iconBtnStyle()}>{c.is_published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                      <button onClick={() => deleteCourse(c.id)} className="qm-icon-btn" style={iconBtnStyle(true)}><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>
@@ -198,72 +202,64 @@ export default function AdminCourses() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-brand-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-extrabold text-brand-navy">{editing ? 'تعديل الكورس' : 'إضافة كورس جديد'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">×</button>
-            </div>
-            <form onSubmit={handleSave} className="p-5 space-y-4">
+        <GlassModal title={editing ? 'تعديل الكورس' : 'إضافة كورس جديد'} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {/* Thumbnail Upload */}
-              <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">صورة الغلاف</label>
-                <div className="relative">
-                  {form.thumbnail_url ? (
-                    <div className="relative rounded-xl overflow-hidden h-36 mb-2">
-                      <img src={form.thumbnail_url} className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setForm(f => ({ ...f, thumbnail_url: '' }))}
-                        className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg">حذف</button>
-                    </div>
+            {/* Thumbnail Upload */}
+            <div>
+              <label style={labelStyle}>صورة الغلاف</label>
+              {form.thumbnail_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 140, marginBottom: 8 }}>
+                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button type="button" onClick={() => setForm(f => ({ ...f, thumbnail_url: '' }))}
+                    style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(239,68,68,0.85)', color: '#fff', fontSize: 11, padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>حذف</button>
+                </div>
+              ) : (
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 140, border: '1.5px dashed rgba(255,255,255,0.25)', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.04)' }}>
+                  {uploading ? (
+                    <div className="animate-spin" style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.15)', borderTopColor: 'rgba(255,255,255,0.7)' }} />
                   ) : (
-                    <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-brand-pink transition-colors">
-                      {uploading ? (
-                        <div className="w-8 h-8 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
-                      ) : (
-                        <>
-                          <Upload size={24} className="text-gray-300 mb-2" />
-                          <span className="text-sm text-gray-400 font-bold">اضغط لرفع صورة الغلاف</span>
-                          <span className="text-xs text-gray-300 mt-1">PNG, JPG — حتى 5MB</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
-                    </label>
+                    <>
+                      <Upload size={22} style={{ color: 'rgba(255,255,255,0.35)', marginBottom: 8 }} />
+                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>اضغط لرفع صورة الغلاف</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>PNG, JPG — حتى 5MB</span>
+                    </>
                   )}
-                </div>
-              </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                </label>
+              )}
+            </div>
 
+            <div>
+              <label style={labelStyle}>عنوان الكورس *</label>
+              <input className="qm-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} style={inputStyle} placeholder="مثال: القدرات الكمي — المستوى الأساسي" />
+            </div>
+            <div>
+              <label style={labelStyle}>الوصف</label>
+              <textarea className="qm-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ ...inputStyle, resize: 'vertical' }} rows={3} placeholder="وصف مختصر للكورس..." />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">عنوان الكورس *</label>
-                <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field" placeholder="مثال: القدرات الكمي — المستوى الأساسي" />
+                <label style={labelStyle}>السعر *</label>
+                <input type="number" className="qm-input" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} style={inputStyle} placeholder="199" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-brand-navy mb-2">الوصف</label>
-                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field" rows={3} placeholder="وصف مختصر للكورس..." />
+                <label style={labelStyle}>المستوى</label>
+                <select className="qm-select" value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} style={inputStyle}>
+                  <option value="beginner">مبتدئ</option>
+                  <option value="intermediate">متوسط</option>
+                  <option value="advanced">متقدم</option>
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-brand-navy mb-2">السعر *</label>
-                  <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="input-field" placeholder="199" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-brand-navy mb-2">المستوى</label>
-                  <select value={form.level} onChange={e => setForm({...form, level: e.target.value})} className="input-field">
-                    <option value="beginner">مبتدئ</option>
-                    <option value="intermediate">متوسط</option>
-                    <option value="advanced">متقدم</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving || uploading} className="btn-primary flex-1 text-center py-3">
-                  {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-outline flex-1 py-3">إلغاء</button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <button type="submit" disabled={saving || uploading} style={{ ...primaryBtnStyle, flex: 1, justifyContent: 'center' }}>
+                {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}
+              </button>
+              <button type="button" onClick={() => setShowModal(false)} className="qm-btn-outline" style={{ ...outlineBtnStyle, flex: 1 }}>إلغاء</button>
+            </div>
+          </form>
+        </GlassModal>
       )}
     </div>
   )

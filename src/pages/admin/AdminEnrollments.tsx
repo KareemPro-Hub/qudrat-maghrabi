@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { CreditCard, Search } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import SarSymbol from '../../components/SarSymbol'
+import {
+  GlassPageHeader, GlassSpinner, GlassEmptyState, GlassSearchInput, GlassBadge,
+  tableWrapStyle, thStyle, tdStyle, trStyle,
+} from '../../components/admin/glassKit'
 
 export default function AdminEnrollments() {
   const [enrollments, setEnrollments] = useState<any[]>([])
@@ -24,11 +28,8 @@ export default function AdminEnrollments() {
     ))
   }, [search, enrollments])
 
-  const statusColors: Record<string, string> = {
-    paid: 'bg-green-50 text-green-600',
-    pending: 'bg-yellow-50 text-yellow-600',
-    failed: 'bg-red-50 text-red-500',
-    refunded: 'bg-gray-100 text-gray-500',
+  const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+    paid: 'success', pending: 'warning', failed: 'danger', refunded: 'neutral',
   }
   const statusLabels: Record<string, string> = {
     paid: '✅ مدفوع', pending: '⏳ معلق', failed: '❌ فشل', refunded: '↩️ مسترجع'
@@ -37,48 +38,40 @@ export default function AdminEnrollments() {
   const totalRevenue = enrollments.filter(e => e.payment_status === 'paid').reduce((s, e) => s + (e.amount_paid || e.courses?.price || 0), 0)
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-brand-navy">الاشتراكات</h1>
-        <p className="text-gray-500 mt-1">إجمالي الإيرادات: <span className="gradient-text font-extrabold">{totalRevenue.toLocaleString('en')} <SarSymbol /></span></p>
-      </div>
+    <div>
+      <GlassPageHeader
+        title="الاشتراكات"
+        subtitle={<>إجمالي الإيرادات: <span style={{ color: '#F9A8D4', fontWeight: 800 }}>{totalRevenue.toLocaleString('en')} <SarSymbol /></span></>}
+      />
 
-      <div className="relative mb-6 max-w-md">
-        <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input value={search} onChange={e => setSearch(e.target.value)} className="input-field pr-10" placeholder="ابحث باسم الطالب أو الكورس..." />
-      </div>
+      <GlassSearchInput value={search} onChange={setSearch} placeholder="ابحث باسم الطالب أو الكورس..." icon={<Search size={16} />} />
 
       {loading ? (
-        <div className="flex justify-center py-20"><div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" /></div>
+        <GlassSpinner />
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
-          <CreditCard size={48} className="mx-auto text-gray-200 mb-3" />
-          <p className="text-gray-400 font-bold">لا يوجد اشتراكات بعد</p>
-        </div>
+        <GlassEmptyState icon={<CreditCard size={40} />} text="لا يوجد اشتراكات بعد" />
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+        <div className="qm-glass" style={tableWrapStyle}>
+          <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+            <thead>
               <tr>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الطالب</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الكورس</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">المبلغ</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">الحالة</th>
-                <th className="text-right px-5 py-4 font-bold text-gray-500">التاريخ</th>
+                <th style={thStyle}>الطالب</th>
+                <th style={thStyle}>الكورس</th>
+                <th style={thStyle}>المبلغ</th>
+                <th style={thStyle}>الحالة</th>
+                <th style={thStyle}>التاريخ</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((e) => (
-                <tr key={e.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-4 font-bold text-brand-navy">{e.profiles?.full_name || '—'}</td>
-                  <td className="px-5 py-4 text-gray-600">{e.courses?.title || '—'}</td>
-                  <td className="px-5 py-4 font-bold text-brand-pink">{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} <SarSymbol /></td>
-                  <td className="px-5 py-4">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${statusColors[e.payment_status] || 'bg-gray-100 text-gray-500'}`}>
-                      {statusLabels[e.payment_status] || e.payment_status}
-                    </span>
+                <tr key={e.id} className="qm-row" style={trStyle}>
+                  <td style={{ ...tdStyle, fontWeight: 700, color: '#fff' }}>{e.profiles?.full_name || '—'}</td>
+                  <td style={{ ...tdStyle, color: 'rgba(255,255,255,0.65)' }}>{e.courses?.title || '—'}</td>
+                  <td style={{ ...tdStyle, fontWeight: 700, color: '#F9A8D4' }}>{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} <SarSymbol /></td>
+                  <td style={tdStyle}>
+                    <GlassBadge variant={statusVariant[e.payment_status] || 'neutral'}>{statusLabels[e.payment_status] || e.payment_status}</GlassBadge>
                   </td>
-                  <td className="px-5 py-4 text-gray-400">{new Date(e.enrolled_at).toLocaleDateString('ar-SA')}</td>
+                  <td style={{ ...tdStyle, color: 'rgba(255,255,255,0.45)' }}>{new Date(e.enrolled_at).toLocaleDateString('ar-SA')}</td>
                 </tr>
               ))}
             </tbody>
