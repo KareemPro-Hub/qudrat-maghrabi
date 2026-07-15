@@ -266,6 +266,12 @@
 .qm-footer-news input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; padding: 10px 12px; color: #3c2850; font-size: 13px; }
 .qm-footer-news button { border: 0; width: 42px; flex: 0 0 42px; border-radius: 9px; background: #ffc83e; color: #3c2850; font-size: 19px; cursor: pointer; }
 .qm-footer-news small { display: block; color: #89759f; font-size: 10px; margin-top: 9px; }
+.qm-footer-payments { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; padding-bottom: 30px; }
+.qm-footer-payments > span { flex: 0 0 auto; color: #bbaacf; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.qm-payment-logos { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.qm-payment-chip { display: grid; place-items: center; height: 40px; padding: 0 16px; border-radius: 11px; background: rgba(255,255,255,.94); box-shadow: 0 8px 20px rgba(20,4,42,.18); transition: transform .2s ease, background .2s ease; }
+.qm-payment-chip:hover { transform: translateY(-2px); background: #fff; }
+.qm-payment-chip img { height: 18px; width: auto; max-width: 62px; object-fit: contain; display: block; }
 .qm-footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; color: #8f7aa8; }
 .qm-footer-bottom p { margin: 0; font-size: 12px; }
 .qm-footer-bottom > div { display: flex; align-items: center; gap: 12px; font-size: 11px; }
@@ -327,6 +333,8 @@
   .qm-footer-news { text-align: center; }
   .qm-footer-news form { max-width: 420px; margin: auto; }
   .qm-footer-bottom { flex-direction: column; gap: 13px; text-align: center; }
+  .qm-footer-payments { flex-direction: column; text-align: center; }
+  .qm-payment-logos { justify-content: center; }
 }
 @media (min-width: 901px) {
   .qm-section-head, .qm-title-line { display: flex; align-items: center; gap: 15px; }

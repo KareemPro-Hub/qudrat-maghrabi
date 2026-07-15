@@ -38,7 +38,7 @@ export default function Footer() {
 
         <div className="qm-footer-column">
           <h3>الدعم</h3>
-          <Link to="/contact">مركز المساعدة</Link>
+          <Link to="/refund">سياسة الاسترجاع</Link>
           <Link to="/contact">تواصل معنا</Link>
           <Link to="/terms">الشروط والأحكام</Link>
           <Link to="/privacy">سياسة الخصوصية</Link>
@@ -52,6 +52,22 @@ export default function Footer() {
             <button type="submit" aria-label="اشتراك">←</button>
           </form>
           <small>بالاشتراك أنت توافق على سياسة الخصوصية.</small>
+        </div>
+      </div>
+
+      <div className="qm-footer-payments qm-wrap">
+        <span>وسائل الدفع المتاحة</span>
+        <div className="qm-payment-logos">
+          <span className="qm-payment-chip"><img src="/payments/visa.png" alt="Visa" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/mastercard.png" alt="Mastercard" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/apple-pay.png" alt="Apple Pay" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/alrajhi-bank.png" alt="مصرف الراجحي" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/stc-bank.png" alt="STC Bank" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/urpay.png" alt="Urpay" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/instapay.png" alt="InstaPay" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/vodafone-cash.png" alt="Vodafone Cash" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/orange-cash.png" alt="Orange Cash" loading="lazy" /></span>
+          <span className="qm-payment-chip"><img src="/payments/paymob.png" alt="Paymob" loading="lazy" /></span>
         </div>
       </div>
 

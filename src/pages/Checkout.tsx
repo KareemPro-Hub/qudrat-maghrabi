@@ -176,6 +176,21 @@ export default function Checkout() {
                 <ShieldCheck size={14} />
                 <span>مدفوعات آمنة عبر Moyasar</span>
               </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-center text-xs text-gray-400 font-semibold mb-3">وسائل الدفع المقبولة</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {[
+                    ['visa.png', 'Visa'], ['mastercard.png', 'Mastercard'], ['apple-pay.png', 'Apple Pay'],
+                    ['alrajhi-bank.png', 'مصرف الراجحي'], ['stc-bank.png', 'STC Bank'], ['urpay.png', 'Urpay'],
+                    ['instapay.png', 'InstaPay'], ['vodafone-cash.png', 'Vodafone Cash'], ['orange-cash.png', 'Orange Cash'], ['paymob.png', 'Paymob'],
+                  ].map(([file, alt]) => (
+                    <span key={file} className="h-9 px-3 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-lg">
+                      <img src={`/payments/${file}`} alt={alt} loading="lazy" className="h-4 w-auto object-contain" />
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
