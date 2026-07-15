@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 
 const trustStats = [
-  { icon: '♟', value: '2,000+', label: 'طالب مسجّل' },
+  { icon: 'student', value: '2,000+', label: 'طالب مسجّل' },
   { icon: '▶', value: '200+', label: 'درس مرئي' },
-  { icon: '◎', value: '98%', label: 'هدفنا لدرجتك' },
-  { icon: '▦', value: '10,000+', label: 'بنك أسئلة تجميعات' },
+  { icon: 'target', value: '98%', label: 'هدفنا لدرجتك' },
+  { icon: 'question', value: '10,000+', label: 'بنك أسئلة تجميعات' },
 ]
 
 const programs = [
@@ -56,6 +56,13 @@ const faqs = [
   { q: 'هل الاختبارات مشابهة لاختبار القدرات؟', a: 'النموذج البصري يحاكي زمن الاختبار ونمط الأسئلة لأغراض العرض.' },
   { q: 'كم مدة الاشتراك؟', a: 'تختلف المدة حسب الباقة المختارة ويمكنك رؤية التفاصيل ضمن الأسعار.' },
 ]
+
+function TrustIcon({ type }: { type: string }) {
+  if (type === 'student') return <svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Z" /><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5" /><path d="M22 8v6" /></svg>
+  if (type === 'target') return <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4.3" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /></svg>
+  if (type === 'question') return <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M9.4 9.3a2.6 2.6 0 1 1 3.8 2.3c-.9.5-1.2 1-1.2 2" /><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" /></svg>
+  return <>{type}</>
+}
 
 function ValueIcon({ path }: { path: string }) {
   if (path === 'rect') return <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m10 9 5 3-5 3V9Z" /></svg>
@@ -110,7 +117,7 @@ export default function Home() {
         <div className="qm-trust qm-wrap">
           {trustStats.map((s) => (
             <article key={s.label}>
-              <i>{s.icon}</i>
+              <i><TrustIcon type={s.icon} /></i>
               <div><strong>{s.value}</strong><span>{s.label}</span></div>
             </article>
           ))}
