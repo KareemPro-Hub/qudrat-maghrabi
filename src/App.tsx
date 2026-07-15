@@ -85,7 +85,7 @@ export default function App() {
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
 
         {/* Parent */}
-        <Route path="/parent" element={<Layout><ParentDashboard /></Layout>} />
+        <Route path="/parent" element={<ParentDashboard />} />
         <Route path="/parent/link" element={<AuthLayout><ParentLink /></AuthLayout>} />
 
         {/* Admin */}
