@@ -1,25 +1,25 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen, Video, Upload, GripVertical } from 'lucide-react'
-import SarSymbol from '../../components/SarSymbol'
+import { Plus, Edit, Trash2, Eye, EyeOff, Video, Upload, GripVertical } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
-import {
-  glassCard, TopSheen, primaryBtnStyle, outlineBtnStyle, inputStyle, labelStyle,
-  iconBtnStyle, GlassBadge, GlassPageHeader, GlassSpinner, GlassEmptyState, GlassModal,
-  tableWrapStyle, thStyle, tdStyle, trStyle,
-} from '../../components/admin/glassKit'
+import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 
 const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '', thumbnail_url: '' }
 const levelLabels: Record<string, string> = { beginner: 'مبتدئ', intermediate: 'متوسط', advanced: 'متقدم' }
+const levelClass: Record<string, string> = { beginner: '', intermediate: 'orange', advanced: 'purple' }
+const coverClass = ['c1', 'c2', 'c3', 'c4']
+
+type CourseStats = { lessons: number; students: number; completion: number }
 
 export default function AdminCourses() {
   const navigate = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
+  const [statsByCourse, setStatsByCourse] = useState<Record<string, CourseStats>>({})
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Course | null>(null)
@@ -31,8 +31,37 @@ export default function AdminCourses() {
   useEffect(() => { fetchCourses() }, [])
 
   async function fetchCourses() {
+    setLoading(true)
     const { data } = await supabase.from('courses').select('*').order('order_index', { ascending: true })
-    setCourses(data || [])
+    const list = data || []
+    setCourses(list)
+
+    if (list.length) {
+      const ids = list.map((c) => c.id)
+      const [lessonsRes, enrollRes, progressRes] = await Promise.all([
+        supabase.from('lessons').select('id, course_id').in('course_id', ids),
+        supabase.from('enrollments').select('course_id').eq('payment_status', 'paid').in('course_id', ids),
+        supabase.from('lesson_progress').select('watch_percentage, lessons!inner(course_id)').in('lessons.course_id', ids),
+      ])
+      const stats: Record<string, CourseStats> = {}
+      ids.forEach((id) => { stats[id] = { lessons: 0, students: 0, completion: 0 } })
+      ;(lessonsRes.data || []).forEach((l: any) => { if (stats[l.course_id]) stats[l.course_id].lessons++ })
+      ;(enrollRes.data || []).forEach((e: any) => { if (stats[e.course_id]) stats[e.course_id].students++ })
+      const progAgg: Record<string, { total: number; count: number }> = {}
+      ;(progressRes.data || []).forEach((p: any) => {
+        const cid = p.lessons?.course_id
+        if (!cid) return
+        if (!progAgg[cid]) progAgg[cid] = { total: 0, count: 0 }
+        progAgg[cid].total += p.watch_percentage || 0
+        progAgg[cid].count++
+      })
+      Object.keys(progAgg).forEach((cid) => {
+        if (stats[cid]) stats[cid].completion = Math.round(progAgg[cid].total / progAgg[cid].count)
+      })
+      setStatsByCourse(stats)
+    } else {
+      setStatsByCourse({})
+    }
     setLoading(false)
   }
 
@@ -45,9 +74,7 @@ export default function AdminCourses() {
     reordered.splice(dropIndex, 0, moved)
     setCourses(reordered)
     dragIndex.current = null
-    await Promise.all(reordered.map((c, i) =>
-      supabase.from('courses').update({ order_index: i }).eq('id', c.id)
-    ))
+    await Promise.all(reordered.map((c, i) => supabase.from('courses').update({ order_index: i }).eq('id', c.id)))
     toast.success('تم حفظ الترتيب ✅')
   }
 
@@ -60,7 +87,7 @@ export default function AdminCourses() {
       price: String(c.price),
       level: (c as any).level || 'beginner',
       duration_hours: String((c as any).duration_hours || ''),
-      thumbnail_url: (c as any).thumbnail_url || ''
+      thumbnail_url: (c as any).thumbnail_url || '',
     })
     setShowModal(true)
   }
@@ -74,12 +101,8 @@ export default function AdminCourses() {
     data.append('upload_preset', CLOUDINARY_PRESET)
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
     const json = await res.json()
-    if (json.secure_url) {
-      setForm(f => ({ ...f, thumbnail_url: json.secure_url }))
-      toast.success('تم رفع الصورة ✅')
-    } else {
-      toast.error('فشل رفع الصورة')
-    }
+    if (json.secure_url) { setForm((f) => ({ ...f, thumbnail_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
+    else toast.error('فشل رفع الصورة')
     setUploading(false)
   }
 
@@ -93,9 +116,8 @@ export default function AdminCourses() {
       price: Number(form.price),
       level: form.level,
       duration_hours: Number(form.duration_hours) || null,
-      thumbnail_url: form.thumbnail_url || null
+      thumbnail_url: form.thumbnail_url || null,
     }
-
     if (editing) {
       const { error } = await supabase.from('courses').update(payload).eq('id', editing.id)
       if (error) toast.error('حدث خطأ'); else { toast.success('تم التحديث ✅'); fetchCourses(); setShowModal(false) }
@@ -119,148 +141,127 @@ export default function AdminCourses() {
     fetchCourses()
   }
 
+  const totalLessons = Object.values(statsByCourse).reduce((s, c) => s + c.lessons, 0)
+  const totalStudents = Object.values(statsByCourse).reduce((s, c) => s + c.students, 0)
+  const avgCompletion = courses.length ? Math.round(Object.values(statsByCourse).reduce((s, c) => s + c.completion, 0) / courses.length) : 0
+  const featured = [...courses].sort((a, b) => (statsByCourse[b.id]?.students || 0) - (statsByCourse[a.id]?.students || 0)).slice(0, 3)
+
   return (
-    <div>
-      <GlassPageHeader
-        title="الكورسات"
-        subtitle="إدارة كورسات المنصة"
-        action={
-          <button onClick={openAdd} style={primaryBtnStyle}>
-            <Plus size={17} /> إضافة كورس
-          </button>
-        }
+    <>
+      <SectionToolbar
+        title="إدارة الكورسات"
+        subtitle="نظّم المحتوى وتابع أداء كل مسار تعليمي."
+        action={<button className="primary-admin" onClick={openAdd}><Plus size={16} /> إضافة كورس جديد</button>}
       />
 
-      {loading ? (
-        <GlassSpinner />
-      ) : courses.length === 0 ? (
-        <GlassEmptyState
-          icon={<BookOpen size={40} />}
-          text="لا يوجد كورسات بعد"
-          action={<button onClick={openAdd} style={{ ...primaryBtnStyle, marginTop: 4 }}>أضف أول كورس</button>}
-        />
+      <div className="mini-metrics">
+        <article><span>{loading ? '…' : courses.length}</span><p>إجمالي الكورسات<small>{courses.filter((c) => c.is_published).length} منشورة · {courses.filter((c) => !c.is_published).length} مسودة</small></p></article>
+        <article><span>{loading ? '…' : totalLessons}</span><p>إجمالي الدروس<small>عبر جميع الكورسات</small></p></article>
+        <article><span>{loading ? '…' : totalStudents}</span><p>الطلاب المسجلون<small>اشتراكات مدفوعة</small></p></article>
+        <article><span>{loading ? '…' : `${avgCompletion}%`}</span><p>متوسط الإكمال<small>عبر كل الكورسات</small></p></article>
+      </div>
+
+      {loading ? <Spinner /> : courses.length === 0 ? (
+        <EmptyState text="لا يوجد كورسات بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول كورس</button>} />
       ) : (
-        <div className="qm-glass" style={tableWrapStyle}>
-          <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={thStyle}>الكورس</th>
-                <th style={thStyle}>السعر</th>
-                <th style={thStyle}>المستوى</th>
-                <th style={thStyle}>الحالة</th>
-                <th style={thStyle}>الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {courses.map((c, i) => (
-                <tr
-                  key={c.id}
-                  draggable
-                  onDragStart={() => handleDragStart(i)}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={() => handleDrop(i)}
-                  className="qm-row"
-                  style={trStyle}
-                >
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <GripVertical size={16} style={{ color: 'rgba(255,255,255,0.3)', cursor: 'grab', flexShrink: 0 }} />
-                      {(c as any).thumbnail_url ? (
-                        <img src={(c as any).thumbnail_url} style={{ width: 48, height: 32, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                      ) : (
-                        <div style={{ width: 48, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#EC4899 50%,#7C3AED)', flexShrink: 0 }} />
-                      )}
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#fff' }}>{c.title}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5, marginTop: 2, maxWidth: 320, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.description}</div>
-                      </div>
+        <>
+          {featured.length > 0 && (
+            <div className="course-card-grid">
+              {featured.map((c, i) => {
+                const s = statsByCourse[c.id] || { lessons: 0, students: 0, completion: 0 }
+                return (
+                  <article className="course-manage-card" key={c.id}>
+                    <span className={`course-cover ${coverClass[i % coverClass.length]}`}>
+                      {(c as any).thumbnail_url ? <img src={(c as any).thumbnail_url} alt="" /> : c.title.charAt(0)}
+                    </span>
+                    <div>
+                      <small className={`course-label ${levelClass[(c as any).level] || ''}`}>{levelLabels[(c as any).level] || 'مبتدئ'}</small>
+                      <h3>{c.title}</h3>
+                      <p>{s.lessons} درسًا · {s.students} طالب</p>
+                      <i><u style={{ width: `${s.completion}%` }} /></i>
+                      <footer><span>{s.completion}% إكمال</span><b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b></footer>
                     </div>
-                  </td>
-                  <td style={{ ...tdStyle, fontWeight: 700, color: '#F9A8D4' }}>{c.price} <SarSymbol /></td>
-                  <td style={tdStyle}>
-                    <GlassBadge variant="accent">{levelLabels[(c as any).level] || 'مبتدئ'}</GlassBadge>
-                  </td>
-                  <td style={tdStyle}>
-                    <GlassBadge variant={c.is_published ? 'success' : 'neutral'}>{c.is_published ? '✅ منشور' : '⏸ مخفي'}</GlassBadge>
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <button onClick={() => navigate(`/admin/lessons/${c.id}`)} className="qm-btn-outline" style={{ ...outlineBtnStyle, padding: '7px 12px', fontSize: 11.5 }}>
-                        <Video size={13} /> الدروس
-                      </button>
-                      <button onClick={() => openEdit(c)} className="qm-icon-btn" style={iconBtnStyle()}><Edit size={15} /></button>
-                      <button onClick={() => togglePublish(c)} className="qm-icon-btn" style={iconBtnStyle()}>{c.is_published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-                      <button onClick={() => deleteCourse(c.id)} className="qm-icon-btn" style={iconBtnStyle(true)}><Trash2 size={15} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          <article className="admin-card data-card" data-searchable>
+            <header className="card-head"><div><h3>جميع الكورسات</h3><p>تحكم كامل في المحتوى والحالة</p></div></header>
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>الكورس</th><th>السعر</th><th>المستوى</th><th>الطلاب</th><th>الإكمال</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                <tbody>
+                  {courses.map((c, i) => {
+                    const s = statsByCourse[c.id] || { lessons: 0, students: 0, completion: 0 }
+                    return (
+                      <tr key={c.id} draggable onDragStart={() => handleDragStart(i)} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(i)}>
+                        <td>
+                          <span className={`table-course ${coverClass[i % coverClass.length]}`} style={{ cursor: 'grab' }}>
+                            <GripVertical size={14} />
+                          </span>
+                          <b>{c.title}</b>
+                        </td>
+                        <td>{c.price} ر.س</td>
+                        <td><span className="tag purple">{levelLabels[(c as any).level] || 'مبتدئ'}</span></td>
+                        <td>{s.students}</td>
+                        <td><div className="inline-progress"><i><u style={{ width: `${s.completion}%` }} /></i><b>{s.completion}%</b></div></td>
+                        <td><StatusBadge variant={c.is_published ? 'success' : 'neutral'}>{c.is_published ? 'منشور' : 'مسودة'}</StatusBadge></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="row-action" onClick={() => navigate(`/admin/lessons/${c.id}`)}><Video size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الدروس</button>
+                            <button className="row-action" onClick={() => openEdit(c)}><Edit size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تعديل</button>
+                            <button className="row-action" onClick={() => togglePublish(c)}>{c.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+                            <button className="row-action" onClick={() => deleteCourse(c.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </>
       )}
 
-      {/* Modal */}
       {showModal && (
-        <GlassModal title={editing ? 'تعديل الكورس' : 'إضافة كورس جديد'} onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Thumbnail Upload */}
-            <div>
-              <label style={labelStyle}>صورة الغلاف</label>
+        <Modal title={editing ? 'تعديل الكورس' : 'إضافة كورس جديد'} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSave} className="admin-form">
+            <label>
+              صورة الغلاف
               {form.thumbnail_url ? (
-                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 140, marginBottom: 8 }}>
-                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <button type="button" onClick={() => setForm(f => ({ ...f, thumbnail_url: '' }))}
-                    style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(239,68,68,0.85)', color: '#fff', fontSize: 11, padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>حذف</button>
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 140 }}>
+                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, thumbnail_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
                 </div>
               ) : (
-                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 140, border: '1.5px dashed rgba(255,255,255,0.25)', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.04)' }}>
-                  {uploading ? (
-                    <div className="animate-spin" style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.15)', borderTopColor: 'rgba(255,255,255,0.7)' }} />
-                  ) : (
-                    <>
-                      <Upload size={22} style={{ color: 'rgba(255,255,255,0.35)', marginBottom: 8 }} />
-                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>اضغط لرفع صورة الغلاف</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>PNG, JPG — حتى 5MB</span>
-                    </>
-                  )}
+                <label className="adm-thumb-drop">
+                  {uploading ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة الغلاف</span></>)}
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                 </label>
               )}
-            </div>
-
-            <div>
-              <label style={labelStyle}>عنوان الكورس *</label>
-              <input className="qm-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} style={inputStyle} placeholder="مثال: القدرات الكمي — المستوى الأساسي" />
-            </div>
-            <div>
-              <label style={labelStyle}>الوصف</label>
-              <textarea className="qm-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ ...inputStyle, resize: 'vertical' }} rows={3} placeholder="وصف مختصر للكورس..." />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>السعر *</label>
-                <input type="number" className="qm-input" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} style={inputStyle} placeholder="199" />
-              </div>
-              <div>
-                <label style={labelStyle}>المستوى</label>
-                <select className="qm-select" value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} style={inputStyle}>
+            </label>
+            <label>عنوان الكورس *<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: القدرات الكمي" /></label>
+            <label>الوصف<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للكورس..." /></label>
+            <div className="form-grid">
+              <label>السعر *<input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="199" /></label>
+              <label>المستوى
+                <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
                   <option value="beginner">مبتدئ</option>
                   <option value="intermediate">متوسط</option>
                   <option value="advanced">متقدم</option>
                 </select>
-              </div>
+              </label>
             </div>
-            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-              <button type="submit" disabled={saving || uploading} style={{ ...primaryBtnStyle, flex: 1, justifyContent: 'center' }}>
-                {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}
-              </button>
-              <button type="button" onClick={() => setShowModal(false)} className="qm-btn-outline" style={{ ...outlineBtnStyle, flex: 1 }}>إلغاء</button>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={saving || uploading}>{saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}</button>
+              <button type="button" className="ghost-button" onClick={() => setShowModal(false)}>إلغاء</button>
             </div>
           </form>
-        </GlassModal>
+        </Modal>
       )}
-    </div>
+    </>
   )
 }

@@ -19,6 +19,9 @@ import AdminCourses from './pages/admin/AdminCourses'
 import AdminStudents from './pages/admin/AdminStudents'
 import AdminEnrollments from './pages/admin/AdminEnrollments'
 import AdminQuizzes from './pages/admin/AdminQuizzes'
+import AdminNotifications from './pages/admin/AdminNotifications'
+import AdminTeam from './pages/admin/AdminTeam'
+import AdminSettings from './pages/admin/AdminSettings'
 import Quiz from './pages/Quiz'
 import QuizResult from './pages/QuizResult'
 import Learn from './pages/Learn'
@@ -92,6 +95,9 @@ export default function App() {
         <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />
         <Route path="/admin/enrollments" element={<AdminLayout><AdminEnrollments /></AdminLayout>} />
         <Route path="/admin/quizzes" element={<AdminLayout><AdminQuizzes /></AdminLayout>} />
+        <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
+        <Route path="/admin/team" element={<AdminLayout><AdminTeam /></AdminLayout>} />
+        <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
         <Route path="/quiz/:quizId" element={<Layout><Quiz /></Layout>} />
         <Route path="/quiz/:quizId/result/:resultId" element={<Layout><QuizResult /></Layout>} />
         <Route path="/about" element={<Layout><About /></Layout>} />
