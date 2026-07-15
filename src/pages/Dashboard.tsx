@@ -192,7 +192,7 @@ export default function Dashboard() {
     <div className="student-shell">
       <aside className="student-sidebar" aria-label="التنقل الرئيسي">
         <Link className="student-brand" to="/" aria-label="قدرات المغربي">
-          <img src="/logo.png" alt="قدرات المغربي" />
+          <img src="/admin/logo.png" alt="قدرات المغربي" />
         </Link>
 
         <nav className="student-nav">
