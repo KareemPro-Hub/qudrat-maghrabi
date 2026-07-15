@@ -22,6 +22,9 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname === path
 
+  // The homepage hero has its own embedded nav bar matching the new design
+  if (location.pathname === '/') return null
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

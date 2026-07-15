@@ -2,71 +2,67 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-navy text-white mt-20">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+    <footer className="qm-site-footer qm-home">
+      <div className="qm-footer-orb qm-footer-orb-one" />
+      <div className="qm-footer-orb qm-footer-orb-two" />
 
-          {/* Brand */}
-          <div>
-            <div className="mb-4">
-              <img src="/logo.png" alt="قدرات المغربي" className="h-14 w-auto object-contain" />
-            </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              منصة تعليمية متخصصة في اختبار القدرات الكمي لطلاب الثانوي في المملكة العربية السعودية.
-            </p>
-          </div>
+      <div className="qm-footer-cta qm-wrap">
+        <div>
+          <span>خطوتك القادمة تبدأ هنا</span>
+          <h2>جاهز ترفع درجتك في القدرات؟</h2>
+          <p>ابدأ بخطة واضحة وتدريبات ذكية توصلك لهدفك بثقة.</p>
+        </div>
+        <Link to="/register">ابدأ رحلتك الآن <b>←</b></Link>
+      </div>
 
-          {/* Links */}
-          <div>
-            <h3 className="font-bold text-lg mb-4 gradient-text">روابط سريعة</h3>
-            <ul className="space-y-2">
-              {[
-                { to: '/courses', label: 'الكورسات' },
-                { to: '/about', label: 'من نحن' },
-                { to: '/contact', label: 'تواصل معنا' },
-                { to: '/privacy', label: 'سياسة الخصوصية' },
-                { to: '/terms', label: 'الشروط والأحكام' },
-                { to: '/refund', label: 'سياسة الاسترداد' },
-              ].map(link => (
-                <li key={link.to}>
-                  <Link to={link.to} className="text-gray-400 hover:text-brand-pink transition-colors text-sm font-medium">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="font-bold text-lg mb-4 gradient-text">تواصل معنا</h3>
-            <ul className="space-y-2 text-gray-400 text-sm">
-              <li>📧 Qudrat.Maghrabi.Pro@gmail.com</li>
-              <li>🐦 @QudratMaghrabi</li>
-              <li>📺 YouTube: قدرات المغربي</li>
-            </ul>
+      <div className="qm-footer-main qm-wrap">
+        <div className="qm-footer-brand">
+          <Link className="qm-brand" to="/">
+            <img src="/home/brand/logo.png" alt="قدرات المغربي" />
+          </Link>
+          <p>منصة تعليمية متخصصة في إعداد طلاب الثانوية لاختبار القدرات الكمي بأسلوب بسيط وفعّال.</p>
+          <div className="qm-social-links">
+            <a href="#" aria-label="إكس">𝕏</a>
+            <a href="#" aria-label="إنستغرام">◎</a>
+            <a href="#" aria-label="يوتيوب">▶</a>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-6 text-center text-gray-500 text-sm flex flex-col md:flex-row justify-between items-center gap-2">
-          <p>© {new Date().getFullYear()} منصة قدرات المغربي — جميع الحقوق محفوظة</p>
-          <div className="flex gap-4">
-            <Link to="/privacy" className="hover:text-brand-pink transition-colors">سياسة الخصوصية</Link>
-            <Link to="/terms" className="hover:text-brand-pink transition-colors">الشروط والأحكام</Link>
-            <Link to="/refund" className="hover:text-brand-pink transition-colors">سياسة الاسترداد</Link>
-          </div>
+        <div className="qm-footer-column">
+          <h3>المنصة</h3>
+          <Link to="/courses">الكورسات</Link>
+          <Link to="/about">مميزاتنا</Link>
+          <Link to="/#qm-prices">الأسعار</Link>
+          <Link to="/#qm-reviews">آراء الطلاب</Link>
         </div>
 
-        <div className="mt-4 text-center text-sm text-gray-300">
+        <div className="qm-footer-column">
+          <h3>الدعم</h3>
+          <Link to="/contact">مركز المساعدة</Link>
+          <Link to="/contact">تواصل معنا</Link>
+          <Link to="/terms">الشروط والأحكام</Link>
+          <Link to="/privacy">سياسة الخصوصية</Link>
+        </div>
+
+        <div className="qm-footer-news">
+          <h3>ابقَ على اطلاع</h3>
+          <p>نصائح أسبوعية ونماذج مجانية تساعدك في الاستعداد.</p>
+          <form onSubmit={(e) => e.preventDefault()}>
+            <input type="email" placeholder="البريد الإلكتروني" aria-label="البريد الإلكتروني" />
+            <button type="submit" aria-label="اشتراك">←</button>
+          </form>
+          <small>بالاشتراك أنت توافق على سياسة الخصوصية.</small>
+        </div>
+      </div>
+
+      <div className="qm-wrap">
+        <div className="qm-footer-bottom">
+          <p>© {new Date().getFullYear()} قدرات المغربي. جميع الحقوق محفوظة.</p>
+          <div><span>صنع للطلاب الطموحين</span><i /><span>المملكة العربية السعودية</span></div>
+        </div>
+        <div className="qm-footer-credit">
           نُسِجَت ملامح هذا الإبداع البصري والرقمي بروح وإبداع{' '}
-          <a
-            href="https://kareempro.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="gradient-text font-extrabold hover:opacity-80 transition-opacity"
-          >
-            Kareem Pro
-          </a>
+          <a href="https://kareempro.com" target="_blank" rel="noopener noreferrer">Kareem Pro</a>
         </div>
       </div>
     </footer>

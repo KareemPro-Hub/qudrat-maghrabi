@@ -1,209 +1,242 @@
 import { Link } from 'react-router-dom'
-import { Play, Star, BookOpen } from 'lucide-react'
-import StatsCounter from '../components/StatsCounter'
 
-const features = [
+const trustStats = [
+  { icon: '♟', value: '2,000+', label: 'طالب مسجّل' },
+  { icon: '▶', value: '200+', label: 'درس مرئي' },
+  { icon: '◎', value: '98%', label: 'هدفنا لدرجتك' },
+  { icon: '▦', value: '10,000+', label: 'بنك أسئلة تجميعات' },
+]
+
+const programs = [
+  { icon: '▦', title: 'تأسيس الكمي', desc: 'ابدأ من الصفر وثبّت أساسياتك.' },
+  { icon: '↗', title: 'المهارات المتقدمة', desc: 'استراتيجيات سريعة للحل الذكي.' },
+  { icon: '✦', title: 'الباقة الشاملة', desc: 'تأسيس، تدريب ومحاكاة كاملة.', featured: true },
+  { icon: '◎', title: 'المحاكاة المكثفة', desc: 'نماذج واقعية بوقت الاختبار.' },
+]
+
+const valuePoints = [
+  { title: 'تأسيس وتجميع متدرج', desc: 'من الصفر حتى إتقان أصعب الأسئلة.', path: 'M4 19h4v-4h4v-4h4V7h4M15 4h5v5' },
+  { title: 'شرح احترافي بجودة عالية', desc: 'دروس واضحة ومركزة بدون تطويل.', path: 'rect' },
+  { title: 'اختبارات تحاكي الواقع', desc: 'تدريب فعلي يجهزك ليوم الاختبار.', path: 'exam' },
+  { title: 'متابعة دقيقة لتقدمك', desc: 'اعرف مستواك ودرجاتك أولًا بأول.', path: 'M4 19V5M4 19h16M7 15l4-4 3 2 5-7' },
+  { title: 'مجتمع تفاعلي معك', desc: 'دعم مستمر وإجابة عن استفساراتك.', path: 'community' },
+  { title: 'تطبيق للجوال والآيباد', desc: 'تعلّم في أي وقت ومن أي مكان.', path: 'device' },
+]
+
+const plans = [
   {
-    icon: '🎯',
-    title: 'تأسيس وتجميع متدرج',
-    desc: 'شرح شامل لكل أبواب الكمي يبدأ معك من الصفر، ويسير معك خطوة بخطوة حتى تتقن حل أصعب أسئلة الاختبار.',
+    key: 'basic', number: '01', kicker: 'بداية ثابتة', name: 'الأساسية', price: '99',
+    features: ['دروس التأسيس', 'اختبارات قصيرة', 'تقارير الأداء'],
+    cta: 'اختر الباقة', extra: 'qm-basic',
+    icon: <><path d="M6 4.5h11a2 2 0 0 1 2 2V20H7a3 3 0 0 1-3-3V6.5a2 2 0 0 1 2-2Z" /><path d="M7 4.5V20M9.5 9H16M9.5 12H15" /></>,
   },
   {
-    icon: '🎬',
-    title: 'شرح احترافي بجودة عالية',
-    desc: 'محتوى مرئي متميز بجودة عالية يضمن لك رؤية واضحة بدون إطالة أو تشتيت؛ لتوفر وقتك وجهدك.',
+    key: 'hot', number: '02', kicker: 'رحلة متكاملة', name: 'الشاملة', price: '199',
+    features: ['جميع الدروس', 'محاكاة غير محدودة', 'خطة ذكية مخصصة'],
+    cta: 'ابدأ الآن', extra: 'qm-hot', popular: true,
+    icon: <><circle cx="12" cy="12" r="8" /><path d="m14.8 9.2-1.6 4-4 1.6 1.6-4 4-1.6Z" /></>,
   },
   {
-    icon: '📊',
-    title: 'تابع تطورك أول بأول',
-    desc: 'لوحة تحكم ذكية تقيس تقدمك اليومي، وتضمن لك إنهاء المنهج والتجميعات قبل وقت كافٍ من اختبارك.',
-  },
-  {
-    icon: '📝',
-    title: 'اختبارات تحاكي الواقع',
-    desc: 'تمرّن بأسئلة حقيقية واكسر حاجز الرهبة قبل الاختبار؛ لتعرف نقاط قوتك وتضمن جاهزيتك الكاملة ليوم الاختبار.',
-  },
-  {
-    icon: '💬',
-    title: 'مجتمع تفاعلي معك بالرحلة',
-    desc: 'لن تدرس بمفردك؛ نحن معك خطوة بخطوة نجيب على أسئلتك، نتابع إنجازك، ونحفزك حتى تصل للدرجة الكاملة.',
-  },
-  {
-    icon: '📱',
-    title: 'تطبيق مجاني للجوال والآيباد',
-    desc: 'ادرس وتمرّن من أي مكان وفي أي وقت، عبر تطبيق iOS وAndroid',
+    key: 'pro', number: '03', kicker: 'أقصى استفادة', name: 'الاحترافية', price: '299',
+    features: ['كل مزايا الشاملة', 'جلسات مراجعة', 'دعم مباشر'],
+    cta: 'اختر الباقة', extra: 'qm-pro',
+    icon: <><path d="m5 8 3.5 3L12 5l3.5 6L19 8l-1.5 10h-11L5 8Z" /><path d="M7 18h10" /></>,
   },
 ]
 
 const testimonials = [
-  {
-    name: 'أحمد الغامدي',
-    score: '95',
-    text: 'بفضل منصة قدرات المغربي حصلت على 95 في اختبار القدرات. الشرح واضح جداً والاختبارات تساعد كثيراً.',
-    city: 'الرياض',
-  },
-  {
-    name: 'سارة العتيبي',
-    score: '92',
-    text: 'أفضل منصة تعليمية جربتها للقدرات. المنهج منظم وفريق الدعم متجاوب ومحترف.',
-    city: 'جدة',
-  },
-  {
-    name: 'محمد القحطاني',
-    score: '98',
-    text: 'ما توقعت أوصل لـ98 في القدرات الكمي! المنصة غيرت أسلوب مذاكرتي كلياً.',
-    city: 'الدمام',
-  },
+  { kind: 'voice', warm: false, quote: 'شرح بسيط ومباشر، ارتفعت درجتي من 72 إلى 91 خلال شهرين.', name: 'سارة', city: 'الرياض', time: '0:42' },
+  { kind: 'whatsapp', quote: 'أكثر شيء أفادني تحليل الأخطاء بعد كل محاكاة.', name: 'عبدالرحمن', city: 'جدة',
+    chat: ['تحليل الأخطاء فرق معي جدًا 👌', 'وكل محاكاة نتيجتي تتحسن!'] },
+  { kind: 'voice', warm: true, quote: 'الخطة اليومية جعلت المذاكرة أخف ونتيجتي أفضل بكثير.', name: 'نورة', city: 'الدمام', time: '0:36' },
 ]
+
+const faqs = [
+  { q: 'هل يناسبني الكورس إذا كان مستواي مبتدئًا؟', a: 'نعم، يبدأ مسار التأسيس من المفاهيم الأساسية ثم ينتقل تدريجيًا للتطبيق.' },
+  { q: 'هل الاختبارات مشابهة لاختبار القدرات؟', a: 'النموذج البصري يحاكي زمن الاختبار ونمط الأسئلة لأغراض العرض.' },
+  { q: 'كم مدة الاشتراك؟', a: 'تختلف المدة حسب الباقة المختارة ويمكنك رؤية التفاصيل ضمن الأسعار.' },
+]
+
+function ValueIcon({ path }: { path: string }) {
+  if (path === 'rect') return <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m10 9 5 3-5 3V9Z" /></svg>
+  if (path === 'exam') return <svg viewBox="0 0 24 24"><path d="M8 4h8M9 3v3h6V3M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z" /><path d="m8 12 2 2 5-5M8 17h7" /></svg>
+  if (path === 'community') return <svg viewBox="0 0 24 24"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" /><path d="M3 19c.4-3.2 2.2-5 5.5-5s5.1 1.8 5.5 5M14 14c3.8-.5 6 1.2 6.5 4" /></svg>
+  if (path === 'device') return <svg viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="15" rx="2" /><rect x="16" y="8" width="5" height="10" rx="1.5" /><path d="M8 17h2M18 15.5h1" /></svg>
+  return <svg viewBox="0 0 24 24"><path d={path} /></svg>
+}
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="qm-home">
+      {/* ===== Hero ===== */}
+      <section className="qm-hero">
+        <nav className="qm-nav qm-wrap">
+          <Link className="qm-brand qm-brand-full" to="/">
+            <img src="/home/brand/logo.png" alt="قدرات المغربي" />
+          </Link>
+          <div className="qm-nav-links">
+            <Link to="/"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/home.png" alt="" /></span>الرئيسية</Link>
+            <a href="#qm-courses"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/online-course.png" alt="" /></span>الكورسات</a>
+            <a href="#qm-prices"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/tags.png" alt="" /></span>الأسعار</a>
+            <a href="#qm-reviews"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/thumbs-up-trust-v2.png" alt="" /></span>آراء الطلاب</a>
+            <Link to="/contact"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/headset.png" alt="" /></span>تواصل معنا</Link>
+          </div>
+          <Link className="qm-nav-cta" to="/register">ابدأ الآن</Link>
+        </nav>
 
-      {/* Hero */}
-      <section className="relative bg-hero-gradient text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-10 w-64 h-64 rounded-full" style={{background: 'radial-gradient(circle, #FF8008, transparent)'}} />
-          <div className="absolute bottom-10 left-10 w-80 h-80 rounded-full" style={{background: 'radial-gradient(circle, #8B35C4, transparent)'}} />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-
-          {/* Text column */}
-          <div className="text-center lg:text-right order-2 lg:order-1">
-
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-6 py-2 mb-8 text-sm font-bold tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-brand-pink animate-pulse flex-shrink-0" />
-              طريقك المختصر لتجاوز عقبة الكمي في المملكة 🇸🇦
-            </div>
-
-            {/* Headline */}
-            <h1 className="font-extrabold mb-6" style={{fontSize: 'clamp(2.2rem, 6vw, 4.2rem)', lineHeight: '1.4'}}>
-              تبي الكامل بالكمي ؟
-              <br />
-              <span className="gradient-text">ابدأ رحلتك من هنا</span>
+        <div className="qm-hero-grid qm-wrap">
+          <div className="qm-hero-copy">
+            <h1 className="qm-hero-title">
+              <span>اكسر خوفك</span>
+              <span>وتفوّق</span>
+              <span className="qm-hero-title-accent"><span>بجدارة</span><span className="qm-hero-rocket" aria-hidden="true">🚀</span></span>
             </h1>
-
-            {/* Sub-headline */}
-            <p className="text-lg md:text-xl text-gray-200 mb-5 font-bold tracking-wide">
-              تأسيس ذكي • تجميعات حديثة • حلول بثوانٍ
+            <p className="qm-hero-lead">
+              <span>انضم لدفعة </span><strong>التميز</strong><span> واكتشف أسرار وتكنيكات </span><strong>«المغربي»</strong>
+              <span> التي حوّلت أعقد مسائل الرياضيات إلى </span><strong>خطوات سهلة ومضمونة لفوق الـ 95 بالكمي!</strong>
             </p>
-
-            {/* Description */}
-            <p className="text-base md:text-lg text-gray-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-loose">
-              انضم لدفعة <span className="text-white font-black">التميز</span> واكتشف أسرار وتكنيكات "<span className="text-white font-black">المغربي</span>" التي حوّلت أعقد مسائل الرياضيات إلى <span className="text-white font-black">خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</span>
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
-              <Link to="/register" className="btn-primary text-lg py-4 px-12 w-full sm:w-auto">
-                ابدأ رحلتك الآن — مجانًا
-              </Link>
-              <Link to="/courses" className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-bold py-4 px-10 rounded-2xl transition-all duration-200 border border-white/20 w-full sm:w-auto">
-                <Play size={18} fill="white" />
-                استعرض الكورسات
-              </Link>
+            <div className="qm-hero-actions">
+              <a className="qm-primary" href="#qm-courses">استكشف الكورسات</a>
+              <button className="qm-watch" type="button"><i>▶</i> شاهد الفيديو</button>
             </div>
           </div>
-
-          {/* Image column */}
-          <div className="relative flex justify-center items-center order-1 lg:order-2 py-6">
-
-            {/* Glow behind student */}
-            <div className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full opacity-40" style={{background: 'radial-gradient(circle, #E91E8C 0%, #8B35C4 45%, transparent 70%)', filter: 'blur(40px)'}} />
-
-            {/* Dashed orbit rings */}
-            <svg className="absolute w-[105%] h-[105%] animate-spin-slow pointer-events-none" viewBox="0 0 400 400" style={{animationDuration: '40s'}}>
-              <circle cx="200" cy="200" r="190" fill="none" stroke="#FF8008" strokeWidth="1.5" strokeDasharray="6 10" opacity="0.5" />
-            </svg>
-            <svg className="absolute w-[88%] h-[88%] pointer-events-none" viewBox="0 0 400 400" style={{animation: 'spin 30s linear infinite reverse'}}>
-              <circle cx="200" cy="200" r="190" fill="none" stroke="#E91E8C" strokeWidth="1.5" strokeDasharray="2 8" opacity="0.5" />
-            </svg>
-
-            {/* Floating badges */}
-            <div className="absolute top-2 left-0 md:left-4 bg-white text-brand-navy font-black text-sm md:text-base px-4 py-2 rounded-2xl shadow-brand-lg flex items-center gap-2 z-20 animate-float">
-              <span className="text-xl">🎯</span> فوق الـ 95٪
+          <div className="qm-hero-art">
+            <div className="qm-arch">
+              <img src="/home/hero-student.png" alt="طالب سعودي يحمل آيفون يعرض شعار المنصة وبطاقة معادلة" />
             </div>
-            <div className="absolute bottom-8 right-0 md:right-2 bg-white text-brand-navy font-black text-sm md:text-base px-4 py-2 rounded-2xl shadow-brand-lg flex items-center gap-2 z-20 animate-float" style={{animationDelay: '1.2s'}}>
-              <span className="text-xl">📈</span> +5000 طالب
-            </div>
-
-            {/* Student image */}
-            <img
-              src="/hero-student.png"
-              alt="طالب يدرس في منصة قدرات المغربي"
-              className="relative z-10 w-64 sm:w-80 md:w-[26rem] h-auto object-contain"
-              style={{filter: 'drop-shadow(0 25px 35px rgba(0,0,0,0.45))'}}
-            />
           </div>
         </div>
-      </section>
 
-      {/* Stats */}
-      <StatsCounter />
-
-      {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 py-20">
-        <div className="text-center mb-12">
-          <h2 className="section-title">لماذا قدرات المغربي ؟</h2>
-          <p className="section-subtitle">كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((f) => (
-            <div key={f.title} className="card group">
-              <div className="text-4xl mb-4">{f.icon}</div>
-              <h3 className="text-xl font-black text-brand-navy mb-2 group-hover:gradient-text transition-all">{f.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-            </div>
+        <div className="qm-trust qm-wrap">
+          {trustStats.map((s) => (
+            <article key={s.label}>
+              <i>{s.icon}</i>
+              <div><strong>{s.value}</strong><span>{s.label}</span></div>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="max-w-7xl mx-auto px-4 mb-20">
-        <div className="gradient-bg rounded-3xl p-10 md:p-14 text-white text-center shadow-brand-lg">
-          <h2 className="text-3xl md:text-4xl font-black mb-4">جاهز تبدأ رحلتك للتفوق؟</h2>
-          <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            انضم لأكثر من ٥٠٠٠ طالب حققوا درجاتهم المستهدفة مع منصة قدرات المغربي
-          </p>
-          <Link to="/register" className="inline-block bg-white text-brand-purple font-black py-4 px-10 rounded-2xl hover:bg-gray-100 transition-all duration-200 shadow-lg text-lg" style={{color: '#8B35C4'}}>
-            سجّل الآن مجانًا ←
-          </Link>
+      {/* ===== Programs ===== */}
+      <section id="qm-courses" className="qm-wrap qm-section">
+        <div className="qm-program-heading"><div><h2>اختر أفضل باقة مناسبة لك</h2></div></div>
+        <div className="qm-program-rail">
+          {programs.map((p) => (
+            <article key={p.title} className={p.featured ? 'qm-featured' : ''}>
+              <span>{p.icon}</span>
+              <h3>{p.title}</h3>
+              <p>{p.desc}</p>
+              {p.featured && <a href="#qm-prices">اعرف المزيد ←</a>}
+            </article>
+          ))}
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="section-title">قالوا عنّا</h2>
-            <p className="section-subtitle">آراء طلابنا الذين حققوا نتائج مميزة</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div key={t.name} className="card">
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} fill="#E91E8C" color="#E91E8C" />
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-bold text-brand-navy">{t.name}</div>
-                    <div className="text-xs text-gray-400">{t.city}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-black gradient-text">{t.score}</div>
-                    <div className="text-xs text-gray-400">درجته</div>
-                  </div>
-                </div>
-              </div>
+      {/* ===== Value ===== */}
+      <section className="qm-value qm-wrap qm-section">
+        <div className="qm-value-heading"><div><h2>لماذا قدرات المغربي؟</h2><p>كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p></div></div>
+        <div className="qm-value-photo-frame">
+          <img src="/home/student-woman-math.jpeg" alt="طالبة سعودية تراجع مسائل الرياضيات استعدادًا لاختبار القدرات" loading="lazy" />
+        </div>
+        <div className="qm-value-copy">
+          <div className="qm-value-grid">
+            {valuePoints.map((v) => (
+              <article key={v.title}>
+                <span><ValueIcon path={v.path} /></span>
+                <h3>{v.title}</h3>
+                <p>{v.desc}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ===== Pricing ===== */}
+      <section id="qm-prices" className="qm-pricing qm-section">
+        <span className="qm-pricing-glow qm-pricing-glow-one" aria-hidden="true" />
+        <span className="qm-pricing-glow qm-pricing-glow-two" aria-hidden="true" />
+        <div className="qm-wrap">
+          <header className="qm-pricing-heading">
+            <span className="qm-pricing-heading-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m12 3 2.1 4.9L19 10l-4.9 2.1L12 17l-2.1-4.9L5 10l4.9-2.1L12 3Z" /><path d="m19 16 .8 1.8 1.7.7-1.7.8L19 21l-.8-1.7-1.7-.8 1.7-.7L19 16Z" /></svg>
+            </span>
+            <div><h2>اختر أفضل باقة مناسبة لك</h2><p className="qm-section-sub">خطط مرنة تناسب هدفك وموعد اختبارك</p></div>
+          </header>
+
+          <div className="qm-price-grid">
+            {plans.map((plan) => (
+              <article key={plan.key} className={`qm-price-card ${plan.extra}${plan.popular ? ' qm-hot' : ''}`}>
+                <span className="qm-plan-aura" aria-hidden="true" />
+                {plan.popular && (
+                  <span className="qm-popular">
+                    <svg viewBox="0 0 24 24"><path d="m12 3 2.5 5.3L20 9l-4 4 .9 5.7-4.9-2.6-4.9 2.6L8 13 4 9l5.5-.7L12 3Z" /></svg>
+                    الأكثر اختيارًا
+                  </span>
+                )}
+                <header className="qm-plan-head">
+                  <span className="qm-plan-icon" aria-hidden="true"><svg viewBox="0 0 24 24">{plan.icon}</svg></span>
+                  <span className="qm-plan-number">{plan.number}</span>
+                  <div><small>{plan.kicker}</small><h3>{plan.name}</h3></div>
+                </header>
+                <div className="qm-price-lockup"><strong>{plan.price}</strong><span>ر.س<small>للباقة</small></span></div>
+                <ul>
+                  {plan.features.map((f) => (
+                    <li key={f}><svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7" /></svg><span>{f}</span></li>
+                  ))}
+                </ul>
+                <Link to="/register">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Reviews ===== */}
+      <section id="qm-reviews" className="qm-reviews qm-wrap qm-section">
+        <h2>قصص تفوقهم بدأت هنا</h2>
+        <p className="qm-reviews-lead">تجارب حقيقية من طلاب صنعوا فرقًا في مستواهم ودرجاتهم.</p>
+        <div className="qm-review-row">
+          {testimonials.map((t) => (
+            <article key={t.name} className="qm-testimonial-card">
+              {t.kind === 'voice' ? (
+                <div className={`qm-testimonial-media qm-voice-record${t.warm ? ' qm-warm' : ''}`}>
+                  <div className="qm-media-label">
+                    <svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 1 1-3-6.2L20 4l-1.3 3A8 8 0 0 1 20 11.5Z" /><path d="M8.5 8.2c.5 3 2.3 4.8 5.3 5.3l1-1.6-2.2-1-1 1c-1.1-.5-2-1.4-2.5-2.5l1-1-1-2.2-1.6 1Z" /></svg>
+                    <span>تسجيل واتساب</span>
+                  </div>
+                  <button className="qm-voice-play" aria-label={`تشغيل تسجيل ${t.name}`} type="button">
+                    <svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z" /></svg>
+                  </button>
+                  <div className="qm-voice-wave" aria-hidden="true">{Array.from({ length: 12 }).map((_, i) => <i key={i} />)}</div>
+                  <time>{t.time}</time>
+                </div>
+              ) : (
+                <div className="qm-testimonial-media qm-whatsapp-shot">
+                  <div className="qm-chat-top"><span className="qm-chat-avatar">ع</span><i /><b>محادثة واتساب</b></div>
+                  <div className="qm-chat-bubbles">{t.chat!.map((c) => <span key={c}>{c}</span>)}</div>
+                </div>
+              )}
+              <blockquote>“{t.quote}”</blockquote>
+              <footer>
+                <span className="qm-student-avatar">{t.name.charAt(0)}</span>
+                <div><b>{t.name}</b><small>{t.city}</small></div>
+                <span className="qm-verified">✓ تجربة موثّقة</span>
+              </footer>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="qm-faq qm-wrap qm-section">
+        <h2>الأسئلة الشائعة</h2>
+        {faqs.map((f, i) => (
+          <details key={f.q} open={i === 0}>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
     </div>
   )
 }
