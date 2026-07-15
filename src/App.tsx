@@ -61,7 +61,7 @@ export default function App() {
             borderRadius: '12px',
             direction: 'rtl',
           },
-          success: { iconTheme: { primary: '#E91E8C', secondary: '#fff' } },
+          success: { iconTheme: { primary: '#D946C6', secondary: '#fff' } },
         }}
       />
       <Routes>

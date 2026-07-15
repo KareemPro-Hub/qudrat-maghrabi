@@ -64,7 +64,7 @@ export default function Courses() {
                   <div className="flex items-center gap-4 text-sm text-gray-400 mb-5">
                     <span className="flex items-center gap-1"><BookOpen size={14} /> {course.lessons_count} درس</span>
                     <span className="flex items-center gap-1"><Users size={14} /> {course.enrolled_count?.toLocaleString('ar')} طالب</span>
-                    <span className="flex items-center gap-1"><Star size={14} fill="#E91E8C" color="#E91E8C" /> ٤.٩</span>
+                    <span className="flex items-center gap-1"><Star size={14} fill="#D946C6" color="#D946C6" /> ٤.٩</span>
                   </div>
                 </div>
 

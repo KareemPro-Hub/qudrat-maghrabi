@@ -41,7 +41,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{background: 'linear-gradient(135deg, #1B1B5E 0%, #3D1070 100%)'}}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{background: 'linear-gradient(135deg, #2D174B 0%, #3D1070 100%)'}}>
       <div className="w-full max-w-md">
 
         {/* Card */}
@@ -98,7 +98,7 @@ export default function Login() {
                   onClick={() => setRemember(!remember)}
                   className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 cursor-pointer
                     ${remember ? 'border-brand-pink' : 'border-gray-300'}`}
-                  style={remember ? {background: 'linear-gradient(135deg, #FF8008, #E91E8C)'} : {}}
+                  style={remember ? {background: 'linear-gradient(135deg, #FFC83E, #D946C6)'} : {}}
                 >
                   {remember && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

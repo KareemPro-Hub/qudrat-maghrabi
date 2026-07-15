@@ -92,7 +92,7 @@ export default function CourseDetail() {
     <div className="min-h-screen">
 
       {/* Hero */}
-      <div className="py-16" style={{ background: 'linear-gradient(135deg, #1B1B5E 0%, #3D1070 100%)' }}>
+      <div className="py-16" style={{ background: 'linear-gradient(135deg, #2D174B 0%, #3D1070 100%)' }}>
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 

@@ -6,7 +6,7 @@ export default function PaymentFailed() {
   const courseId = searchParams.get('courseId')
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #1B1B5E 0%, #3D1070 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #2D174B 0%, #3D1070 100%)' }}>
       <div className="bg-white rounded-3xl shadow-brand-lg p-10 max-w-md w-full text-center">
 
         <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">

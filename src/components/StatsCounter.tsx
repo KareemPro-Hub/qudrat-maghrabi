@@ -10,9 +10,9 @@ const stats = [
         <path d="M10 20v10c0 5.523 6.268 10 14 10s14-4.477 14-10V20" stroke="url(#g1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         <defs>
           <linearGradient id="g1" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FF8008"/>
-            <stop offset="0.5" stopColor="#E91E8C"/>
-            <stop offset="1" stopColor="#8B35C4"/>
+            <stop stopColor="#FFC83E"/>
+            <stop offset="0.5" stopColor="#D946C6"/>
+            <stop offset="1" stopColor="#7935EB"/>
           </linearGradient>
         </defs>
       </svg>
@@ -21,8 +21,8 @@ const stats = [
     suffix: '+',
     label: 'طالب مسجّل',
     bg: 'bg-orange-50',
-    gradFrom: '#FF8008',
-    gradTo: '#E91E8C',
+    gradFrom: '#FFC83E',
+    gradTo: '#D946C6',
   },
   {
     svg: (
@@ -34,8 +34,8 @@ const stats = [
         <path d="M16 40h16M24 36v4" stroke="url(#g2)" strokeWidth="2.5" strokeLinecap="round"/>
         <defs>
           <linearGradient id="g2" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#E91E8C"/>
-            <stop offset="1" stopColor="#8B35C4"/>
+            <stop stopColor="#D946C6"/>
+            <stop offset="1" stopColor="#7935EB"/>
           </linearGradient>
         </defs>
       </svg>
@@ -44,8 +44,8 @@ const stats = [
     suffix: '+',
     label: 'درس مرئي',
     bg: 'bg-pink-50',
-    gradFrom: '#E91E8C',
-    gradTo: '#8B35C4',
+    gradFrom: '#D946C6',
+    gradTo: '#7935EB',
   },
   {
     svg: (
@@ -55,8 +55,8 @@ const stats = [
         <path d="M16 24l5.5 5.5L33 18" stroke="url(#g3)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
         <defs>
           <linearGradient id="g3" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#8B35C4"/>
-            <stop offset="1" stopColor="#1B1B5E"/>
+            <stop stopColor="#7935EB"/>
+            <stop offset="1" stopColor="#2D174B"/>
           </linearGradient>
         </defs>
       </svg>
@@ -65,8 +65,8 @@ const stats = [
     suffix: '%',
     label: 'هدفنا لدرجتك',
     bg: 'bg-purple-50',
-    gradFrom: '#8B35C4',
-    gradTo: '#1B1B5E',
+    gradFrom: '#7935EB',
+    gradTo: '#2D174B',
   },
   {
     svg: (
@@ -78,9 +78,9 @@ const stats = [
         <path d="M17 28l3 3 7-7" stroke="url(#g4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         <defs>
           <linearGradient id="g4" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FF8008"/>
-            <stop offset="0.5" stopColor="#E91E8C"/>
-            <stop offset="1" stopColor="#8B35C4"/>
+            <stop stopColor="#FFC83E"/>
+            <stop offset="0.5" stopColor="#D946C6"/>
+            <stop offset="1" stopColor="#7935EB"/>
           </linearGradient>
         </defs>
       </svg>
@@ -89,8 +89,8 @@ const stats = [
     suffix: '+',
     label: 'بنك أسئلة تجميعات',
     bg: 'bg-indigo-50',
-    gradFrom: '#FF8008',
-    gradTo: '#8B35C4',
+    gradFrom: '#FFC83E',
+    gradTo: '#7935EB',
   },
 ]
 
