@@ -77,7 +77,7 @@ export default function App() {
         <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
 
         {/* Student */}
-        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/learn/:courseId" element={<Layout><Learn /></Layout>} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />

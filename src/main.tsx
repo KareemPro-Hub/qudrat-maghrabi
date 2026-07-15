@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import './styles/home.css'
 import './styles/admin-light.css'
+import './styles/student-light.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
