@@ -257,7 +257,7 @@ export default function Learn() {
                             <Clock size={10} />
                             {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
                             {lesson.is_free_preview && <span className="text-green-500 font-bold mr-1">مجاني</span>}
-                            {isQuizBlocked && <span className="text-orange-400 font-bold mr-1">اجتز الاختبار أولاً</span>}
+                            {isQuizBlocked && <span className="text-orange-400 font-bold mr-1">اجتز الاختبار أولًا</span>}
                           </p>
                         </div>
                       </button>
@@ -351,7 +351,7 @@ export default function Learn() {
                             if (!isLastLesson) setCurrentLesson(lessons[currentIndex + 1])
                           }}
                           disabled={isLastLesson || !quizPassed}
-                          title={!quizPassed ? 'اجتز اختبار هذا الدرس أولاً' : ''}
+                          title={!quizPassed ? 'اجتز اختبار هذا الدرس أولًا' : ''}
                           className="btn-primary flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
                           الدرس التالي <ChevronLeft size={16} />
                         </button>
@@ -365,7 +365,7 @@ export default function Learn() {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <BookOpen size={64} className="mx-auto text-gray-200 mb-4" />
-                <p className="text-gray-400 font-bold">اختر درساً من القائمة</p>
+                <p className="text-gray-400 font-bold">اختر درسًا من القائمة</p>
               </div>
             </div>
           )}

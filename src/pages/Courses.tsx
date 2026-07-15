@@ -39,8 +39,8 @@ export default function Courses() {
         ) : courses.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <BookOpen size={48} className="mx-auto mb-4 text-gray-200" />
-            <p className="font-bold text-lg">لا توجد كورسات منشورة حالياً</p>
-            <p className="text-sm mt-2">تابعنا قريباً لإطلاق الكورسات</p>
+            <p className="font-bold text-lg">لا توجد كورسات منشورة حاليًا</p>
+            <p className="text-sm mt-2">تابعنا قريبًا لإطلاق الكورسات</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">

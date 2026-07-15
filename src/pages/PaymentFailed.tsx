@@ -15,13 +15,13 @@ export default function PaymentFailed() {
 
         <h1 className="text-2xl font-black text-brand-navy mb-2">فشلت عملية الدفع</h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          لم تتم عملية الدفع. يمكنك المحاولة مجدداً أو التواصل مع الدعم.
+          لم تتم عملية الدفع. يمكنك المحاولة مجددًا أو التواصل مع الدعم.
         </p>
 
         <div className="space-y-3">
           {courseId && (
             <Link to={`/checkout/${courseId}`} className="btn-primary w-full py-4 text-lg block text-center">
-              حاول مجدداً
+              حاول مجددًا
             </Link>
           )}
           <Link to="/courses" className="btn-outline w-full py-3 block text-center">

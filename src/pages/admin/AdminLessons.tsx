@@ -141,7 +141,7 @@ export default function AdminLessons() {
                 </p>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <button onClick={() => toggleFreePreview(lesson)} className="qm-icon-btn" style={iconBtnStyle()} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانياً'}>
+                <button onClick={() => toggleFreePreview(lesson)} className="qm-icon-btn" style={iconBtnStyle()} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانيًا'}>
                   {lesson.is_free_preview ? <Eye size={15} /> : <EyeOff size={15} />}
                 </button>
                 <button onClick={() => openEdit(lesson)} className="qm-icon-btn" style={iconBtnStyle()}><Edit size={15} /></button>
@@ -165,7 +165,7 @@ export default function AdminLessons() {
               <label style={labelStyle}>الباب</label>
               <input className="qm-input" value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })}
                 style={inputStyle} placeholder="مثال: الباب الأول — النسب والتناسب" />
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائياً</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائيًا</p>
             </div>
             <div>
               <label style={labelStyle}>الوصف</label>

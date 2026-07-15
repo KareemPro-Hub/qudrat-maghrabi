@@ -27,7 +27,7 @@ export default function Login() {
         .eq('id', data.user!.id)
         .single()
 
-      toast.success('مرحباً بك!')
+      toast.success('مرحبًا بك!')
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager']
       if (profile && adminRoles.includes(profile.role)) {
         navigate('/admin')
@@ -51,7 +51,7 @@ export default function Login() {
           <div className="text-center mb-8">
             <img src="/logo.png" alt="قدرات المغربي" className="h-20 w-auto object-contain mx-auto mb-4" />
             <h1 className="text-2xl font-extrabold text-brand-navy">تسجيل الدخول</h1>
-            <p className="text-gray-500 text-sm mt-1">أهلاً بعودتك في منصة قدرات المغربي</p>
+            <p className="text-gray-500 text-sm mt-1">أهلًا بعودتك في منصة قدرات المغربي</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">

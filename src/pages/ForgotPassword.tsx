@@ -73,7 +73,7 @@ export default function ForgotPassword() {
               <p className="text-gray-500 text-sm mb-6">
                 لم يصلك الإيميل؟{' '}
                 <button onClick={() => setSent(false)} className="text-brand-pink font-bold hover:underline">
-                  حاول مجدداً
+                  حاول مجددًا
                 </button>
               </p>
             </div>

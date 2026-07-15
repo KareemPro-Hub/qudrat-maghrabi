@@ -31,7 +31,7 @@ export default function Register() {
     })
 
     if (error) {
-      toast.error(error.message === 'User already registered' ? 'البريد الإلكتروني مسجل مسبقاً' : 'حدث خطأ، حاول مجدداً')
+      toast.error(error.message === 'User already registered' ? 'البريد الإلكتروني مسجل مسبقًا' : 'حدث خطأ، حاول مجددًا')
     } else {
       toast.success('تم التسجيل! تحقق من بريدك لتأكيد الحساب')
       navigate('/login')

@@ -12,7 +12,7 @@ export default function ResetPassword() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Supabase يتعامل مع الـ hash تلقائياً عند فتح الصفحة
+    // Supabase يتعامل مع الـ hash تلقائيًا عند فتح الصفحة
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         toast('أدخل كلمة مرور جديدة', { icon: '🔐' })
@@ -29,7 +29,7 @@ export default function ResetPassword() {
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password })
     if (error) {
-      toast.error('حدث خطأ، حاول مجدداً')
+      toast.error('حدث خطأ، حاول مجددًا')
     } else {
       toast.success('تم تغيير كلمة المرور بنجاح ✅')
       navigate('/login')

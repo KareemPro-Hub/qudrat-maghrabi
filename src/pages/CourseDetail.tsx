@@ -53,7 +53,7 @@ export default function CourseDetail() {
 
   const handleBuy = () => {
     if (!user) {
-      toast.error('سجّل دخولك أولاً')
+      toast.error('سجّل دخولك أولًا')
       navigate('/login')
       return
     }

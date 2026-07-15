@@ -44,7 +44,7 @@ export default function ParentLink() {
     if (error?.code === '23505') {
       toast.error('هذا الطالب مرتبط بحسابك بالفعل')
     } else if (error) {
-      toast.error('حدث خطأ، حاول مجدداً')
+      toast.error('حدث خطأ، حاول مجددًا')
     } else {
       toast.success(`تم ربط حسابك بـ ${found.full_name} ✅`)
       navigate('/parent')
@@ -107,7 +107,7 @@ export default function ParentLink() {
             )}
 
             <p className="text-center text-xs text-gray-400">
-              يجب أن يكون الطالب مسجلاً في المنصة أولاً
+              يجب أن يكون الطالب مسجلًا في المنصة أولًا
             </p>
           </div>
         </div>
