@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="sidebar-profile">
           <div className="avatar">
-            {profile.avatar_url ? <img src={profile.avatar_url} alt={profile.full_name || ''} /> : initialsOf(profile.full_name)}
+            <img src={profile.avatar_url || '/admin/default-avatar.png'} alt={profile.full_name || ''} />
           </div>
           <div>
             <strong>{profile.full_name}</strong>
