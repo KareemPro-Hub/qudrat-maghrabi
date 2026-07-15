@@ -58,7 +58,7 @@ const faqs = [
 ]
 
 function TrustIcon({ type }: { type: string }) {
-  if (type === 'student') return <svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Z" /><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5" /><path d="M22 8v6" /></svg>
+  if (type === 'student') return <svg viewBox="0 0 24 24"><circle cx="12" cy="6.1" r="3.3" /><path d="M3.3 11.3c2.8-1.7 6-1.7 8.7.3" /><path d="M20.7 11.3c-2.8-1.7-6-1.7-8.7.3" /><path d="M3.3 11.3v6.7c2.8-1.7 6-1.7 8.7.3v-7" /><path d="M20.7 11.3v6.7c-2.8-1.7-6-1.7-8.7.3v-7" /></svg>
   if (type === 'target') return <svg viewBox="0 0 24 24"><circle cx="10.3" cy="13.7" r="7.6" /><circle cx="10.3" cy="13.7" r="4.4" /><circle cx="10.3" cy="13.7" r="1" fill="currentColor" stroke="none" /><path d="M12.3 11.7 19.5 4.5" /><path d="M19.5 4.5v3.3M19.5 4.5h-3.3" /></svg>
   if (type === 'question') return <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M9.4 9.3a2.6 2.6 0 1 1 3.8 2.3c-.9.5-1.2 1-1.2 2" /><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" /></svg>
   return <>{type}</>
