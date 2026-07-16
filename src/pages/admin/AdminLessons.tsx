@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, GripVertical } from 'lucide-react'
+import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
-import {
-  glassCard, TopSheen, primaryBtnStyle, outlineBtnStyle, inputStyle, labelStyle,
-  iconBtnStyle, GlassBadge, GlassSpinner, GlassEmptyState, GlassModal,
-} from '../../components/admin/glassKit'
+import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
 const emptyForm = {
   title: '', chapter: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
@@ -96,133 +93,111 @@ export default function AdminLessons() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-        <button onClick={() => navigate('/admin/courses')} className="qm-icon-btn" style={iconBtnStyle()}>
-          <ArrowRight size={16} />
-        </button>
-        <div style={{ flex: 1 }}>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>الكورسات ← </p>
-          <h1 style={{ fontSize: 21, fontWeight: 700, color: '#fff', margin: '2px 0 0', textShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>{course?.title || 'دروس الكورس'}</h1>
-        </div>
-        <button onClick={openAdd} style={primaryBtnStyle}>
-          <Plus size={17} /> إضافة درس
-        </button>
-      </div>
-      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12.5, margin: '0 0 26px 0', paddingRight: 46 }}>{lessons.length} درس</p>
+    <>
+      <SectionToolbar
+        title={course?.title || 'دروس الكورس'}
+        subtitle={`${lessons.length} ${lessons.length === 1 ? 'درس' : 'دروس'} · إدارة دروس الكورس ومحتواه`}
+        action={
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="ghost-button" onClick={() => navigate('/admin/courses')}>
+              <ArrowRight size={14} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> رجوع للكورسات
+            </button>
+            <button className="primary-admin" onClick={openAdd}><Plus size={16} /> إضافة درس</button>
+          </div>
+        }
+      />
 
       {loading ? (
-        <GlassSpinner />
+        <Spinner />
       ) : lessons.length === 0 ? (
-        <GlassEmptyState
-          icon={<Video size={40} />}
-          text="لا توجد دروس بعد"
-          action={<button onClick={openAdd} style={{ ...primaryBtnStyle, marginTop: 4 }}>أضف أول درس</button>}
-        />
+        <EmptyState text="لا توجد دروس بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول درس</button>} />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {lessons.map((lesson, i) => (
-            <div key={lesson.id} className="qm-glass" style={{ ...glassCard, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <TopSheen />
-              <div style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}><GripVertical size={18} /></div>
-              <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#F97316,#EC4899 50%,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
-                {i + 1}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <h3 style={{ fontWeight: 700, color: '#fff', fontSize: 13.5, margin: 0 }}>{lesson.title}</h3>
-                  {lesson.is_free_preview && <GlassBadge variant="success">مجاني</GlassBadge>}
-                  {lesson.video_id && <GlassBadge variant="accent"><Video size={10} style={{ display: 'inline', marginLeft: 4 }} />VdoCipher</GlassBadge>}
-                </div>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5, margin: '4px 0 0' }}>
-                  {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
-                  {lesson.video_id && <span style={{ marginRight: 8 }}>· ID: {lesson.video_id.substring(0, 12)}...</span>}
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                <button onClick={() => toggleFreePreview(lesson)} className="qm-icon-btn" style={iconBtnStyle()} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانيًا'}>
-                  {lesson.is_free_preview ? <Eye size={15} /> : <EyeOff size={15} />}
-                </button>
-                <button onClick={() => openEdit(lesson)} className="qm-icon-btn" style={iconBtnStyle()}><Edit size={15} /></button>
-                <button onClick={() => deleteLesson(lesson.id)} className="qm-icon-btn" style={iconBtnStyle(true)}><Trash2 size={15} /></button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <article className="admin-card data-card">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الدرس</th>
+                  <th>المدة</th>
+                  <th>الفيديو</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lessons.map((lesson, i) => (
+                  <tr key={lesson.id}>
+                    <td>
+                      <span className="table-course c3" style={{ fontSize: 11 }}>{i + 1}</span>
+                    </td>
+                    <td>
+                      <b>{lesson.title}</b>
+                      {lesson.chapter && <span className="cell-sub">{lesson.chapter}</span>}
+                    </td>
+                    <td>{lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : '—'}</td>
+                    <td>
+                      {lesson.video_id ? (
+                        <TagBadge variant="purple"><Video size={10} style={{ verticalAlign: 'middle', marginLeft: 4 }} />مرفوع</TagBadge>
+                      ) : (
+                        <span className="cell-sub">لم يُرفع بعد</span>
+                      )}
+                    </td>
+                    <td><StatusBadge variant={lesson.is_free_preview ? 'success' : 'neutral'}>{lesson.is_free_preview ? 'مجاني' : 'عادي'}</StatusBadge></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="row-action" onClick={() => toggleFreePreview(lesson)} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانيًا'}>
+                          {lesson.is_free_preview ? <Eye size={12} /> : <EyeOff size={12} />}
+                        </button>
+                        <button className="row-action" onClick={() => openEdit(lesson)}><Edit size={12} /></button>
+                        <button className="row-action" onClick={() => deleteLesson(lesson.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
       )}
 
-      {/* Modal */}
       {showModal && (
-        <GlassModal title={editing ? 'تعديل الدرس' : 'إضافة درس جديد'} onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={labelStyle}>عنوان الدرس *</label>
-              <input className="qm-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                style={inputStyle} placeholder="مثال: مقدمة في النسب والتناسب" />
+        <Modal title={editing ? 'تعديل الدرس' : 'إضافة درس جديد'} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSave} className="admin-form">
+            <label>عنوان الدرس *<input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: مقدمة في النسب والتناسب" /></label>
+            <label>
+              الباب
+              <input value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })} placeholder="مثال: الباب الأول — النسب والتناسب" />
+            </label>
+            <label>الوصف<textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للدرس..." /></label>
+            <label>
+              رقم الفيديو (Bunny Video ID)
+              <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+            </label>
+            <label>
+              رابط صورة الغلاف (Thumbnail URL)
+              <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })} placeholder="https://..." dir="ltr" />
+            </label>
+            <div className="form-grid">
+              <label>المدة (دقيقة)<input type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: e.target.value })} placeholder="15" /></label>
+              <label>الترتيب<input type="number" value={form.order_index} onChange={e => setForm({ ...form, order_index: Number(e.target.value) })} min={1} /></label>
             </div>
-            <div>
-              <label style={labelStyle}>الباب</label>
-              <input className="qm-input" value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })}
-                style={inputStyle} placeholder="مثال: الباب الأول — النسب والتناسب" />
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>الدروس اللي لها نفس اسم الباب تتجمع تحته تلقائيًا</p>
+            <div className="form-row" style={{ padding: '10px 12px', borderRadius: 12, background: '#f2fbf6', border: '1px solid #d9f1e7' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input type="checkbox" checked={form.is_free_preview} onChange={e => setForm({ ...form, is_free_preview: e.target.checked })} style={{ width: 16, height: 16 }} />
+                <span>
+                  <b style={{ display: 'block', fontSize: 12 }}>درس مجاني (Preview)</b>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>يظهر للطلاب قبل الاشتراك كعينة مجانية</small>
+                </span>
+              </label>
             </div>
-            <div>
-              <label style={labelStyle}>الوصف</label>
-              <textarea className="qm-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                style={{ ...inputStyle, resize: 'vertical' }} rows={2} placeholder="وصف مختصر للدرس..." />
-            </div>
-            <div>
-              <label style={labelStyle}>رقم الفيديو (VdoCipher Video ID)</label>
-              <input className="qm-input" value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })}
-                style={inputStyle} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>من لوحة VdoCipher → Videos → نسخ الـ ID</p>
-            </div>
-            <div>
-              <label style={labelStyle}>رابط صورة الغلاف (Thumbnail URL)</label>
-              <input className="qm-input" value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
-                style={inputStyle} placeholder="https://..." dir="ltr" />
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>ارفع الصورة على Google Drive أو Imgur وضع الرابط هنا</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>المدة (دقيقة)</label>
-                <input type="number" className="qm-input" value={form.duration_minutes}
-                  onChange={e => setForm({ ...form, duration_minutes: e.target.value })}
-                  style={inputStyle} placeholder="15" />
-              </div>
-              <div>
-                <label style={labelStyle}>الترتيب</label>
-                <input type="number" className="qm-input" value={form.order_index}
-                  onChange={e => setForm({ ...form, order_index: Number(e.target.value) })}
-                  style={inputStyle} min={1} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)' }}>
-              <div
-                onClick={() => setForm({ ...form, is_free_preview: !form.is_free_preview })}
-                className="qm-check"
-                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${form.is_free_preview ? '#4ADE80' : 'rgba(255,255,255,0.3)'}`, background: form.is_free_preview ? '#22C55E' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                {form.is_free_preview && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0 }}>درس مجاني (Preview)</p>
-                <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>يظهر للطلاب قبل الاشتراك كعينة مجانية</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-              <button type="submit" disabled={saving} style={{ ...primaryBtnStyle, flex: 1, justifyContent: 'center' }}>
-                {saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الدرس'}
-              </button>
-              <button type="button" onClick={() => setShowModal(false)} className="qm-btn-outline" style={{ ...outlineBtnStyle, flex: 1 }}>إلغاء</button>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الدرس'}</button>
+              <button type="button" className="ghost-button" onClick={() => setShowModal(false)}>إلغاء</button>
             </div>
           </form>
-        </GlassModal>
+        </Modal>
       )}
-    </div>
+    </>
   )
 }
