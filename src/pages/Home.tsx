@@ -9,10 +9,10 @@ const trustStats = [
 ]
 
 const programs = [
-  { icon: '▦', title: 'تأسيس الكمي', desc: 'ابدأ من الصفر وثبّت أساسياتك.' },
-  { icon: '↗', title: 'المهارات المتقدمة', desc: 'استراتيجيات سريعة للحل الذكي.' },
-  { icon: '✦', title: 'الباقة الشاملة', desc: 'تأسيس، تدريب ومحاكاة كاملة.', featured: true },
-  { icon: '◎', title: 'المحاكاة المكثفة', desc: 'نماذج واقعية بوقت الاختبار.' },
+  { icon: 'foundation', title: 'تأسيس الكمي', desc: 'ابدأ من الصفر وثبّت أساسياتك.' },
+  { icon: 'quiz', title: 'حل اختبار بعد كل درس', desc: 'طبّق مباشرة وتأكد من فهمك.' },
+  { icon: 'archive', title: 'حلول تجميعات السنوات السابقة', desc: 'حلول مشروحة لأشهر التجميعات.', featured: true },
+  { icon: 'group', title: 'جروب تفاعلي للدعم والمساعدة', desc: 'متابعة مستمرة وإجابة على استفساراتك.' },
 ]
 
 const valuePoints = [
@@ -64,6 +64,14 @@ function TrustIcon({ type }: { type: string }) {
   if (type === 'question') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/message-question.png)", maskImage: "url(/home/nav-icons/message-question.png)" }} />
   if (type === '▶') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/screen-play.png)", maskImage: "url(/home/nav-icons/screen-play.png)" }} />
   return <>{type}</>
+}
+
+function ProgramIcon({ type }: { type: string }) {
+  if (type === 'foundation') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/book-open-reader.png)", maskImage: "url(/home/nav-icons/book-open-reader.png)" }} />
+  if (type === 'quiz') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/question-square.png)", maskImage: "url(/home/nav-icons/question-square.png)" }} />
+  if (type === 'archive') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/tags.png)", maskImage: "url(/home/nav-icons/tags.png)" }} />
+  if (type === 'group') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/headset.png)", maskImage: "url(/home/nav-icons/headset.png)" }} />
+  return null
 }
 
 function ValueIcon({ path }: { path: string }) {
@@ -141,11 +149,11 @@ export default function Home() {
 
       {/* ===== Programs ===== */}
       <section id="qm-courses" className="qm-wrap qm-section">
-        <div className="qm-program-heading"><div><h2>اختر أفضل باقة مناسبة لك</h2></div></div>
+        <div className="qm-program-heading"><div><h2>ماذا سنتعلم في هذا الكورس ؟</h2></div></div>
         <div className="qm-program-rail">
           {programs.map((p) => (
             <article key={p.title} className={p.featured ? 'qm-featured' : ''}>
-              <span>{p.icon}</span>
+              <span><ProgramIcon type={p.icon} /></span>
               <h3>{p.title}</h3>
               <p>{p.desc}</p>
               {p.featured && <a href="#qm-prices">اعرف المزيد ←</a>}
