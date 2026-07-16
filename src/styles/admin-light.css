@@ -77,7 +77,8 @@
 
 /* Modal (not part of the source mockup — authored to match its visual language) */
 .adm-modal-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(46,25,71,.45);backdrop-filter:blur(6px)}
-.adm-modal{width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:22px;background:#fff;box-shadow:0 30px 70px rgba(40,18,64,.35);border:1px solid var(--adm-line)}
+.adm-modal{width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:22px;background:#fff;box-shadow:0 30px 70px rgba(40,18,64,.35);border:1px solid var(--adm-line);scrollbar-width:none;}
+.adm-modal::-webkit-scrollbar{display:none;}
 .adm-modal.wide{max-width:720px}
 .adm-modal-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--adm-line);background:#fff}
 .adm-modal-head h3{margin:0;font-size:18px;font-weight:900}
