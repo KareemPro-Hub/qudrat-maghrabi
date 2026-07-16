@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import SiteNav from './components/SiteNav'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Auth from './pages/Auth'
 import Courses from './pages/Courses'
@@ -60,9 +61,14 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen">{children}</div>
 }
 
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster
         position="top-center"
         toastOptions={{
