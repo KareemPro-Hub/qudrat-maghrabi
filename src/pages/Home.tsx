@@ -107,9 +107,11 @@ export default function Home() {
         <div className="qm-hero-grid qm-wrap">
           <div className="qm-hero-copy">
             <h1 className="qm-hero-title">
-              <span>اكسر خوفك</span>
-              <span>وتفوّق</span>
-              <span className="qm-hero-title-accent"><span>بجدارة</span><span className="qm-hero-rocket" aria-hidden="true">🚀</span></span>
+              <span className="qm-hero-title-row"><span>اكسر</span><span>خوفك</span></span>
+              <span className="qm-hero-title-row">
+                <span>وتفوّق</span>
+                <span className="qm-hero-title-accent"><span>بجدارة</span><span className="qm-hero-rocket" aria-hidden="true">🚀</span></span>
+              </span>
             </h1>
             <p className="qm-hero-lead">
               <span>انضم لدفعة </span><strong>التميز</strong><span> واكتشف أسرار وتكنيكات </span><strong>«المغربي»</strong>

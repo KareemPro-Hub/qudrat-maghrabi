@@ -91,8 +91,8 @@
 
 .qm-hero-grid { display: grid; grid-template-columns: .88fr 1.12fr; align-items: center; direction: ltr; height: 650px; position: relative; z-index: 2; }
 .qm-hero-copy { direction: rtl; padding-left: 25px; }
-.qm-hero-title { display: flex; flex-direction: column; align-items: flex-start; gap: 0; font-size: 65px; line-height: 1.16; margin: 0 0 22px; font-weight: 900; letter-spacing: -2.8px; }
-.qm-hero-title > span { display: block; white-space: nowrap; }
+.qm-hero-title { display: flex; flex-direction: column; align-items: stretch; gap: 4px; font-size: 65px; line-height: 1.16; margin: 0 0 22px; font-weight: 900; letter-spacing: -2.8px; }
+.qm-hero-title-row { display: flex; align-items: center; justify-content: space-between; white-space: nowrap; }
 .qm-hero-title-accent { display: flex; align-items: center; direction: rtl; gap: 18px; color: var(--qm-yellow); }
 .qm-hero-rocket { font-size: .72em; line-height: 1; filter: drop-shadow(0 7px 10px rgba(66,25,103,.25)); transform: translateY(2px) rotate(-7deg); display: inline-block; }
 .qm-hero-lead { max-width: 625px; font-size: 19px; line-height: 2.05; font-weight: 300; color: rgba(255,255,255,.72); margin: 0 0 30px; }
