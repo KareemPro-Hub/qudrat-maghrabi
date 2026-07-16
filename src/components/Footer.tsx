@@ -85,10 +85,6 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} قدرات المغربي. جميع الحقوق محفوظة.</p>
           <div><span>صنع للطلاب الطموحين</span><i /><span>المملكة العربية السعودية</span></div>
         </div>
-        <div className="qm-footer-credit">
-          نُسِجَت ملامح هذا الإبداع البصري والرقمي بروح وإبداع{' '}
-          <a href="https://kareempro.com" target="_blank" rel="noopener noreferrer">Kareem Pro</a>
-        </div>
       </div>
     </footer>
   )
