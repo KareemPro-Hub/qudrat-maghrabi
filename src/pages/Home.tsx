@@ -162,16 +162,16 @@ export default function Home() {
 
       {/* ===== Value ===== */}
       <section className="qm-value qm-wrap qm-section">
-        <div className="qm-value-heading">
-          <div>
-            <h2>لماذا <span className="qm-heading-accent">قدرات المغربي</span> ؟</h2>
-            <p>كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
-          </div>
-        </div>
         <div className="qm-value-photo-frame">
           <img src="/home/student-woman-math.jpeg" alt="طالبة سعودية تراجع مسائل الرياضيات استعدادًا لاختبار القدرات" loading="lazy" />
         </div>
         <div className="qm-value-copy">
+          <div className="qm-value-heading">
+            <div>
+              <h2>لماذا <span className="qm-heading-accent">قدرات المغربي</span> ؟</h2>
+              <p>كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
+            </div>
+          </div>
           <div className="qm-value-grid">
             {valuePoints.map((v) => (
               <article key={v.title}>
