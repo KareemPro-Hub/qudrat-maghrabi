@@ -3,40 +3,29 @@ import { useParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Trophy, RotateCcw, Home, BookOpen, Play, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-declare global { interface Window { VdoPlayer: any } }
-
 function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoId: string, courseId: string, sessionToken: string, onClose: () => void }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [src, setSrc] = useState('')
 
   useEffect(() => {
     let destroyed = false
     async function init() {
       try {
-        const res = await fetch('/api/vdocipher-otp', {
+        const res = await fetch('/api/bunny-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
           body: JSON.stringify({ videoId, courseId }),
         })
-        const { otp, playbackInfo, error: apiError } = await res.json()
-        if (apiError || !otp) throw new Error(apiError || 'تعذّر تحميل الفيديو')
+        const { libraryId, token, expires, error: apiError } = await res.json()
+        if (apiError || !token) throw new Error(apiError || 'تعذّر تحميل الفيديو')
         if (destroyed) return
-        if (!window.VdoPlayer) {
-          await new Promise<void>((resolve, reject) => {
-            const s = document.createElement('script')
-            s.src = 'https://player.vdocipher.com/v2/api.js'
-            s.onload = () => resolve(); s.onerror = () => reject(); document.head.appendChild(s)
-          })
-        }
-        if (destroyed) return
-        playerRef.current = new window.VdoPlayer({ otp, playbackInfo, theme: '9ae8bbe8dd964ddc9bdb932cca1cb59a', container: containerRef.current })
+        setSrc(`https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${token}&expires=${expires}`)
         setLoading(false)
       } catch (e: any) { if (!destroyed) { setError(e.message); setLoading(false) } }
     }
     init()
-    return () => { destroyed = true; playerRef.current?.destroy?.() }
+    return () => { destroyed = true }
   }, [videoId])
 
   return (
@@ -47,7 +36,17 @@ function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoI
         </button>
         {loading && <div className="h-64 flex items-center justify-center"><div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" /></div>}
         {error && <div className="h-64 flex items-center justify-center text-red-400 font-bold">{error}</div>}
-        <div ref={containerRef} style={{ aspectRatio: '16/9' }} />
+        {src && !error && (
+          <div style={{ position: 'relative', aspectRatio: '16/9' }}>
+            <iframe
+              src={src}
+              loading="lazy"
+              style={{ border: 0, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
       </div>
     </div>
   )

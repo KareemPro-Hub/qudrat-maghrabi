@@ -27,7 +27,7 @@ export interface Lesson {
   course_id: string
   title: string
   description?: string
-  video_id: string // VdoCipher video ID
+  video_id: string // Bunny Stream video ID
   order_index: number
   duration_minutes?: number
   is_free_preview: boolean

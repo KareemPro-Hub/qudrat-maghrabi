@@ -33,6 +33,7 @@ import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Refund from './pages/Refund'
+import NotFound from './pages/NotFound'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -104,6 +105,9 @@ export default function App() {
         <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
         <Route path="/terms" element={<Layout><Terms /></Layout>} />
         <Route path="/refund" element={<Layout><Refund /></Layout>} />
+
+        {/* 404 */}
+        <Route path="*" element={<Layout><NotFound /></Layout>} />
       </Routes>
     </BrowserRouter>
   )
