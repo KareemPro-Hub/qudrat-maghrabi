@@ -37,7 +37,7 @@
 .quick-button:hover::after{left:125%}
 .quick-button:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(64,28,91,.28),inset 0 1px 0 rgba(255,255,255,.88)}
 .admin-content{padding:26px 30px 55px}
-.admin-panel{animation:admPanelIn .42s cubic-bezier(.2,.8,.2,1) both}
+.admin-panel{animation:admPanelIn .42s cubic-bezier(.2,.8,.2,1)}
 @keyframes admPanelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 /* Overview */

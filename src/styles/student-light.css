@@ -42,7 +42,7 @@
 .student-mini-profile{display:flex;align-items:center;gap:10px;padding:7px 9px 7px 15px;border-radius:17px;background:#fff}
 .student-mini-profile>span{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#7432dc,#d941a8);color:#fff;font-weight:900}
 .student-mini-profile b,.student-mini-profile small{display:block}.student-mini-profile b{font-size:17.5px}.student-mini-profile small{margin-top:2px;color:#9a8fa0;font-size:15px}
-.student-panel{display:none;padding-top:26px}.student-panel.active{display:block;animation:panelIn .42s ease both}
+.student-panel{display:none;padding-top:26px}.student-panel.active{display:block;animation:panelIn .42s ease}
 .continue-card{position:relative;min-height:330px;display:grid;grid-template-columns:1.12fr .88fr;align-items:center;overflow:hidden;padding:42px 58px;border-radius:28px;background:linear-gradient(122deg,#c6409f 0%,#8a37ca 46%,#45319b 100%);box-shadow:0 24px 55px rgba(99,47,163,.22);color:#fff;isolation:isolate}
 .continue-card::before,.continue-card::after{content:"";position:absolute;z-index:-1;pointer-events:none}.continue-card::before{inset:auto -70px -140px auto;width:720px;height:250px;border:1px solid rgba(255,198,59,.34);border-radius:50%;transform:rotate(-8deg)}.continue-card::after{left:-95px;top:-150px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 68%)}
 .continue-copy{position:relative;z-index:1}.continue-label{width:max-content;display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:7px 13px;border:1px solid rgba(255,255,255,.35);border-radius:12px;background:rgba(255,255,255,.09);font-size:17.5px}.continue-label svg{width:18px;height:18px}

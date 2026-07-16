@@ -50,7 +50,7 @@
 .parent-shell .child-switch button.active{color:#7230d4;background:#f6f0ff}
 .parent-shell .child-switch span{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(145deg,#7431d7,#a63ee0);color:#fff;font-size:15px;font-weight:900}
 
-.parent-shell .parent-panel{display:none;padding-top:26px}.parent-shell .parent-panel.active{display:block;animation:parentPanelIn .42s ease both}
+.parent-shell .parent-panel{display:none;padding-top:26px}.parent-shell .parent-panel.active{display:block;animation:parentPanelIn .42s ease}
 .parent-shell .parent-focus-card{position:relative;min-height:330px;display:grid;grid-template-columns:1.22fr .78fr;align-items:center;overflow:hidden;padding:38px 58px;border-radius:28px;background:linear-gradient(122deg,#cf4098 0%,#8f37bd 46%,#40319d 100%);box-shadow:0 24px 55px rgba(99,47,163,.22);color:#fff;isolation:isolate}
 .parent-shell .parent-focus-card::before,.parent-shell .parent-focus-card::after{content:"";position:absolute;z-index:-1;pointer-events:none}.parent-shell .parent-focus-card::before{inset:auto -70px -145px auto;width:720px;height:250px;border:1px solid rgba(255,197,57,.32);border-radius:50%;transform:rotate(-8deg)}.parent-shell .parent-focus-card::after{left:-90px;top:-160px;width:390px;height:390px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.14),transparent 69%)}
 .parent-shell .focus-copy h2{margin:0 0 20px;font-size:38px;font-weight:900}

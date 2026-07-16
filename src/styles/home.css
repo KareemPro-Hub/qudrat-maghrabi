@@ -107,7 +107,7 @@
 .qm-arch img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 28px 40px rgba(55,24,105,.28)); }
 
 .qm-trust { margin-top: -2px; height: 126px; padding: 0 25px; background: rgba(255,255,255,.97); border: 1px solid rgba(255,255,255,.7); border-radius: 18px; box-shadow: 0 22px 55px rgba(61,27,91,.2); display: flex; align-items: center; justify-content: space-around; position: relative; z-index: 2; }
-.qm-trust article { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; color: #392251; animation: qmCounterRise .7s ease both; }
+.qm-trust article { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; color: #392251; animation: qmCounterRise .7s ease backwards; }
 .qm-trust article:nth-child(2) { animation-delay: .08s; } .qm-trust article:nth-child(3) { animation-delay: .16s; } .qm-trust article:nth-child(4) { animation-delay: .24s; }
 .qm-trust article + article::after { content: ""; position: absolute; right: 0; top: 25%; width: 1px; height: 50%; background: linear-gradient(transparent, #ded3ea, transparent); }
 .qm-trust article i { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; font-style: normal; font-size: 23px; background: linear-gradient(145deg,#efe4ff,#ddc5ff); color: #7f35df; box-shadow: 0 8px 20px rgba(117,52,205,.15); }
@@ -232,7 +232,7 @@
 .qm-reviews::before { content: ""; position: absolute; z-index: -1; width: 420px; height: 420px; right: 50%; top: 20px; transform: translateX(50%); border-radius: 50%; background: radial-gradient(circle, rgba(151,65,235,.08), transparent 70%); }
 .qm-reviews-lead { margin: 10px auto 0; color: var(--qm-muted); font-size: 16px; font-weight: 300; }
 .qm-review-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 46px; align-items: stretch; }
-.qm-testimonial-card { position: relative; overflow: hidden; min-height: 370px; background: linear-gradient(150deg,#fff,#fbf8ff); border: 1px solid #eadff4; border-radius: 25px; padding: 17px; text-align: right; box-shadow: 0 18px 42px rgba(71,32,108,.09); transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; animation: qmTestimonialRise .7s cubic-bezier(.2,.8,.2,1) both; }
+.qm-testimonial-card { position: relative; overflow: hidden; min-height: 370px; background: linear-gradient(150deg,#fff,#fbf8ff); border: 1px solid #eadff4; border-radius: 25px; padding: 17px; text-align: right; box-shadow: 0 18px 42px rgba(71,32,108,.09); transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; animation: qmTestimonialRise .7s cubic-bezier(.2,.8,.2,1) backwards; }
 .qm-testimonial-card:nth-child(2) { animation-delay: .12s; } .qm-testimonial-card:nth-child(3) { animation-delay: .24s; }
 .qm-testimonial-card:hover { transform: translateY(-9px); border-color: #d7c0f2; box-shadow: 0 27px 55px rgba(71,32,108,.16); }
 .qm-testimonial-media { height: 135px; border-radius: 18px; position: relative; overflow: hidden; }
