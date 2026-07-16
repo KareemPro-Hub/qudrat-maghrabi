@@ -69,7 +69,7 @@ function TrustIcon({ type }: { type: string }) {
 function ProgramIcon({ type }: { type: string }) {
   if (type === 'foundation') return <span className="qm-program-icon-img qm-mask-icon qm-program-icon-foundation" style={{ WebkitMaskImage: "url(/home/nav-icons/dictionary-open.png)", maskImage: "url(/home/nav-icons/dictionary-open.png)" }} />
   if (type === 'quiz') return <span className="qm-program-icon-img qm-mask-icon qm-program-icon-quiz" style={{ WebkitMaskImage: "url(/home/nav-icons/quiz-alt.png)", maskImage: "url(/home/nav-icons/quiz-alt.png)" }} />
-  if (type === 'archive') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/tags.png)", maskImage: "url(/home/nav-icons/tags.png)" }} />
+  if (type === 'archive') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/ballot.png)", maskImage: "url(/home/nav-icons/ballot.png)" }} />
   if (type === 'group') return <span className="qm-program-icon-img qm-mask-icon qm-program-icon-group" style={{ WebkitMaskImage: "url(/home/nav-icons/users-alt.png)", maskImage: "url(/home/nav-icons/users-alt.png)" }} />
   return null
 }
