@@ -4,15 +4,10 @@ import { Lock, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
-declare global {
-  interface Window { VdoPlayer: any }
-}
-
-function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string, courseId: string, sessionToken: string }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<any>(null)
+function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, courseId: string, sessionToken: string }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [src, setSrc] = useState('')
 
   useEffect(() => {
     let destroyed = false
@@ -20,9 +15,10 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
     async function init() {
       setLoading(true)
       setError('')
+      setSrc('')
 
       try {
-        const res = await fetch('/api/vdocipher-otp', {
+        const res = await fetch('/api/bunny-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -30,27 +26,11 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
           },
           body: JSON.stringify({ videoId, courseId }),
         })
-        const { otp, playbackInfo, error: apiError } = await res.json()
-        if (apiError || !otp) throw new Error(apiError || 'Failed to load video')
+        const { libraryId, token, expires, error: apiError } = await res.json()
+        if (apiError || !token) throw new Error(apiError || 'Failed to load video')
         if (destroyed) return
 
-        if (!window.VdoPlayer) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script')
-            script.src = 'https://player.vdocipher.com/v2/api.js'
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error('Failed to load VdoCipher SDK'))
-            document.head.appendChild(script)
-          })
-        }
-        if (destroyed) return
-
-        playerRef.current = new window.VdoPlayer({
-          otp,
-          playbackInfo,
-          theme: '9ae8bbe8dd964ddc9bdb932cca1cb59a',
-          container: containerRef.current,
-        })
+        setSrc(`https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${token}&expires=${expires}`)
         setLoading(false)
       } catch (e: any) {
         if (!destroyed) { setError(e.message); setLoading(false) }
@@ -58,7 +38,7 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
     }
 
     init()
-    return () => { destroyed = true; playerRef.current?.destroy?.() }
+    return () => { destroyed = true }
   }, [videoId])
 
   return (
@@ -73,7 +53,15 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
           <p style={{ color: '#ff8a75', fontWeight: 700 }}>{error}</p>
         </div>
       )}
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      {src && !error && (
+        <iframe
+          src={src}
+          loading="lazy"
+          style={{ border: 0, position: 'absolute', top: 0, left: 0, height: '100%', width: '100%' }}
+          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+          allowFullScreen
+        />
+      )}
     </div>
   )
 }
@@ -318,7 +306,7 @@ export default function Learn() {
           <article className="hub-video-player">
             <div className="hub-video-stage">
               {currentLesson.video_id ? (
-                <VdoCipherPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} />
+                <BunnyPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.55)' }}>
                   <svg style={{ width: 56, height: 56, marginBottom: 12 }} viewBox="0 0 32 32"><use href="#icon-video"></use></svg>
