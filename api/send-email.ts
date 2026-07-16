@@ -123,6 +123,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ${footer}
       </div>`
 
+  } else if (type === 'admin_broadcast') {
+    subject = data?.title || 'إشعار جديد — قدرات المغربي'
+    html = `
+      <div dir="rtl" style="${baseStyle}">
+        ${header}
+        <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #3D1070;">
+          <h2 style="color:#1B1B5E;">${data?.title || ''}</h2>
+          <p style="color:#444;line-height:1.8;white-space:pre-wrap;">
+            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            ${data?.body || ''}
+          </p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="https://qudrat-maghrabi.vercel.app/dashboard"
+               style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
+              الذهاب للمنصة ←
+            </a>
+          </div>
+        </div>
+        ${footer}
+      </div>`
+
   } else {
     return res.status(400).json({ error: 'Unknown email type' })
   }

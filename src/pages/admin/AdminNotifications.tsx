@@ -18,6 +18,7 @@ export default function AdminNotifications() {
   const [body, setBody] = useState('')
   const [audience, setAudience] = useState<'students' | 'team' | 'course'>('students')
   const [type, setType] = useState('info')
+  const [sendEmail, setSendEmail] = useState(true)
   const [courses, setCourses] = useState<any[]>([])
   const [courseId, setCourseId] = useState('')
   const [sending, setSending] = useState(false)
@@ -43,18 +44,20 @@ export default function AdminNotifications() {
     setLoading(false)
   }
 
-  async function resolveRecipients(): Promise<string[]> {
+  type Recipient = { id: string; email: string | null; full_name: string | null }
+
+  async function resolveRecipients(): Promise<Recipient[]> {
     if (audience === 'students') {
-      const { data } = await supabase.from('profiles').select('id').eq('role', 'student')
-      return (data || []).map((r: any) => r.id)
+      const { data } = await supabase.from('profiles').select('id, email, full_name').eq('role', 'student')
+      return data || []
     }
     if (audience === 'team') {
-      const { data } = await supabase.from('profiles').select('id').in('role', ['admin', 'teacher', 'content_manager', 'student_manager'])
-      return (data || []).map((r: any) => r.id)
+      const { data } = await supabase.from('profiles').select('id, email, full_name').in('role', ['admin', 'teacher', 'content_manager', 'student_manager'])
+      return data || []
     }
     if (audience === 'course' && courseId) {
-      const { data } = await supabase.from('enrollments').select('student_id').eq('payment_status', 'paid').eq('course_id', courseId)
-      return (data || []).map((r: any) => r.student_id)
+      const { data } = await supabase.from('enrollments').select('profiles(id, email, full_name)').eq('payment_status', 'paid').eq('course_id', courseId)
+      return (data || []).map((r: any) => r.profiles).filter(Boolean)
     }
     return []
   }
@@ -70,14 +73,39 @@ export default function AdminNotifications() {
       setSending(false)
       return
     }
-    const rows = recipients.map((uid) => ({ user_id: uid, title, body, type }))
+    const rows = recipients.map((r) => ({ user_id: r.id, title, body, type }))
     const { error } = await supabase.from('notifications').insert(rows)
-    if (error) toast.error('حدث خطأ أثناء الإرسال')
-    else {
-      toast.success(`تم إرسال الإشعار إلى ${recipients.length} مستخدم ✅`)
-      setTitle(''); setBody('')
-      fetchLog()
+    if (error) {
+      toast.error('حدث خطأ أثناء الإرسال')
+      setSending(false)
+      return
     }
+
+    toast.success(`تم إرسال الإشعار إلى ${recipients.length} مستخدم ✅`)
+
+    // إرسال إيميل حقيقي لكل مستلم كمان (غير معطّل لإتمام العملية لو فشل بريد واحد)
+    if (sendEmail) {
+      let emailsOk = 0
+      await Promise.all(
+        recipients
+          .filter((r) => r.email)
+          .map((r) =>
+            fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: r.email,
+                type: 'admin_broadcast',
+                data: { studentName: r.full_name, title, body },
+              }),
+            }).then((res) => { if (res.ok) emailsOk++ }).catch(() => {})
+          )
+      )
+      if (emailsOk > 0) toast.success(`تم إرسال إيميل فعلي لـ ${emailsOk} مستلم ✅`)
+    }
+
+    setTitle(''); setBody('')
+    fetchLog()
     setSending(false)
   }
 
@@ -115,6 +143,15 @@ export default function AdminNotifications() {
               </select>
             </label>
             <label>نص الرسالة<textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder="اكتب رسالتك هنا..." /></label>
+            <div className="form-row" style={{ padding: '10px 12px', borderRadius: 12, background: '#f2fbf6', border: '1px solid #d9f1e7' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} style={{ width: 16, height: 16 }} />
+                <span>
+                  <b style={{ display: 'block', fontSize: 12 }}>إرسال إيميل حقيقي كمان</b>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>يوصل لصندوق بريد المستلم مش داخل المنصة بس</small>
+                </span>
+              </label>
+            </div>
             <div className="form-row">
               <span />
               <button type="submit" className="primary-admin" disabled={sending}>{sending ? 'جاري الإرسال...' : 'إرسال الإشعار'}</button>
