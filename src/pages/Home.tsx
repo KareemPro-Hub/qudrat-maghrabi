@@ -101,7 +101,7 @@ export default function Home() {
           </Link>
           <div className="qm-nav-links">
             <Link to="/"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/home.png" alt="" /></span>الرئيسية</Link>
-            <a href="#qm-courses"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/online-course.png" alt="" /></span>الكورسات</a>
+            <Link to="/courses"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/online-course.png" alt="" /></span>الكورسات</Link>
             <a href="#qm-prices"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/tags.png" alt="" /></span>الأسعار</a>
             <a href="#qm-reviews"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/thumbs-up-trust-v2.png" alt="" /></span>آراء الطلاب</a>
             <Link to="/contact"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/headset.png" alt="" /></span>تواصل معنا</Link>
