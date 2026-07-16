@@ -31,7 +31,7 @@ export default function Footer() {
             <a href="#" aria-label="سناب شات">
               <span className="qm-social-icon qm-social-icon-snapchat" />
             </a>
-            <a href="#" aria-label="يوتيوب">
+            <a href="https://www.youtube.com/@QudratAlmaghrabi" target="_blank" rel="noopener noreferrer" aria-label="يوتيوب">
               <span className="qm-social-icon qm-social-icon-youtube" />
             </a>
           </div>

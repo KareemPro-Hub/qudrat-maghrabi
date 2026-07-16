@@ -1,3 +1,10 @@
+const contactChannels = [
+  { icon: '📧', title: 'البريد الإلكتروني', value: 'Qudrat.Maghrabi.Pro@gmail.com', sub: 'نرد خلال 24 ساعة', href: 'mailto:Qudrat.Maghrabi.Pro@gmail.com' },
+  { icon: '💬', title: 'واتساب', value: '+966 54 806 6321', sub: 'السبت – الخميس، ٩ص – ١٠م', href: 'https://wa.me/966548066321' },
+  { icon: '📺', title: 'يوتيوب', value: 'قدرات المغربي', sub: 'محتوى مجاني ومتجدد', href: 'https://www.youtube.com/@QudratAlmaghrabi' },
+  { icon: '🐦', title: 'تويتر / X', value: '@QudratMaghrabi', sub: 'تابعنا للأخبار والتحديثات', href: '' },
+]
+
 export default function Contact() {
   return (
     <div className="min-h-screen py-16">
@@ -9,19 +16,25 @@ export default function Contact() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {[
-            { icon: '📧', title: 'البريد الإلكتروني', value: 'Qudrat.Maghrabi.Pro@gmail.com', sub: 'نرد خلال 24 ساعة' },
-            { icon: '💬', title: 'واتساب', value: '+966 5X XXX XXXX', sub: 'السبت – الخميس، ٩ص – ١٠م' },
-            { icon: '📺', title: 'يوتيوب', value: 'قدرات المغربي', sub: 'محتوى مجاني ومتجدد' },
-            { icon: '🐦', title: 'تويتر / X', value: '@QudratMaghrabi', sub: 'تابعنا للأخبار والتحديثات' },
-          ].map((item, i) => (
-            <div key={i} className="card text-center">
-              <div className="text-4xl mb-3">{item.icon}</div>
-              <h3 className="font-black text-brand-navy text-lg mb-1">{item.title}</h3>
-              <p className="text-brand-pink font-bold mb-1">{item.value}</p>
-              <p className="text-gray-400 text-sm">{item.sub}</p>
-            </div>
-          ))}
+          {contactChannels.map((item, i) => {
+            const content = (
+              <>
+                <div className="text-4xl mb-3">{item.icon}</div>
+                <h3 className="font-black text-brand-navy text-lg mb-1">{item.title}</h3>
+                <p className="text-brand-pink font-bold mb-1">{item.value}</p>
+                <p className="text-gray-400 text-sm">{item.sub}</p>
+              </>
+            )
+            return item.href ? (
+              <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" className="card text-center hover:shadow-lg transition-shadow">
+                {content}
+              </a>
+            ) : (
+              <div key={i} className="card text-center">
+                {content}
+              </div>
+            )
+          })}
         </div>
 
         <div className="card">
