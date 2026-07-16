@@ -70,7 +70,7 @@ function ProgramIcon({ type }: { type: string }) {
   if (type === 'foundation') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/book-open-reader.png)", maskImage: "url(/home/nav-icons/book-open-reader.png)" }} />
   if (type === 'quiz') return <span className="qm-program-icon-img qm-mask-icon qm-program-icon-quiz" style={{ WebkitMaskImage: "url(/home/nav-icons/quiz-alt.png)", maskImage: "url(/home/nav-icons/quiz-alt.png)" }} />
   if (type === 'archive') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/tags.png)", maskImage: "url(/home/nav-icons/tags.png)" }} />
-  if (type === 'group') return <span className="qm-program-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/headset.png)", maskImage: "url(/home/nav-icons/headset.png)" }} />
+  if (type === 'group') return <span className="qm-program-icon-img qm-mask-icon qm-program-icon-group" style={{ WebkitMaskImage: "url(/home/nav-icons/users-alt.png)", maskImage: "url(/home/nav-icons/users-alt.png)" }} />
   return null
 }
 
