@@ -399,7 +399,10 @@ export default function Dashboard() {
               <p>{ROLE_LABEL[profile?.role || 'student']} {courses.length > 0 ? `· مشترك في ${courses.length} ${courses.length === 1 ? 'كورس' : 'كورسات'}` : ''}</p>
               <small>{nearestExpiry ? `اشتراكك فعّال حتى ${nearestExpiry.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })}` : profile?.email}</small>
             </div>
-            <button type="button" className="secondary-button" onClick={() => navigate('/profile')}>تعديل البيانات</button>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" className="secondary-button" onClick={() => navigate('/profile')}>تعديل البيانات</button>
+              <button type="button" className="secondary-button" onClick={async () => { await signOut(); navigate('/') }}>تسجيل الخروج</button>
+            </div>
           </article>
         </section>
       </main>

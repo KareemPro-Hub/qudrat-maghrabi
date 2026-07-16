@@ -51,7 +51,7 @@ interface StudentSummary {
 }
 
 export default function ParentDashboard() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, signOut } = useAuth()
   const navigate = useNavigate()
   const [panel, setPanel] = useState<PanelKey>('home')
   const [fetching, setFetching] = useState(true)
@@ -471,7 +471,10 @@ export default function ParentDashboard() {
                 <Link to="/parent/link" className="secondary-parent-button">+ ربط طالب آخر</Link>
               </div>
             </div>
-            <button type="button" className="secondary-parent-button" onClick={() => navigate('/profile')}>تعديل البيانات</button>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" className="secondary-parent-button" onClick={() => navigate('/profile')}>تعديل البيانات</button>
+              <button type="button" className="secondary-parent-button" onClick={async () => { await signOut(); navigate('/') }}>تسجيل الخروج</button>
+            </div>
           </article>
         </section>
       </main>
