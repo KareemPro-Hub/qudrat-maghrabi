@@ -34,6 +34,15 @@ export default function Footer() {
               <span className="qm-social-icon qm-social-icon-youtube" />
             </a>
           </div>
+
+          <div className="qm-store-badges">
+            <a href="#" aria-label="حمّل من App Store">
+              <img src="/app-badges/app-store.png" alt="Available on the App Store" loading="lazy" />
+            </a>
+            <a href="#" aria-label="حمّل من Google Play">
+              <img src="/app-badges/google-play.png" alt="Get it on Google Play" loading="lazy" />
+            </a>
+          </div>
         </div>
 
         <div className="qm-footer-column">
