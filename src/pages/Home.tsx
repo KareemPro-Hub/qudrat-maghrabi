@@ -61,6 +61,7 @@ function TrustIcon({ type }: { type: string }) {
   if (type === 'student') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/book-open-reader.png)", maskImage: "url(/home/nav-icons/book-open-reader.png)" }} />
   if (type === 'target') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/bullseye-arrow.png)", maskImage: "url(/home/nav-icons/bullseye-arrow.png)" }} />
   if (type === 'question') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/question-square.png)", maskImage: "url(/home/nav-icons/question-square.png)" }} />
+  if (type === '▶') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/screen-play.png)", maskImage: "url(/home/nav-icons/screen-play.png)" }} />
   return <>{type}</>
 }
 
