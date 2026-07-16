@@ -398,7 +398,7 @@ export default function ParentDashboard() {
 
         {/* ===== التقدم ===== */}
         <section className={`parent-panel simple-view${panel === 'progress' ? ' active' : ''}`} data-panel="progress">
-          <div className="simple-head"><div><h2>التقدم</h2><p>المهم فقط: أين وصل {childFirst}، وما الخطوة القادمة؟</p></div><span className="simple-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7" /><path d="M16 6h3v3" /></svg></span></div>
+          <div className="simple-head"><div><h2>التقدم</h2><p>المهم فقط: أين وصل {childFirst}، وما الخطوة القادمة ؟</p></div><span className="simple-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7" /><path d="M16 6h3v3" /></svg></span></div>
           {active.primary ? (
             <article className="progress-focus">
               <div className="progress-number" style={{ background: `conic-gradient(#7c35df 0 ${active.primary.pct}%, #ece5f1 ${active.primary.pct}%)` }}>

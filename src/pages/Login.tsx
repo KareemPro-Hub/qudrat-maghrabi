@@ -27,7 +27,7 @@ export default function Login() {
         .eq('id', data.user!.id)
         .single()
 
-      toast.success('مرحبًا بك!')
+      toast.success('مرحبًا بك !')
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager']
       if (profile && adminRoles.includes(profile.role)) {
         navigate('/admin')
@@ -109,7 +109,7 @@ export default function Login() {
                 <span className="text-sm font-semibold text-gray-600">تذكرني</span>
               </label>
               <Link to="/forgot-password" className="text-sm text-brand-pink hover:underline font-semibold">
-                نسيت كلمة المرور؟
+                نسيت كلمة المرور ؟
               </Link>
             </div>
 
@@ -119,7 +119,7 @@ export default function Login() {
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            ليس لديك حساب؟{' '}
+            ليس لديك حساب ؟{' '}
             <Link to="/register" className="font-bold text-brand-pink hover:underline">
               سجّل الآن
             </Link>

@@ -216,7 +216,7 @@ export default function CourseDetail() {
       {/* What you'll learn */}
       <div className="py-14">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-black text-brand-navy mb-8 text-right">ماذا ستتعلم؟</h2>
+          <h2 className="text-2xl font-black text-brand-navy mb-8 text-right">ماذا ستتعلم ؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {features.map((f, i) => (
               <div key={i} className="flex items-start gap-3 text-right">
@@ -234,7 +234,7 @@ export default function CourseDetail() {
       {!enrolled && (
         <div className="py-10 bg-gray-50">
           <div className="max-w-xl mx-auto px-4 text-center">
-            <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ؟</h3>
+            <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>
             <p className="text-gray-500 mb-6">انضم لآلاف الطلاب الذين حققوا نتائج مميزة</p>
             <button onClick={handleBuy} className="btn-primary py-4 px-12 text-lg">
               اشترك الآن بـ {course.price} <SarSymbol />

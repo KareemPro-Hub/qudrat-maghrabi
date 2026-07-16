@@ -70,9 +70,9 @@ export default function PaymentSuccess() {
           <CheckCircle size={40} className="text-white" />
         </div>
 
-        <h1 className="text-2xl font-black text-brand-navy mb-2">تم الاشتراك بنجاح! 🎉</h1>
+        <h1 className="text-2xl font-black text-brand-navy mb-2">تم الاشتراك بنجاح ! 🎉</h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          مبروك! تم تفعيل الكورس في حسابك. تحقق من بريدك للتأكيد.
+          مبروك ! تم تفعيل الكورس في حسابك. تحقق من بريدك للتأكيد.
         </p>
 
         {paymentId && (

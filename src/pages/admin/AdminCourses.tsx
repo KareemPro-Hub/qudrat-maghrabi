@@ -135,7 +135,7 @@ export default function AdminCourses() {
   }
 
   async function deleteCourse(id: string) {
-    if (!confirm('هل أنت متأكد من حذف الكورس؟')) return
+    if (!confirm('هل أنت متأكد من حذف الكورس ؟')) return
     await supabase.from('courses').delete().eq('id', id)
     toast.success('تم الحذف')
     fetchCourses()

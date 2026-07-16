@@ -181,7 +181,7 @@ export default function Learn() {
         .insert({ student_id: user!.id, lesson_id: lessonId, completed: true, watch_percentage: 100 })
     }
     setProgress(prev => ({ ...prev, [lessonId]: true }))
-    showToast('أحسنت!', 'أكملت مشاهدة فيديو الدرس.')
+    showToast('أحسنت !', 'أكملت مشاهدة فيديو الدرس.')
   }
 
   function showToast(title: string, text: string) {

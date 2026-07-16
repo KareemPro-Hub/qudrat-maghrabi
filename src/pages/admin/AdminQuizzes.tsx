@@ -80,7 +80,7 @@ export default function AdminQuizzes() {
   }
 
   async function deleteQuestion(id: string, quizId: string) {
-    if (!confirm('حذف السؤال؟')) return
+    if (!confirm('حذف السؤال ؟')) return
     await supabase.from('quiz_questions').delete().eq('id', id)
     fetchQuestions(quizId)
   }
@@ -92,7 +92,7 @@ export default function AdminQuizzes() {
   }
 
   async function deleteQuiz(id: string) {
-    if (!confirm('حذف الاختبار وجميع أسئلته؟')) return
+    if (!confirm('حذف الاختبار وجميع أسئلته ؟')) return
     await supabase.from('quizzes').delete().eq('id', id)
     toast.success('تم الحذف')
     fetchAll()

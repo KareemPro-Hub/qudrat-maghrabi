@@ -33,7 +33,7 @@ export default function Register() {
     if (error) {
       toast.error(error.message === 'User already registered' ? 'البريد الإلكتروني مسجل مسبقًا' : 'حدث خطأ، حاول مجددًا')
     } else {
-      toast.success('تم التسجيل! تحقق من بريدك لتأكيد الحساب')
+      toast.success('تم التسجيل ! تحقق من بريدك لتأكيد الحساب')
       navigate('/login')
     }
     setLoading(false)
@@ -135,7 +135,7 @@ export default function Register() {
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            لديك حساب بالفعل؟{' '}
+            لديك حساب بالفعل ؟{' '}
             <Link to="/login" className="font-bold text-brand-pink hover:underline">تسجيل الدخول</Link>
           </p>
         </div>

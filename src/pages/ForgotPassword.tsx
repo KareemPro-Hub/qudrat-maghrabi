@@ -34,7 +34,7 @@ export default function ForgotPassword() {
             <img src="/logo.png" alt="قدرات المغربي" className="h-16 w-auto object-contain mx-auto mb-4" />
             {!sent ? (
               <>
-                <h1 className="text-2xl font-black text-brand-navy">نسيت كلمة المرور؟</h1>
+                <h1 className="text-2xl font-black text-brand-navy">نسيت كلمة المرور ؟</h1>
                 <p className="text-gray-500 text-sm mt-1">أدخل بريدك وهنبعتلك رابط إعادة التعيين</p>
               </>
             ) : (
@@ -42,7 +42,7 @@ export default function ForgotPassword() {
                 <div className="w-16 h-16 rounded-full gradient-bg flex items-center justify-center mx-auto mb-4">
                   <CheckCircle size={32} className="text-white" />
                 </div>
-                <h1 className="text-2xl font-black text-brand-navy">تم الإرسال!</h1>
+                <h1 className="text-2xl font-black text-brand-navy">تم الإرسال !</h1>
                 <p className="text-gray-500 text-sm mt-1">تحقق من بريدك الإلكتروني واضغط على الرابط</p>
               </>
             )}
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
           ) : (
             <div className="text-center">
               <p className="text-gray-500 text-sm mb-6">
-                لم يصلك الإيميل؟{' '}
+                لم يصلك الإيميل ؟{' '}
                 <button onClick={() => setSent(false)} className="text-brand-pink font-bold hover:underline">
                   حاول مجددًا
                 </button>

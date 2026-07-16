@@ -84,7 +84,7 @@ export default function AdminLessons() {
   }
 
   async function deleteLesson(id: string) {
-    if (!confirm('حذف الدرس؟')) return
+    if (!confirm('حذف الدرس ؟')) return
     await supabase.from('lessons').delete().eq('id', id)
     toast.success('تم الحذف')
     fetchData()

@@ -51,7 +51,7 @@ export default function Quiz() {
     clearTimeout(timerRef.current)
     if (Object.keys(answers).length < questions.length) {
       const unanswered = questions.length - Object.keys(answers).length
-      if (!confirm(`لم تجب على ${unanswered} سؤال. هل تريد الإرسال؟`)) return
+      if (!confirm(`لم تجب على ${unanswered} سؤال. هل تريد الإرسال ؟`)) return
     }
     setSubmitting(true)
 

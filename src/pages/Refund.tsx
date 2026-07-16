@@ -47,7 +47,7 @@ export default function Refund() {
         </div>
 
         <div className="card mt-8 text-center bg-purple-50 border-purple-100">
-          <p className="text-gray-600 mb-4">هل لديك استفسار حول سياسة الاسترداد؟</p>
+          <p className="text-gray-600 mb-4">هل لديك استفسار حول سياسة الاسترداد ؟</p>
           <Link to="/contact" className="btn-primary inline-block py-3 px-8">تواصل معنا</Link>
         </div>
 

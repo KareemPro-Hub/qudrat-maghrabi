@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="qm-footer-cta qm-wrap">
         <div>
           <span>خطوتك القادمة تبدأ هنا</span>
-          <h2>جاهز ترفع درجتك في القدرات؟</h2>
+          <h2>جاهز ترفع درجتك في القدرات ؟</h2>
           <p>ابدأ بخطة واضحة وتدريبات ذكية توصلك لهدفك بثقة.</p>
         </div>
         <Link to="/register">ابدأ رحلتك الآن <b>←</b></Link>

@@ -125,7 +125,7 @@ export default function QuizResult() {
           </div>
 
           <h1 className="text-2xl font-black text-brand-navy mb-1">
-            {result.passed ? 'أحسنت! اجتزت الاختبار 🎉' : 'لم تجتز الاختبار هذه المرة'}
+            {result.passed ? 'أحسنت ! اجتزت الاختبار 🎉' : 'لم تجتز الاختبار هذه المرة'}
           </h1>
           <p className="text-gray-600 mb-6">{quiz.title}</p>
 

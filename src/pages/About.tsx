@@ -36,7 +36,7 @@ export default function About() {
         </div>
 
         <div className="card">
-          <h2 className="text-2xl font-black text-brand-navy mb-4">لماذا قدرات المغربي؟</h2>
+          <h2 className="text-2xl font-black text-brand-navy mb-4">لماذا قدرات المغربي ؟</h2>
           <ul className="space-y-3 text-gray-600 text-lg">
             {[
               'شرح مبسّط يناسب جميع المستويات',
