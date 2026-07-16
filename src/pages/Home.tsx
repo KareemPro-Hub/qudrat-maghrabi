@@ -158,12 +158,8 @@ export default function Home() {
       <section className="qm-value qm-wrap qm-section">
         <div className="qm-value-heading">
           <div>
-            <span className="qm-section-kicker">
-              <svg viewBox="0 0 24 24"><path d="m12 3 1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3Z" /><path d="m18.5 15 .7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7.7-1.6Z" /></svg>
-              ليه قدرات المغربي بالذات
-            </span>
             <h2>لماذا <span className="qm-heading-accent">قدرات المغربي</span> ؟</h2>
-            <p>كل ما تحتاجه في <strong>مكان واحد</strong> للوصول لـ<strong>أعلى الدرجات</strong></p>
+            <p>كل ما تحتاجه في مكان واحد للوصول لأعلى الدرجات</p>
           </div>
         </div>
         <div className="qm-value-photo-frame">
