@@ -43,7 +43,8 @@
 /* ---------- Check list (About "why us") ---------- */
 .qm-info-check-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
 .qm-info-check-list li { display: flex; align-items: center; gap: 12px; color: #463857; font-size: 15.5px; }
-.qm-info-check-list li span { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg,#32c4b2,#1ca092); color: #fff; display: grid; place-items: center; font-size: 12px; box-shadow: 0 6px 14px rgba(28,160,146,.22); }
+.qm-info-check-list li span:first-child { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg,#32c4b2,#1ca092); color: #fff; display: grid; place-items: center; font-size: 12px; box-shadow: 0 6px 14px rgba(28,160,146,.22); }
+.qm-info-check-list li span:last-child { flex: 1 1 auto; }
 
 /* ---------- Contact channel grid ---------- */
 .qm-info-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
