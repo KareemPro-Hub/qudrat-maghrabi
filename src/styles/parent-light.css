@@ -20,8 +20,8 @@
 .parent-shell svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 .parent-shell .parent-sidebar{position:fixed;z-index:30;inset:0 0 0 auto;width:var(--sidebar);display:flex;flex-direction:column;padding:25px 20px 22px;border-left:1px solid #eadff1;background:rgba(255,255,255,.94);box-shadow:-14px 0 38px rgba(67,35,88,.035);backdrop-filter:blur(16px)}
-.parent-shell .parent-brand{height:140px;display:grid;place-items:center;margin-bottom:16px}
-.parent-shell .parent-brand img{width:150px;height:auto;max-height:122px;object-fit:contain}
+.parent-shell .parent-brand{height:92px;display:grid;place-items:center;margin-bottom:14px}
+.parent-shell .parent-brand img{width:100px;height:auto;max-height:82px;object-fit:contain}
 .parent-shell .parent-nav{display:grid;gap:10px}
 .parent-shell .parent-nav-item{width:100%;height:64px;display:flex;align-items:center;gap:13px;padding:8px 12px;border:1px solid transparent;border-radius:18px;background:transparent;color:#6d617c;font-size:17px;font-weight:700;text-align:right;transition:.25s ease}
 .parent-shell .parent-nav-item:hover{background:#faf7ff;color:var(--purple);transform:translateX(-2px)}
