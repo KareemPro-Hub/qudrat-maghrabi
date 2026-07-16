@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import SiteNav from './components/SiteNav'
@@ -12,28 +13,38 @@ import PaymentFailed from './pages/PaymentFailed'
 import Dashboard from './pages/Dashboard'
 import ParentDashboard from './pages/ParentDashboard'
 import ParentLink from './pages/ParentLink'
-import AdminLayout from './components/AdminLayout'
-import AdminOverview from './pages/admin/AdminOverview'
-import AdminCourses from './pages/admin/AdminCourses'
-import AdminStudents from './pages/admin/AdminStudents'
-import AdminEnrollments from './pages/admin/AdminEnrollments'
-import AdminQuizzes from './pages/admin/AdminQuizzes'
-import AdminNotifications from './pages/admin/AdminNotifications'
-import AdminTeam from './pages/admin/AdminTeam'
-import AdminSettings from './pages/admin/AdminSettings'
 import Quiz from './pages/Quiz'
 import QuizResult from './pages/QuizResult'
 import Learn from './pages/Learn'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
-import AdminLessons from './pages/admin/AdminLessons'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Refund from './pages/Refund'
 import NotFound from './pages/NotFound'
+
+// لوحة الإدارة محمّلة كسوليًا (lazy) — مش محتاجها إلا الأدمن فقط، بتقلل حجم الباندل الأساسي
+const AdminLayout = lazy(() => import('./components/AdminLayout'))
+const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'))
+const AdminCourses = lazy(() => import('./pages/admin/AdminCourses'))
+const AdminStudents = lazy(() => import('./pages/admin/AdminStudents'))
+const AdminEnrollments = lazy(() => import('./pages/admin/AdminEnrollments'))
+const AdminQuizzes = lazy(() => import('./pages/admin/AdminQuizzes'))
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'))
+const AdminTeam = lazy(() => import('./pages/admin/AdminTeam'))
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
+const AdminLessons = lazy(() => import('./pages/admin/AdminLessons'))
+
+function AdminFallback() {
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
+    </div>
+  )
+}
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -88,16 +99,16 @@ export default function App() {
         <Route path="/parent" element={<ParentDashboard />} />
         <Route path="/parent/link" element={<AuthLayout><ParentLink /></AuthLayout>} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
-        <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
-        <Route path="/admin/lessons/:courseId" element={<AdminLayout><AdminLessons /></AdminLayout>} />
-        <Route path="/admin/students" element={<AdminLayout><AdminStudents /></AdminLayout>} />
-        <Route path="/admin/enrollments" element={<AdminLayout><AdminEnrollments /></AdminLayout>} />
-        <Route path="/admin/quizzes" element={<AdminLayout><AdminQuizzes /></AdminLayout>} />
-        <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
-        <Route path="/admin/team" element={<AdminLayout><AdminTeam /></AdminLayout>} />
-        <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
+        {/* Admin (محمّلة كسوليًا) */}
+        <Route path="/admin" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminOverview /></AdminLayout></Suspense>} />
+        <Route path="/admin/courses" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminCourses /></AdminLayout></Suspense>} />
+        <Route path="/admin/lessons/:courseId" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminLessons /></AdminLayout></Suspense>} />
+        <Route path="/admin/students" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminStudents /></AdminLayout></Suspense>} />
+        <Route path="/admin/enrollments" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminEnrollments /></AdminLayout></Suspense>} />
+        <Route path="/admin/quizzes" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminQuizzes /></AdminLayout></Suspense>} />
+        <Route path="/admin/notifications" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminNotifications /></AdminLayout></Suspense>} />
+        <Route path="/admin/team" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminTeam /></AdminLayout></Suspense>} />
+        <Route path="/admin/settings" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminSettings /></AdminLayout></Suspense>} />
         <Route path="/quiz/:quizId" element={<Layout><Quiz /></Layout>} />
         <Route path="/quiz/:quizId/result/:resultId" element={<Layout><QuizResult /></Layout>} />
         <Route path="/about" element={<Layout><About /></Layout>} />

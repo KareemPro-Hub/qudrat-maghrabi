@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
@@ -8,6 +8,8 @@ import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } fro
 const emptyForm = {
   title: '', chapter: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
 }
+
+const emptyFileForm = { title: '', file_url: '', size_label: '', file_type: 'pdf', order_index: 0 }
 
 export default function AdminLessons() {
   const { courseId } = useParams<{ courseId: string }>()
@@ -92,6 +94,72 @@ export default function AdminLessons() {
     fetchData()
   }
 
+  // ===== ملفات الدرس =====
+  const [filesLesson, setFilesLesson] = useState<any>(null)
+  const [lessonFiles, setLessonFiles] = useState<any[]>([])
+  const [filesLoading, setFilesLoading] = useState(false)
+  const [showFileModal, setShowFileModal] = useState(false)
+  const [editingFile, setEditingFile] = useState<any>(null)
+  const [fileForm, setFileForm] = useState(emptyFileForm)
+  const [savingFile, setSavingFile] = useState(false)
+
+  async function openFiles(lesson: any) {
+    setFilesLesson(lesson)
+    setFilesLoading(true)
+    const { data } = await supabase.from('lesson_files').select('*').eq('lesson_id', lesson.id).order('order_index')
+    setLessonFiles(data || [])
+    setFilesLoading(false)
+  }
+
+  function openAddFile() {
+    setEditingFile(null)
+    setFileForm({ ...emptyFileForm, order_index: lessonFiles.length + 1 })
+    setShowFileModal(true)
+  }
+
+  function openEditFile(file: any) {
+    setEditingFile(file)
+    setFileForm({
+      title: file.title,
+      file_url: file.file_url,
+      size_label: file.size_label || '',
+      file_type: file.file_type || 'pdf',
+      order_index: file.order_index || 0,
+    })
+    setShowFileModal(true)
+  }
+
+  async function handleSaveFile(e: React.FormEvent) {
+    e.preventDefault()
+    if (!fileForm.title || !fileForm.file_url) return toast.error('العنوان ورابط الملف مطلوبان')
+    setSavingFile(true)
+    const payload = {
+      title: fileForm.title,
+      file_url: fileForm.file_url,
+      size_label: fileForm.size_label || null,
+      file_type: fileForm.file_type,
+      order_index: Number(fileForm.order_index),
+      lesson_id: filesLesson.id,
+    }
+    if (editingFile) {
+      const { error } = await supabase.from('lesson_files').update(payload).eq('id', editingFile.id)
+      if (error) toast.error('حدث خطأ')
+      else { toast.success('تم التعديل ✅'); openFiles(filesLesson); setShowFileModal(false) }
+    } else {
+      const { error } = await supabase.from('lesson_files').insert(payload)
+      if (error) toast.error('حدث خطأ')
+      else { toast.success('تمت الإضافة ✅'); openFiles(filesLesson); setShowFileModal(false) }
+    }
+    setSavingFile(false)
+  }
+
+  async function deleteFile(id: string) {
+    if (!confirm('حذف الملف ؟')) return
+    await supabase.from('lesson_files').delete().eq('id', id)
+    toast.success('تم الحذف')
+    openFiles(filesLesson)
+  }
+
   return (
     <>
       <SectionToolbar
@@ -150,6 +218,7 @@ export default function AdminLessons() {
                           {lesson.is_free_preview ? <Eye size={12} /> : <EyeOff size={12} />}
                         </button>
                         <button className="row-action" onClick={() => openEdit(lesson)}><Edit size={12} /></button>
+                        <button className="row-action" onClick={() => openFiles(lesson)} title="ملفات الدرس"><FileText size={12} /></button>
                         <button className="row-action" onClick={() => deleteLesson(lesson.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
                       </div>
                     </td>
@@ -194,6 +263,78 @@ export default function AdminLessons() {
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الدرس'}</button>
               <button type="button" className="ghost-button" onClick={() => setShowModal(false)}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {filesLesson && !showFileModal && (
+        <Modal title={`ملفات درس: ${filesLesson.title}`} onClose={() => setFilesLesson(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="primary-admin" onClick={openAddFile}><Plus size={16} /> إضافة ملف</button>
+            </div>
+            {filesLoading ? (
+              <Spinner />
+            ) : lessonFiles.length === 0 ? (
+              <EmptyState text="لا توجد ملفات لهذا الدرس بعد" />
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>الملف</th>
+                      <th>النوع</th>
+                      <th>الحجم</th>
+                      <th>الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lessonFiles.map((file, i) => (
+                      <tr key={file.id}>
+                        <td><span className="table-course c3" style={{ fontSize: 11 }}>{i + 1}</span></td>
+                        <td><b>{file.title}</b></td>
+                        <td><TagBadge variant="purple">{file.file_type === 'sheet' ? 'ورقة عمل' : 'PDF'}</TagBadge></td>
+                        <td>{file.size_label || '—'}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="row-action" onClick={() => openEditFile(file)}><Edit size={12} /></button>
+                            <button className="row-action" onClick={() => deleteFile(file.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {showFileModal && (
+        <Modal title={editingFile ? 'تعديل الملف' : 'إضافة ملف جديد'} onClose={() => setShowFileModal(false)}>
+          <form onSubmit={handleSaveFile} className="admin-form">
+            <label>عنوان الملف *<input value={fileForm.title} onChange={e => setFileForm({ ...fileForm, title: e.target.value })} placeholder="مثال: ورقة تدريبات الباب الأول" /></label>
+            <label>
+              رابط الملف *
+              <input value={fileForm.file_url} onChange={e => setFileForm({ ...fileForm, file_url: e.target.value })} placeholder="https://..." dir="ltr" />
+            </label>
+            <div className="form-grid">
+              <label>
+                نوع الملف
+                <select value={fileForm.file_type} onChange={e => setFileForm({ ...fileForm, file_type: e.target.value })}>
+                  <option value="pdf">PDF</option>
+                  <option value="sheet">ورقة عمل</option>
+                </select>
+              </label>
+              <label>الحجم (اختياري)<input value={fileForm.size_label} onChange={e => setFileForm({ ...fileForm, size_label: e.target.value })} placeholder="مثال: 2.4 MB" dir="ltr" /></label>
+            </div>
+            <label>الترتيب<input type="number" value={fileForm.order_index} onChange={e => setFileForm({ ...fileForm, order_index: Number(e.target.value) })} min={1} /></label>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={savingFile}>{savingFile ? 'جاري الحفظ...' : editingFile ? 'حفظ التعديلات' : 'إضافة الملف'}</button>
+              <button type="button" className="ghost-button" onClick={() => setShowFileModal(false)}>إلغاء</button>
             </div>
           </form>
         </Modal>
