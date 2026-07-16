@@ -3,8 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import SiteNav from './components/SiteNav'
 import Footer from './components/Footer'
 import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import Auth from './pages/Auth'
 import Courses from './pages/Courses'
 import CourseDetail from './pages/CourseDetail'
 import Checkout from './pages/Checkout'
@@ -71,8 +70,8 @@ export default function App() {
         <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
 
         {/* Auth */}
-        <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
-        <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+        <Route path="/login" element={<Auth />} />
+        <Route path="/register" element={<Auth />} />
         <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
         <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
 
