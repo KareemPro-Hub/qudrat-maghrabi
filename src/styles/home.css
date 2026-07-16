@@ -294,6 +294,11 @@
 .qm-social-links { display: flex; gap: 10px; }
 .qm-social-links a { width: 39px; height: 39px; border: 1px solid rgba(255,255,255,.16); border-radius: 11px; display: grid; place-items: center; color: #fff; text-decoration: none; background: rgba(255,255,255,.05); transition: .25s; }
 .qm-social-links a:hover { background: var(--qm-yellow, #ffc83e); color: #351649; border-color: #ffc83e; transform: translateY(-3px); }
+.qm-social-icon { display: inline-block; width: 18px; height: 18px; background-color: currentColor; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; }
+.qm-social-icon-x { -webkit-mask-image: url('/social/x.png'); mask-image: url('/social/x.png'); }
+.qm-social-icon-tiktok { -webkit-mask-image: url('/social/tiktok.png'); mask-image: url('/social/tiktok.png'); }
+.qm-social-icon-snapchat { -webkit-mask-image: url('/social/snapchat.png'); mask-image: url('/social/snapchat.png'); width: 20px; height: 20px; }
+.qm-social-icon-youtube { -webkit-mask-image: url('/social/youtube.png'); mask-image: url('/social/youtube.png'); width: 21px; height: 21px; }
 .qm-footer-column h3, .qm-footer-news h3 { font-size: 17px; margin: 10px 0 21px; color: #fff; }
 .qm-footer-column { display: flex; flex-direction: column; align-items: flex-start; }
 .qm-footer-column a { color: #bbaacf; text-decoration: none; font-size: 14px; margin-bottom: 14px; transition: .2s; }
