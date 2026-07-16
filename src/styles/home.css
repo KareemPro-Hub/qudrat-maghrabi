@@ -85,7 +85,7 @@
 .qm-trust article + article::after { content: ""; position: absolute; right: 0; top: 25%; width: 1px; height: 50%; background: linear-gradient(transparent, #ded3ea, transparent); }
 .qm-trust article i { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; font-style: normal; font-size: 23px; background: linear-gradient(145deg,#efe4ff,#ddc5ff); color: #7f35df; box-shadow: 0 8px 20px rgba(117,52,205,.15); }
 .qm-trust article i svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.qm-trust article i img.qm-trust-icon-img { width: 30px; height: 30px; object-fit: contain; display: block; }
+.qm-trust article i .qm-mask-icon { width: 30px; height: 30px; display: block; background-color: currentColor; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .qm-trust article:nth-child(2) i { background: linear-gradient(145deg,#fff1d3,#ffd988); color: #d18219; }
 .qm-trust article:nth-child(3) i { background: linear-gradient(145deg,#ffe1f2,#ffb8dc); color: #cb3f93; }
 .qm-trust article:nth-child(4) i { background: linear-gradient(145deg,#e0f6f4,#b7e8e3); color: #238d82; }
@@ -297,7 +297,7 @@
   .qm-trust article + article::after { display: none; }
   .qm-trust article i { width: 42px; height: 42px; border-radius: 12px; font-size: 18px; }
   .qm-trust article i svg { width: 24px; height: 24px; }
-  .qm-trust article i img.qm-trust-icon-img { width: 24px; height: 24px; }
+  .qm-trust article i .qm-mask-icon { width: 24px; height: 24px; }
   .qm-trust article strong { font-size: 23px; }
   .qm-trust article span { font-size: 11px; margin-top: 4px; }
   .qm-program-heading h2 { font-size: 32px; }

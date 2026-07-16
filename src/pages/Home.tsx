@@ -58,7 +58,7 @@ const faqs = [
 ]
 
 function TrustIcon({ type }: { type: string }) {
-  if (type === 'student') return <img src="/home/nav-icons/book-open-reader.png" alt="" className="qm-trust-icon-img" />
+  if (type === 'student') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/book-open-reader.png)", maskImage: "url(/home/nav-icons/book-open-reader.png)" }} />
   if (type === 'target') return <svg viewBox="0 0 24 24"><circle cx="10.3" cy="13.7" r="7.6" /><circle cx="10.3" cy="13.7" r="4.4" /><circle cx="10.3" cy="13.7" r="1" fill="currentColor" stroke="none" /><path d="M12.3 11.7 19.5 4.5" /><path d="M19.5 4.5v3.3M19.5 4.5h-3.3" /></svg>
   if (type === 'question') return <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M9.4 9.3a2.6 2.6 0 1 1 3.8 2.3c-.9.5-1.2 1-1.2 2" /><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" /></svg>
   return <>{type}</>
