@@ -76,7 +76,7 @@ function ValueIcon({ path }: { path: string }) {
   if (path === 'rect') return <i className="qm-icon-play" />
   if (path === 'exam') return <i className="qm-icon-live" />
   if (path === 'community') return <svg viewBox="0 0 24 24"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" /><path d="M3 19c.4-3.2 2.2-5 5.5-5s5.1 1.8 5.5 5M14 14c3.8-.5 6 1.2 6.5 4" /></svg>
-  if (path === 'device') return <svg viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="15" rx="2" /><rect x="16" y="8" width="5" height="10" rx="1.5" /><path d="M8 17h2M18 15.5h1" /></svg>
+  if (path === 'device') return <i className="qm-icon-device" />
   if (path === 'growth') return <i className="qm-icon-growth" />
   return <svg viewBox="0 0 24 24"><path d={path} /></svg>
 }
