@@ -8,6 +8,7 @@ import './styles/student-light.css'
 import './styles/parent-light.css'
 import './styles/lesson-light.css'
 import './styles/auth.css'
+import './styles/info-pages.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -7,51 +7,52 @@ const contactChannels = [
 
 export default function Contact() {
   return (
-    <div className="min-h-screen py-16">
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="qm-home qm-info">
+      <section className="qm-info-hero">
+        <div className="qm-info-orb qm-info-orb-one" />
+        <div className="qm-info-orb qm-info-orb-two" />
+        <span className="qm-info-kicker">نسعد بتواصلك</span>
+        <h1>تواصل معنا</h1>
+        <p>نحن هنا للإجابة على جميع استفساراتك</p>
+      </section>
 
-        <div className="text-center mb-14">
-          <h1 className="text-4xl font-black text-brand-navy mb-4">تواصل معنا</h1>
-          <p className="text-gray-500 text-lg">نحن هنا للإجابة على جميع استفساراتك</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <div className="qm-info-body">
+        <div className="qm-info-contact-grid">
           {contactChannels.map((item, i) => {
             const content = (
               <>
-                <div className="text-4xl mb-3">{item.icon}</div>
-                <h3 className="font-black text-brand-navy text-lg mb-1">{item.title}</h3>
-                <p className="text-brand-pink font-bold mb-1" dir="ltr">{item.value}</p>
-                <p className="text-gray-400 text-sm">{item.sub}</p>
+                <div className="qm-info-contact-icon">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p className="qm-info-contact-value" dir="ltr">{item.value}</p>
+                <p className="qm-info-contact-sub">{item.sub}</p>
               </>
             )
             return item.href ? (
-              <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" className="card text-center hover:shadow-lg transition-shadow">
+              <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" className="qm-info-contact-card">
                 {content}
               </a>
             ) : (
-              <div key={i} className="card text-center">
+              <div key={i} className="qm-info-contact-card">
                 {content}
               </div>
             )
           })}
         </div>
 
-        <div className="card">
-          <h2 className="text-xl font-black text-brand-navy mb-2">ساعات الدعم</h2>
-          <p className="text-gray-500 mb-4 text-sm">فريق الدعم متاح للرد على استفساراتك في الأوقات التالية:</p>
-          <div className="space-y-2 text-gray-600">
-            <div className="flex justify-between border-b border-gray-100 pb-2">
+        <div className="qm-info-card">
+          <h2><span className="qm-info-num">⏱</span>ساعات الدعم</h2>
+          <p style={{ marginBottom: 16 }}>فريق الدعم متاح للرد على استفساراتك في الأوقات التالية:</p>
+          <div>
+            <div className="qm-info-hours-row">
               <span>السبت – الخميس</span>
-              <span className="font-bold">٩:٠٠ ص – ١٠:٠٠ م</span>
+              <b>٩:٠٠ ص – ١٠:٠٠ م</b>
             </div>
-            <div className="flex justify-between">
+            <div className="qm-info-hours-row">
               <span>الجمعة</span>
-              <span className="font-bold text-gray-400">مغلق</span>
+              <span className="qm-info-closed">مغلق</span>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   )
