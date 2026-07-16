@@ -6,6 +6,7 @@ import './styles/home.css'
 import './styles/admin-light.css'
 import './styles/student-light.css'
 import './styles/parent-light.css'
+import './styles/lesson-light.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

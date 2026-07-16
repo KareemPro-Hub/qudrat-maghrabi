@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
-import { CheckCircle, Circle, Lock, Clock, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useParams, Navigate, Link } from 'react-router-dom'
+import { Lock, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
@@ -22,7 +22,6 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
       setError('')
 
       try {
-        // طلب OTP من الـ API
         const res = await fetch('/api/vdocipher-otp', {
           method: 'POST',
           headers: {
@@ -35,7 +34,6 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
         if (apiError || !otp) throw new Error(apiError || 'Failed to load video')
         if (destroyed) return
 
-        // تحميل VdoCipher SDK
         if (!window.VdoPlayer) {
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script')
@@ -47,7 +45,6 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
         }
         if (destroyed) return
 
-        // تهيئة المشغّل
         playerRef.current = new window.VdoPlayer({
           otp,
           playbackInfo,
@@ -65,25 +62,29 @@ function VdoCipherPlayer({ videoId, courseId, sessionToken }: { videoId: string,
   }, [videoId])
 
   return (
-    <div className="w-full h-full bg-black relative">
+    <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', border: '4px solid #d33dab', borderTopColor: 'transparent', animation: 'lessonSpin .8s linear infinite' }} />
         </div>
       )}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3">
-          <p className="text-red-400 font-bold">{error}</p>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: 10 }}>
+          <p style={{ color: '#ff8a75', fontWeight: 700 }}>{error}</p>
         </div>
       )}
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </div>
   )
 }
 
+function fmtCount(n: number, one: string, many: string) {
+  return `${n} ${n === 1 ? one : many}`
+}
+
 export default function Learn() {
   const { courseId } = useParams<{ courseId: string }>()
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [sessionToken, setSessionToken] = useState<string>('')
   const [course, setCourse] = useState<any>(null)
   const [lessons, setLessons] = useState<any[]>([])
@@ -91,8 +92,15 @@ export default function Learn() {
   const [currentLesson, setCurrentLesson] = useState<any>(null)
   const [enrolled, setEnrolled] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [quizByLesson, setQuizByLesson] = useState<Record<string, any>>({}) // lesson_id → quiz
+  const [quizByLesson, setQuizByLesson] = useState<Record<string, any>>({})
   const [passedQuizIds, setPassedQuizIds] = useState<Set<string>>(new Set())
+  const [lessonFiles, setLessonFiles] = useState<any[]>([])
+  const [questionCount, setQuestionCount] = useState(0)
+  const [activeTab, setActiveTab] = useState<'summary' | 'files' | 'training'>('summary')
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [toast, setToast] = useState<{ show: boolean; title: string; text: string }>({ show: false, title: '', text: '' })
+  const toastTimer = useRef<any>(null)
+  const contentSurfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!authLoading && user && courseId) {
@@ -120,12 +128,10 @@ export default function Learn() {
     p?.forEach((item: any) => { progressMap[item.lesson_id] = item.completed })
     setProgress(progressMap)
 
-    // ربط الاختبارات بالدروس
     const quizMap: Record<string, any> = {}
     q?.forEach((quiz: any) => { if (quiz.lesson_id) quizMap[quiz.lesson_id] = quiz })
     setQuizByLesson(quizMap)
 
-    // الاختبارات التي اجتازها الطالب
     const passed = new Set<string>(qr?.map((r: any) => r.quiz_id) || [])
     setPassedQuizIds(passed)
 
@@ -136,7 +142,20 @@ export default function Learn() {
     setLoading(false)
   }
 
-  // هل الدرس محجوب بسبب اختبار الدرس السابق؟
+  useEffect(() => {
+    if (!currentLesson) return
+    setActiveTab('summary')
+    supabase.from('lesson_files').select('*').eq('lesson_id', currentLesson.id).order('order_index')
+      .then(({ data }) => setLessonFiles(data || []))
+  }, [currentLesson?.id])
+
+  useEffect(() => {
+    const quiz = currentLesson ? quizByLesson[currentLesson.id] : null
+    if (!quiz) { setQuestionCount(0); return }
+    supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('quiz_id', quiz.id)
+      .then(({ count }) => setQuestionCount(count || 0))
+  }, [currentLesson?.id, quizByLesson])
+
   function isBlockedByQuiz(index: number): boolean {
     if (index === 0) return false
     const prevLesson = lessons[index - 1]
@@ -162,11 +181,33 @@ export default function Learn() {
         .insert({ student_id: user!.id, lesson_id: lessonId, completed: true, watch_percentage: 100 })
     }
     setProgress(prev => ({ ...prev, [lessonId]: true }))
+    showToast('أحسنت!', 'أكملت مشاهدة فيديو الدرس.')
+  }
+
+  function showToast(title: string, text: string) {
+    setToast({ show: true, title, text })
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(t => ({ ...t, show: false })), 3000)
+  }
+
+  function goToTab(tab: 'summary' | 'files' | 'training') {
+    setActiveTab(tab)
+    contentSurfaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function startTraining() {
+    goToTab('training')
+    showToast('التدريب جاهز', questionCount > 0 ? `${questionCount} أسئلة متدرجة — ابدأ عندما تكون مستعدًا.` : 'لا يوجد تدريب لهذا الدرس بعد.')
   }
 
   const completedCount = Object.values(progress).filter(Boolean).length
   const progressPct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0
   const currentIndex = lessons.findIndex(l => l.id === currentLesson?.id)
+  const currentQuiz = currentLesson ? quizByLesson[currentLesson.id] : null
+  const quizPassed = currentQuiz ? passedQuizIds.has(currentQuiz.id) : false
+  const isCurrentCompleted = currentLesson ? !!progress[currentLesson.id] : false
+  const summaryPoints = (currentLesson?.description || '').split('\n').map((s: string) => s.trim()).filter(Boolean)
+  const initial = (profile?.full_name || 'ط').charAt(0)
 
   if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -186,190 +227,241 @@ export default function Learn() {
       </div>
     </div>
   )
+  if (!currentLesson) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <BookOpen size={64} className="mx-auto text-gray-200 mb-4" />
+        <p className="text-gray-400 font-bold">لا توجد دروس في هذا الكورس بعد</p>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex flex-col lg:flex-row" style={{ minHeight: 'calc(100vh - 70px)' }}>
+    <div className="lesson-hub-page" dir="rtl">
+      <svg className="svg-sprite" aria-hidden="true">
+        <symbol id="icon-training" viewBox="0 0 32 32">
+          <rect x="6.5" y="4.5" width="16" height="23" rx="3"></rect>
+          <path d="M11 4.5V3h7v1.5M11 11h7M11 16h5M11 21h4"></path>
+          <path d="m21.5 18.5 5-5 2 2-5 5-3 1zM21.5 18.5l2 2"></path>
+          <path d="m10 16 1.7 1.7 3.1-3.2"></path>
+        </symbol>
+        <symbol id="icon-file" viewBox="0 0 32 32">
+          <path d="M8 3.5h10l6 6v19H8zM18 3.5v6h6M12 15h8M12 20h8M12 25h5"></path>
+        </symbol>
+        <symbol id="icon-video" viewBox="0 0 32 32">
+          <rect x="4" y="6" width="24" height="20" rx="5"></rect><path d="m14 12 7 4-7 4z"></path>
+        </symbol>
+      </svg>
 
-        {/* Sidebar — قائمة الدروس */}
-        <aside className="lg:w-80 bg-white border-l border-gray-200 flex flex-col">
+      <header className="hub-header">
+        <Link className="hub-logo" to="/" aria-label="قدرات المغربي">
+          <img src="/admin/logo.png" alt="قدرات المغربي" />
+        </Link>
 
-          {/* Course Header */}
-          <div className="p-5 border-b border-gray-100">
-            <h2 className="font-black text-brand-navy text-sm leading-tight mb-3">{course?.title}</h2>
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-              <span>{completedCount}/{lessons.length} درس مكتمل</span>
-              <span className="font-bold text-brand-pink">{progressPct}%</span>
+        <nav className="hub-breadcrumb" aria-label="مسار الدرس">
+          <span>{course?.title}</span><i>/</i><strong>{currentLesson.title}</strong>
+        </nav>
+
+        <div className="hub-user-actions">
+          <div className="hub-profile"><span>{initial}</span><p><b>{profile?.full_name}</b><small>طالب</small></p></div>
+          <Link className="back-dashboard" to="/dashboard"><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>العودة للوحة</Link>
+        </div>
+      </header>
+
+      <main className="lesson-hub">
+        <section className="lesson-heading-row">
+          <div className="lesson-heading-main">
+            <div className="lesson-progress-ring" aria-label={`أنجزت ${progressPct} بالمئة من الكورس`} style={{ background: `radial-gradient(circle,#fff 0 62%,transparent 64%),conic-gradient(#7634da 0 ${progressPct}%,#eee8f3 ${progressPct}%)` }}>
+              <strong>{progressPct}<small>%</small></strong>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div className="gradient-bg h-2 rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+            <div>
+              <h1>{currentLesson.title}</h1>
+              <p><span></span>فيديو الدرس <i>•</i> الملفات <i>•</i> التدريب</p>
             </div>
           </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {isCurrentCompleted ? (
+              <span className="mark-complete-button done">
+                <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>مكتمل
+              </span>
+            ) : (
+              <button className="mark-complete-button" type="button" onClick={() => markComplete(currentLesson.id)}>
+                <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>تم مشاهدة الدرس
+              </button>
+            )}
+            <button className="course-content-button" type="button" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}>
+              <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l3-3h5l2 3"></path></svg>محتوى الكورس
+            </button>
+          </div>
+        </section>
 
-          {/* Lessons List grouped by chapter */}
-          <div className="flex-1 overflow-y-auto">
-            {(() => {
-              const chapters: { name: string; lessons: any[] }[] = []
-              lessons.forEach(lesson => {
-                const ch = lesson.chapter || ''
-                const existing = chapters.find(c => c.name === ch)
-                if (existing) existing.lessons.push(lesson)
-                else chapters.push({ name: ch, lessons: [lesson] })
-              })
-              let globalIndex = 0
-              return chapters.map(chapter => (
-                <div key={chapter.name}>
-                  {chapter.name && (
-                    <div className="px-4 py-2 bg-gradient-to-l from-purple-50 to-pink-50 border-b border-purple-100 sticky top-0 z-10">
-                      <p className="text-xs font-black text-brand-navy">{chapter.name}</p>
-                    </div>
-                  )}
-                  {chapter.lessons.map(lesson => {
-                    const i = globalIndex++
-                    const isCompleted = progress[lesson.id]
-                    const isCurrent = currentLesson?.id === lesson.id
-                    const isNotEnrolled = !enrolled && !lesson.is_free_preview
-                    const isQuizBlocked = isBlockedByQuiz(lessons.findIndex(l => l.id === lesson.id))
-                    const isLocked = isNotEnrolled || isQuizBlocked
-                    return (
-                      <button
-                        key={lesson.id}
-                        onClick={() => !isLocked && setCurrentLesson(lesson)}
-                        disabled={isLocked}
-                        className={`w-full flex items-start gap-3 p-4 text-right border-b border-gray-50 transition-all duration-200
-                          ${isCurrent ? 'bg-pink-50 border-r-4 border-r-brand-pink' : 'hover:bg-gray-50'}
-                          ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        <div className="flex-shrink-0 mt-0.5">
-                          {isLocked ? (
-                            <Lock size={18} className={isQuizBlocked ? 'text-orange-300' : 'text-gray-300'} />
-                          ) : isCompleted ? (
-                            <CheckCircle size={18} className="text-green-500" />
-                          ) : (
-                            <Circle size={18} className={isCurrent ? 'text-brand-pink' : 'text-gray-300'} />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold truncate ${isCurrent ? 'text-brand-pink' : isCompleted ? 'text-green-600' : 'text-brand-navy'}`}>
-                            {i + 1}. {lesson.title}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                            <Clock size={10} />
-                            {lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
-                            {lesson.is_free_preview && <span className="text-green-500 font-bold mr-1">مجاني</span>}
-                            {isQuizBlocked && <span className="text-orange-400 font-bold mr-1">اجتز الاختبار أولًا</span>}
-                          </p>
-                        </div>
-                      </button>
-                    )
-                  })}
+        <section className="learning-studio">
+          <aside className="lesson-journey" aria-label="رحلة الدرس">
+            <h2>رحلة الدرس</h2>
+            <button className="journey-item current" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <span className="journey-icon"><svg><use href="#icon-video"></use></svg></span>
+              <span><b>شاهد الدرس</b><small>{isCurrentCompleted ? 'أكملت مشاهدة هذا الدرس' : 'شاهد الفيديو كاملًا لإكمال الخطوة'}</small></span>
+            </button>
+            <button className="journey-item" type="button" onClick={() => goToTab('files')}>
+              <span className="journey-icon"><svg><use href="#icon-file"></use></svg></span>
+              <span><b>ملفات الدرس</b><small>{lessonFiles.length ? fmtCount(lessonFiles.length, 'ملف جاهز', 'ملفات جاهزة') : 'لا توجد ملفات بعد'}</small></span>
+            </button>
+            <button className="journey-item training" type="button" onClick={() => goToTab('training')}>
+              <span className="journey-icon"><svg><use href="#icon-training"></use></svg></span>
+              <span><b>تدريب الدرس</b><small>{currentQuiz ? `${fmtCount(questionCount, 'سؤال', 'أسئلة')} • ${currentQuiz.time_limit_minutes ? `${currentQuiz.time_limit_minutes} دقيقة` : 'بدون حد زمني'}` : 'لا يوجد تدريب بعد'}</small></span>
+            </button>
+            <button className="start-training-button" type="button" onClick={startTraining}>
+              <svg><use href="#icon-training"></use></svg><span>ابدأ التدريب</span>
+            </button>
+          </aside>
+
+          <article className="hub-video-player">
+            <div className="hub-video-stage">
+              {currentLesson.video_id ? (
+                <VdoCipherPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.55)' }}>
+                  <svg style={{ width: 56, height: 56, marginBottom: 12 }} viewBox="0 0 32 32"><use href="#icon-video"></use></svg>
+                  <p style={{ fontWeight: 700 }}>لم يُرفع فيديو لهذا الدرس بعد</p>
                 </div>
-              ))
-            })()}
-          </div>
-        </aside>
+              )}
+            </div>
+          </article>
+        </section>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col">
-          {currentLesson ? (
-            <>
-              {/* Video Area */}
-              <div className="bg-black flex-shrink-0" style={{ aspectRatio: '16/9', maxHeight: '60vh' }}>
-                {currentLesson.video_id ? (
-                  <VdoCipherPlayer
-                    key={currentLesson.id}
-                    videoId={currentLesson.video_id}
-                    courseId={courseId!}
-                    sessionToken={sessionToken}
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-white">
-                    <BookOpen size={48} className="text-white/30 mb-4" />
-                    <p className="text-white/60 font-bold">لم يُرفع فيديو لهذا الدرس بعد</p>
-                  </div>
+        <section className="lesson-content-surface" ref={contentSurfaceRef}>
+          <div className="lesson-tabs" role="tablist" aria-label="محتوى الدرس">
+            <button className={`lesson-tab${activeTab === 'summary' ? ' active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'summary'} onClick={() => setActiveTab('summary')}>
+              <svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6zM20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z"></path></svg>ملخص الدرس
+            </button>
+            <button className={`lesson-tab${activeTab === 'files' ? ' active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'files'} onClick={() => setActiveTab('files')}>
+              <svg><use href="#icon-file"></use></svg>ملفات الدرس
+            </button>
+            <button className={`lesson-tab${activeTab === 'training' ? ' active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'training'} onClick={() => setActiveTab('training')}>
+              <svg><use href="#icon-training"></use></svg>التدريبات
+            </button>
+          </div>
+
+          <div className={`tab-panel${activeTab === 'summary' ? ' active' : ''}`} data-panel="summary">
+            <div className="lesson-summary">
+              <h2>ملخص الدرس</h2>
+              <ol>
+                {summaryPoints.length > 0 ? summaryPoints.map((pt: string, i: number) => (
+                  <li key={i}><span>{i + 1}</span><p>{pt}</p></li>
+                )) : (
+                  <li><span>•</span><p>لم يُضَف ملخص لهذا الدرس بعد.</p></li>
                 )}
-              </div>
-
-              {/* Lesson Info */}
-              <div className="p-6 flex-1">
-                <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">الدرس {currentIndex + 1} من {lessons.length}</p>
-                    <h1 className="text-2xl font-black text-brand-navy">{currentLesson.title}</h1>
-                    {currentLesson.description && (
-                      <p className="text-gray-500 mt-2 leading-relaxed">{currentLesson.description}</p>
-                    )}
-                  </div>
-                  {!progress[currentLesson.id] ? (
-                    <button
-                      onClick={() => markComplete(currentLesson.id)}
-                      className="btn-primary flex items-center gap-2 py-2 px-5 text-sm flex-shrink-0">
-                      <CheckCircle size={16} /> تم مشاهدة الدرس
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 px-4 py-2 rounded-xl flex-shrink-0">
-                      <CheckCircle size={16} /> مكتمل ✅
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation */}
-                {(() => {
-                  const currentQuiz = quizByLesson[currentLesson.id]
-                  const quizPassed = currentQuiz ? passedQuizIds.has(currentQuiz.id) : true
-                  const isLastLesson = currentIndex === lessons.length - 1
-                  return (
-                    <div className="mt-6 border-t border-gray-100 pt-6 space-y-3">
-                      {/* زر الاختبار — يظهر لو في اختبار للدرس الحالي */}
-                      {currentQuiz && (
-                        <div className={`rounded-xl p-4 flex items-center justify-between gap-4 ${quizPassed ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
-                          <div>
-                            <p className={`font-black text-sm ${quizPassed ? 'text-green-700' : 'text-orange-700'}`}>
-                              {quizPassed ? '✅ اجتزت اختبار هذا الدرس' : '📝 يجب اجتياز الاختبار للمتابعة'}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">{currentQuiz.title}</p>
-                          </div>
-                          {!quizPassed && (
-                            <Link
-                              to={`/quiz/${currentQuiz.id}`}
-                              className="btn-primary text-sm py-2 px-4 flex-shrink-0 flex items-center gap-1">
-                              ابدأ الاختبار <ChevronLeft size={14} />
-                            </Link>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => currentIndex > 0 && setCurrentLesson(lessons[currentIndex - 1])}
-                          disabled={currentIndex === 0}
-                          className="btn-outline flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
-                          <ChevronRight size={16} /> الدرس السابق
-                        </button>
-                        <button
-                          onClick={() => {
-                            markComplete(currentLesson.id)
-                            if (!isLastLesson) setCurrentLesson(lessons[currentIndex + 1])
-                          }}
-                          disabled={isLastLesson || !quizPassed}
-                          title={!quizPassed ? 'اجتز اختبار هذا الدرس أولًا' : ''}
-                          className="btn-primary flex items-center gap-2 py-2 px-4 text-sm disabled:opacity-40">
-                          الدرس التالي <ChevronLeft size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <BookOpen size={64} className="mx-auto text-gray-200 mb-4" />
-                <p className="text-gray-400 font-bold">اختر درسًا من القائمة</p>
-              </div>
+              </ol>
             </div>
-          )}
-        </main>
+            <aside className="next-actions">
+              <h3>التالي</h3>
+              {lessonFiles[0] && (
+                <button type="button" onClick={() => setActiveTab('files')}>
+                  <span className="pdf-icon">{lessonFiles[0].file_type === 'sheet' ? <svg><use href="#icon-file"></use></svg> : 'PDF'}</span>
+                  <p><b>{lessonFiles[0].title}</b><small>{lessonFiles[0].size_label || ''}</small></p>
+                  <svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"></path></svg>
+                </button>
+              )}
+              {currentQuiz && (
+                <button className="training-preview" type="button" onClick={() => setActiveTab('training')}>
+                  <span className="training-preview-icon"><svg><use href="#icon-training"></use></svg></span>
+                  <p><b>{fmtCount(questionCount, 'سؤال', 'أسئلة')}</b><small>{currentQuiz.time_limit_minutes ? `${currentQuiz.time_limit_minutes} دقيقة تقديرية` : 'وقت غير محدد'}</small></p>
+                  <svg className="round-arrow" viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>
+                </button>
+              )}
+              {!lessonFiles[0] && !currentQuiz && <p style={{ color: '#9c90a2', fontSize: 12 }}>لا توجد إجراءات تالية لهذا الدرس بعد.</p>}
+            </aside>
+          </div>
+
+          <div className={`tab-panel${activeTab === 'files' ? ' active' : ''}`} data-panel="files">
+            <div className="files-panel-head">
+              <div><h2>ملفات الدرس</h2><p>كل ما تحتاجه للمراجعة بعد مشاهدة الفيديو.</p></div>
+              <span>{lessonFiles.length ? fmtCount(lessonFiles.length, 'ملف جاهز', 'ملفات جاهزة') : 'لا توجد ملفات'}</span>
+            </div>
+            <div className="file-list">
+              {lessonFiles.map((f: any) => (
+                <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer" download>
+                  {f.file_type === 'sheet' ? (
+                    <span className="sheet-icon"><svg><use href="#icon-file"></use></svg></span>
+                  ) : (
+                    <span className="pdf-icon">PDF</span>
+                  )}
+                  <p><b>{f.title}</b><small>{f.size_label || ''}</small></p>
+                  <em>تحميل</em>
+                </a>
+              ))}
+              {!lessonFiles.length && <p style={{ color: '#9c90a2', fontSize: 13, gridColumn: '1/-1' }}>لم تُرفع ملفات لهذا الدرس بعد.</p>}
+            </div>
+          </div>
+
+          <div className={`tab-panel${activeTab === 'training' ? ' active' : ''}`} data-panel="training">
+            {currentQuiz ? (
+              <>
+                <div className="training-panel-copy">
+                  <span className="large-training-icon"><svg><use href="#icon-training"></use></svg></span>
+                  <div>
+                    <h2>{currentQuiz.title}</h2>
+                    <p>{fmtCount(questionCount, 'سؤال متدرج', 'أسئلة متدرجة')} تساعدك على تثبيت ما تعلمته في الدرس.</p>
+                    <ul>
+                      <li>{currentQuiz.time_limit_minutes ? `${currentQuiz.time_limit_minutes} دقيقة تقريبًا` : 'بدون حد زمني'}</li>
+                      <li>نتيجة فورية</li>
+                      <li>شرح الإجابات</li>
+                    </ul>
+                  </div>
+                </div>
+                <Link className="training-panel-button" to={`/quiz/${currentQuiz.id}`}>
+                  <svg><use href="#icon-training"></use></svg>{quizPassed ? 'راجع التدريب' : 'ابدأ التدريب الآن'}
+                </Link>
+              </>
+            ) : (
+              <p style={{ color: '#9c90a2' }}>لا يوجد تدريب لهذا الدرس بعد.</p>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <aside className={`course-drawer${drawerOpen ? ' open' : ''}`} aria-label="محتوى الكورس">
+        <header>
+          <div><h2>محتوى الكورس</h2><p>{course?.title}</p></div>
+          <button type="button" aria-label="إغلاق" onClick={() => setDrawerOpen(false)}>
+            <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+          </button>
+        </header>
+        <div className="drawer-progress">
+          <span style={{ background: `conic-gradient(#7633d8 0 ${progressPct}%,#eee9f3 ${progressPct}%)` }}><i></i></span>
+          <p><b>{progressPct}%</b><small>{completedCount} من {fmtCount(lessons.length, 'درس', 'درسًا')}</small></p>
+        </div>
+        <div className="drawer-lessons">
+          {lessons.map((lesson: any, i: number) => {
+            const isCompleted = progress[lesson.id]
+            const isCurrent = currentLesson?.id === lesson.id
+            const isNotEnrolled = !enrolled && !lesson.is_free_preview
+            const isQuizBlocked = isBlockedByQuiz(i)
+            const isLocked = isNotEnrolled || isQuizBlocked
+            const stateClass = isCurrent ? 'current' : isCompleted ? 'done' : isLocked ? 'locked' : ''
+            return (
+              <button
+                key={lesson.id}
+                className={stateClass}
+                disabled={isLocked}
+                onClick={() => {
+                  if (isLocked) return
+                  setCurrentLesson(lesson)
+                  setDrawerOpen(false)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              >
+                <span>{isCompleted ? '✓' : isCurrent ? '▶' : isLocked ? '⌁' : i + 1}</span>
+                <p><b>{lesson.title}</b><small>{isCompleted ? 'مكتمل' : isCurrent ? 'تشاهد الآن' : isQuizBlocked ? 'اجتز اختبار الدرس السابق' : isLocked ? 'مغلق' : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}</small></p>
+              </button>
+            )
+          })}
+        </div>
+      </aside>
+      <div className={`drawer-overlay${drawerOpen ? ' show' : ''}`} onClick={() => setDrawerOpen(false)} />
+
+      <div className={`lesson-toast${toast.show ? ' show' : ''}`} role="status" aria-live="polite">
+        <span>✓</span><p><b>{toast.title}</b><small>{toast.text}</small></p>
       </div>
     </div>
   )

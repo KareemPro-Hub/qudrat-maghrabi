@@ -79,7 +79,7 @@ export default function App() {
         {/* Student */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
-        <Route path="/learn/:courseId" element={<Layout><Learn /></Layout>} />
+        <Route path="/learn/:courseId" element={<Learn />} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
