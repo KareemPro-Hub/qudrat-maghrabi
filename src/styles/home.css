@@ -166,6 +166,8 @@
 .qm-value-grid article:hover { transform: translateY(-4px); border-color: #dfcef5; box-shadow: 0 16px 34px rgba(91,39,133,.13); }
 .qm-value-grid article > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #9140ef; color: #fff; box-shadow: 0 8px 18px rgba(116,47,203,.15); margin: 0 auto; }
 .qm-value-grid article > span svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.qm-icon-play { display: block; width: 24px; height: 24px; background-color: currentColor; -webkit-mask-image: url('/icons/play.png'); mask-image: url('/icons/play.png'); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; }
+.qm-icon-live { display: block; width: 24px; height: 24px; background-color: currentColor; -webkit-mask-image: url('/icons/live.png'); mask-image: url('/icons/live.png'); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; }
 .qm-value-grid article:nth-child(2) > span { background: linear-gradient(145deg,#ffc847,#ffb92b); color: #573926; }
 .qm-value-grid article:nth-child(3) > span { background: linear-gradient(145deg,#f45ca8,#d83c98); color: #fff; }
 .qm-value-grid article:nth-child(4) > span { background: linear-gradient(145deg,#32c4b2,#1ca092); color: #fff; }
