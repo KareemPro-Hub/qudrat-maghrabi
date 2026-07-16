@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import Navbar from './components/Navbar'
+import SiteNav from './components/SiteNav'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -38,7 +38,7 @@ import Refund from './pages/Refund'
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <SiteNav />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>

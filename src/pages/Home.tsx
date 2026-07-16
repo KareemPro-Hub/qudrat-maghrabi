@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 const trustStats = [
   { icon: 'student', value: '2,000+', label: 'طالب مسجّل' },
@@ -74,6 +75,17 @@ function ValueIcon({ path }: { path: string }) {
 }
 
 export default function Home() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.slice(1)
+    const timer = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 60)
+    return () => clearTimeout(timer)
+  }, [location.hash])
+
   return (
     <div className="qm-home">
       {/* ===== Hero ===== */}
