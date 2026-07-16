@@ -45,8 +45,10 @@
 .auth-shell[data-mode="signup"] .auth-panel-signup{opacity:1;transform:translateY(0);pointer-events:auto;}
 
 /* Logo + heading */
-.auth-logo-signup{width:130px;height:auto;display:block;margin:0 0 6px auto;}
-.auth-logo-login{width:150px;height:auto;display:block;margin:0 0 8px auto;}
+.auth-logo-link{display:block;width:fit-content;margin:0 auto;cursor:pointer;transition:opacity .2s;}
+.auth-logo-link:hover{opacity:.85;}
+.auth-logo-signup{width:130px;height:auto;display:block;margin:0 auto 6px;}
+.auth-logo-login{width:150px;height:auto;display:block;margin:0 auto 8px;}
 .auth-head{text-align:center;}
 .auth-head h1{margin:0;font-weight:900;color:#2f174f;letter-spacing:-.4px;}
 .auth-head p{margin:6px 0 0;color:#81758d;}

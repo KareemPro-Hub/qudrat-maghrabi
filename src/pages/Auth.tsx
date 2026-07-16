@@ -101,7 +101,7 @@ export default function Auth() {
           {/* Signup panel */}
           <div className="auth-panel auth-panel-signup">
             <div className="auth-panel-inner">
-              <img src="/logo.png" alt="قدرات المغربي" className="auth-logo-signup" />
+              <Link to="/" className="auth-logo-link"><img src="/logo.png" alt="قدرات المغربي" className="auth-logo-signup" /></Link>
               <div className="auth-head">
                 <h1>أنشئ حسابك</h1>
                 <p>ابدأ رحلتك بثقة نحو أعلى الدرجات</p>
@@ -185,7 +185,7 @@ export default function Auth() {
           {/* Login panel */}
           <div className="auth-panel auth-panel-login">
             <div className="auth-panel-inner">
-              <img src="/logo.png" alt="قدرات المغربي" className="auth-logo-login" />
+              <Link to="/" className="auth-logo-link"><img src="/logo.png" alt="قدرات المغربي" className="auth-logo-login" /></Link>
               <div className="auth-head">
                 <h1>أهلًا بعودتك</h1>
                 <p>سجّل دخولك وكمّل رحلتك نحو الـ <b>95+</b></p>
