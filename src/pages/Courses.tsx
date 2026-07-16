@@ -10,15 +10,26 @@ export default function Courses() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('courses')
-      .select('*')
-      .eq('is_published', true)
-      .order('order_index', { ascending: true })
-      .then(({ data }) => {
-        setCourses(data || [])
-        setLoading(false)
+    Promise.all([
+      supabase
+        .from('courses')
+        .select('*')
+        .eq('is_published', true)
+        .order('order_index', { ascending: true }),
+      supabase.rpc('get_course_stats'),
+    ]).then(([coursesRes, statsRes]) => {
+      const statsByCourse: Record<string, { lessons_count: number; enrolled_count: number }> = {}
+      ;(statsRes.data || []).forEach((s: any) => {
+        statsByCourse[s.course_id] = { lessons_count: s.lessons_count, enrolled_count: s.enrolled_count }
       })
+      const merged = (coursesRes.data || []).map((c: any) => ({
+        ...c,
+        lessons_count: statsByCourse[c.id]?.lessons_count ?? 0,
+        enrolled_count: statsByCourse[c.id]?.enrolled_count ?? 0,
+      }))
+      setCourses(merged)
+      setLoading(false)
+    })
   }, [])
 
 
