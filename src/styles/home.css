@@ -124,7 +124,7 @@
 .qm-trust article:nth-child(3) strong { background-image: linear-gradient(120deg,#c9378c,#ef5da8); }
 .qm-trust article:nth-child(4) strong { background-image: linear-gradient(120deg,#16887d,#36bfae); }
 .qm-trust article span { display: block; margin-top: 7px; color: #81748d; font-size: 13px; font-weight: 400; white-space: nowrap; }
-@keyframes qmCounterRise { from { opacity: 0; transform: translateY(13px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes qmCounterRise { from { opacity: 0; transform: translateY(13px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Section shared ---------- */
 .qm-section { padding-top: 105px; padding-bottom: 105px; }
@@ -261,7 +261,7 @@
 .qm-testimonial-card footer b { display: block; font-size: 13px; color: #3c2551; }
 .qm-testimonial-card footer small { display: block; margin-top: 2px; color: #978b9f; font-size: 10px; }
 .qm-verified { font-size: 9px; color: #299776; background: #e6f8f1; border-radius: 20px; padding: 6px 8px; white-space: nowrap; }
-@keyframes qmTestimonialRise { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes qmTestimonialRise { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: none; } }
 @keyframes qmVoicePulse { from { transform: scaleY(.48); opacity: .62; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes qmChatFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
