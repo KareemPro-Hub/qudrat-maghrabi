@@ -21,7 +21,7 @@ export default function Contact() {
               <>
                 <div className="text-4xl mb-3">{item.icon}</div>
                 <h3 className="font-black text-brand-navy text-lg mb-1">{item.title}</h3>
-                <p className="text-brand-pink font-bold mb-1">{item.value}</p>
+                <p className="text-brand-pink font-bold mb-1" dir="ltr">{item.value}</p>
                 <p className="text-gray-400 text-sm">{item.sub}</p>
               </>
             )
