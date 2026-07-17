@@ -134,7 +134,7 @@ export default function CourseDetail() {
                   </div>
                 )}
               </div>
-              {course.price > 0 || subCourses.length === 0 ? (
+              {course.price > 0 ? (
                 <>
                   <div className="text-3xl font-black gradient-text mb-2">{course.price} <SarSymbol /></div>
                   <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
@@ -145,11 +145,19 @@ export default function CourseDetail() {
                     </Link>
                   ) : (
                     <button onClick={handleBuy} className="btn-primary w-full py-4 text-lg">
-                      {subCourses.length > 0 ? 'اشترك في الباقة الكاملة' : 'اشترك الآن'}
+                      اشترك الآن
                     </button>
                   )}
 
                   <p className="text-center text-gray-400 text-xs mt-3">ضمان استرداد خلال ٧ أيام</p>
+                </>
+              ) : subCourses.length === 0 ? (
+                <>
+                  <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 text-lg font-black px-5 py-2 rounded-full mb-2">مجاني</div>
+                  <p className="text-gray-400 text-sm mb-6">كل الدروس متاحة بدون أي رسوم</p>
+                  <Link to={`/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
+                    ابدأ الآن مجانًا
+                  </Link>
                 </>
               ) : (
                 <>
@@ -184,7 +192,11 @@ export default function CourseDetail() {
                   <div className="flex-1 text-right">
                     <p className="font-black text-brand-navy">{sc.title}</p>
                     {sc.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{sc.description}</p>}
-                    <div className="text-brand-purple font-black mt-2">{sc.price} <SarSymbol /></div>
+                    {sc.price > 0 ? (
+                      <div className="text-brand-purple font-black mt-2">{sc.price} <SarSymbol /></div>
+                    ) : (
+                      <div className="inline-block text-green-600 bg-green-50 text-xs font-black px-3 py-1 rounded-full mt-2">مجاني</div>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -218,7 +230,7 @@ export default function CourseDetail() {
                     )}
                     {chapter.lessons.map(lesson => {
                       const i = globalIndex++
-                      const canWatch = enrolled || lesson.is_free_preview
+                      const canWatch = enrolled || lesson.is_free_preview || (course.price === 0 && subCourses.length === 0)
                       const thumbnail = lesson.thumbnail_url || null
                       return (
                         <div key={lesson.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-0">
@@ -251,7 +263,7 @@ export default function CourseDetail() {
                 ))
               })()}
             </div>
-            {!enrolled && (
+            {!enrolled && course.price > 0 && (
               <div className="text-center mt-4">
                 <button onClick={handleBuy} className="btn-primary py-3 px-10 text-sm">
                   🔓 اشترك لتفتح جميع الدروس
@@ -280,7 +292,7 @@ export default function CourseDetail() {
       </div>
 
       {/* CTA Bottom */}
-      {!enrolled && (course.price > 0 || subCourses.length === 0) && (
+      {!enrolled && course.price > 0 && (
         <div className="py-10 bg-gray-50">
           <div className="max-w-xl mx-auto px-4 text-center">
             <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>

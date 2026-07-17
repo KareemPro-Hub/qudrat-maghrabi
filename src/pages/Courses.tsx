@@ -85,11 +85,18 @@ export default function Courses() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  {course.price > 0 || !childCountByParent[course.id] ? (
+                  {course.price > 0 ? (
                     <>
                       <div className="text-2xl font-black gradient-text">{course.price} <SarSymbol /></div>
                       <span className="btn-primary py-2 px-6 text-sm">
                         اشترك الآن
+                      </span>
+                    </>
+                  ) : !childCountByParent[course.id] ? (
+                    <>
+                      <div className="text-sm font-black text-green-600 bg-green-50 px-4 py-1.5 rounded-full">مجاني</div>
+                      <span className="btn-primary py-2 px-6 text-sm">
+                        ابدأ الآن
                       </span>
                     </>
                   ) : (

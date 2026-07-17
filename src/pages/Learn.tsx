@@ -110,7 +110,8 @@ export default function Learn() {
     ])
     setCourse(c)
     setLessons(l || [])
-    setEnrolled(!!e)
+    // الكورس المجاني بالكامل (سعر 0) يعامل معاملة المشترك
+    setEnrolled(!!e || Number(c?.price) === 0)
 
     const progressMap: Record<string, boolean> = {}
     p?.forEach((item: any) => { progressMap[item.lesson_id] = item.completed })
