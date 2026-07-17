@@ -183,11 +183,14 @@
 .qm-pricing-glow { position: absolute; z-index: -1; border-radius: 50%; filter: blur(5px); pointer-events: none; }
 .qm-pricing-glow-one { width: 560px; height: 560px; right: -230px; top: -210px; background: radial-gradient(circle, rgba(154,62,233,.18), transparent 69%); }
 .qm-pricing-glow-two { width: 500px; height: 500px; left: -220px; bottom: -230px; background: radial-gradient(circle, rgba(255,184,43,.13), transparent 68%); }
-.qm-pricing-heading { display: flex; justify-content: center; align-items: center; gap: 18px; text-align: right; position: relative; z-index: 2; }
-.qm-pricing-heading-icon { width: 60px; height: 60px; flex: 0 0 60px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(145deg,#8438e8,#b344e5); color: #ffcf4b; box-shadow: 0 14px 32px rgba(119,47,196,.24), inset 0 1px 0 rgba(255,255,255,.24); transform: rotate(-3deg); }
+.qm-pricing-heading { display: flex; justify-content: center; align-items: center; gap: 22px; text-align: center; position: relative; z-index: 2; }
+.qm-pricing-heading-icon { width: 60px; height: 60px; flex: 0 0 60px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(145deg,#8438e8,#b344e5); color: #ffcf4b; box-shadow: 0 14px 32px rgba(119,47,196,.24), inset 0 1px 0 rgba(255,255,255,.24); transform: rotate(-3deg); transition: transform .3s ease; }
+.qm-pricing-heading:hover .qm-pricing-heading-icon { transform: rotate(3deg) scale(1.06); }
 .qm-pricing-heading-icon svg { width: 29px; height: 29px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .qm-pricing-heading h2 { font-size: 42px; letter-spacing: -1.2px; color: #321650; margin: 0; }
-.qm-pricing-heading .qm-section-sub { margin: 8px 0 0; font-size: 16px; font-weight: 300; color: var(--qm-muted); }
+.qm-pricing-accent { position: relative; isolation: isolate; padding: 0 2px; background: linear-gradient(120deg, var(--qm-purple), var(--qm-pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.qm-pricing-accent::after { content: ""; position: absolute; z-index: -1; right: 0; left: 0; bottom: 6px; height: 11px; border-radius: 5px; background: rgba(255,200,62,.5); }
+.qm-pricing-heading .qm-section-sub { margin: 8px 0 0; font-size: 16px; font-weight: 300; color: var(--qm-muted); text-align: center; }
 /* بطاقات الأسعار — غطاء علوي + جيب زجاجي (طبق الأصل من التصميم المرجعي) */
 .qm-price-grid { width: 100%; max-width: 1050px; margin: 72px auto 0; display: grid; grid-template-columns: repeat(3, 320px); justify-content: center; gap: 45px; align-items: end; direction: rtl; position: relative; z-index: 2; }
 .qm-price-card { --card-accent: #7025ed; --card-accent-2: #a52cf3; --pocket-top: #d9c4ff; --pocket-bottom: #9d77ef; position: relative; isolation: isolate; overflow: visible; width: 320px; padding: 0; border: 0; background: transparent; color: #fff; text-align: center; filter: drop-shadow(0 24px 18px rgba(47,29,98,.25)); transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .38s ease; animation: qmPocketCardIn .72s cubic-bezier(.2,.8,.2,1) both; }
