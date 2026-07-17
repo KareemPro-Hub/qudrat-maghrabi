@@ -83,7 +83,7 @@ const testimonials: Testimonial[] = [
   { kind: 'whatsapp', quote: 'الدروس القصيرة وفرت علي وقت كتير ووصلت لنتيجة ما توقعتها.', name: 'خالد', city: 'مكة المكرمة',
     chat: ['الشرح مركز جدًا 🙌', 'وفرت وقت كتير في المذاكرة !'] },
   { kind: 'voice', warm: false, quote: 'بنك الأسئلة غطى كل اللي احتجته للمراجعة قبل الاختبار.', name: 'ريم', city: 'الطائف', time: '0:51' },
-  { kind: 'voice', warm: true, quote: 'كنت خايف من الكمي بس المنصة خلته أسهل بكتير.', name: 'فهد', city: 'الدمام', time: '0:39' },
+  { kind: 'voice', warm: true, name: 'فهد', audio: '/reviews/review-fahd.mp3', time: '0:21' },
 ]
 
 function VoiceMedia({ t }: { t: Testimonial }) {
