@@ -9,6 +9,7 @@
   background:radial-gradient(circle at 12% 8%, rgba(143,57,214,.26), transparent 27%),
              radial-gradient(circle at 91% 88%, rgba(222,64,157,.18), transparent 25%),
              linear-gradient(145deg,#24103f 0%,#321452 48%,#281042 100%);
+  line-height:1.5;
 }
 .auth-shell *{box-sizing:border-box;font-family:'FrutigerArabic',Tahoma,Arial,sans-serif;}
 .auth-shell a{color:#7532d8;text-decoration:none;}

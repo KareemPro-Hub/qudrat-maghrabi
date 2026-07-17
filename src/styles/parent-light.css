@@ -11,7 +11,7 @@
   --purple:#7834db;--pink:#d840a1;--orange:#ff931e;--yellow:#ffc43a;--green:#2ca87c;
   --ink:#32174f;--muted:#8d8197;--line:#eee6f4;--page:#f8f6fb;--surface:#fff;
   --shadow:0 18px 52px rgba(71,39,92,.08);--sidebar:238px;
-  min-height:100vh;background:var(--page);color:var(--ink);font-family:'FrutigerArabic',Tahoma,Arial,sans-serif;
+  min-height:100vh;background:var(--page);color:var(--ink);font-family:'FrutigerArabic',Tahoma,Arial,sans-serif;line-height:1.5;
   position:relative;
 }
 .parent-shell *{box-sizing:border-box}

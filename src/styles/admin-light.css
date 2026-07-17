@@ -5,7 +5,7 @@
    ========================================================================== */
 
 :root{--adm-purple:#7736e7;--adm-violet:#9842eb;--adm-pink:#e43e96;--adm-orange:#f27a42;--adm-gold:#f3b52f;--adm-green:#31b979;--adm-ink:#2e1947;--adm-muted:#877b91;--adm-page:#f7f5fa;--adm-line:#ebe5ef;--adm-surface:#fff;--adm-shadow:0 16px 44px rgba(60,27,94,.09);--adm-sidebar:270px}
-.admin-app{min-height:100vh;background:var(--adm-page);color:var(--adm-ink);font-family:'FrutigerArabic',Arial,sans-serif;font-weight:400}
+.admin-app{min-height:100vh;background:var(--adm-page);color:var(--adm-ink);font-family:'FrutigerArabic',Arial,sans-serif;font-weight:400;line-height:1.5}
 .admin-app *{box-sizing:border-box}
 .admin-app button,.admin-app input,.admin-app textarea,.admin-app select{font:inherit}
 .admin-app button,.admin-app a{-webkit-tap-highlight-color:transparent}

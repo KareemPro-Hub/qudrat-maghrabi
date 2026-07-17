@@ -18,6 +18,7 @@
   font-family: 'FrutigerArabic', sans-serif;
   color: var(--qm-ink);
   background: #fff;
+  line-height: 1.5;
 }
 .qm-home * { box-sizing: border-box; }
 .qm-home .qm-wrap { width: min(1180px, calc(100% - 48px)); margin: auto; }
@@ -297,9 +298,9 @@
 .qm-footer-orb-two { width: 420px; height: 420px; left: -180px; bottom: -260px; background: radial-gradient(circle,#7c38ec4d,transparent 68%); }
 .qm-footer-cta { transform: translateY(-54px); min-height: 185px; border-radius: 28px; padding: 34px 46px; display: flex; align-items: center; align-content: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: radial-gradient(circle at 13% 20%,#ffbb5b66,transparent 25%), linear-gradient(105deg,#7733e7,#a942e5 65%,#db539f); box-shadow: 0 25px 65px rgba(22,4,49,.35); border: 1px solid rgba(255,255,255,.16); }
 .qm-footer-cta > div, .qm-footer-cta > a { align-self: center; }
-.qm-footer-cta span { display: block; color: #ffd875; font-size: 13px; font-weight: 700; margin-bottom: 7px; }
-.qm-footer-cta h2 { font-size: 30px; margin: 0 0 5px; }
-.qm-footer-cta p { color: #e9dbf7; margin: 0; }
+.qm-footer-cta span { display: block; color: #ffd875; font-size: 13px; font-weight: 700; margin-bottom: 7px; line-height: 1; }
+.qm-footer-cta h2 { font-size: 30px; margin: 0 0 5px; line-height: 1.25; }
+.qm-footer-cta p { color: #e9dbf7; margin: 0; line-height: 1.5; }
 .qm-footer-cta > a { display: flex; align-items: center; gap: 18px; text-decoration: none; padding: 15px 22px; border-radius: 12px; font-weight: 700; white-space: nowrap; box-shadow: 0 12px 28px rgba(39,10,70,.25); position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(255,255,255,.48); background: linear-gradient(135deg,#ffdc67 0%,#ffc337 58%,#ffb91e 100%); color: #432d35; transition: transform .25s ease, box-shadow .25s ease; }
 .qm-footer-cta > a b { font-size: 19px; }
 .qm-footer-cta > a::after { content: ""; position: absolute; z-index: -1; inset: -45% auto -45% -55%; width: 34%; transform: skewX(-22deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.58), transparent); transition: left .55s ease; }

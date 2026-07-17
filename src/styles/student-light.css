@@ -10,7 +10,7 @@
   --purple:#7935df;--violet:#6331c8;--pink:#dc429f;--orange:#ff9b33;--yellow:#ffc63b;
   --ink:#32174f;--muted:#8d8197;--line:#eee6f4;--surface:#fff;--page:#f8f6fb;
   --shadow:0 18px 52px rgba(71,39,92,.08);--sidebar:238px;
-  min-height:100vh;background:var(--page);color:var(--ink);font-family:'FrutigerArabic',Tahoma,Arial,sans-serif;
+  min-height:100vh;background:var(--page);color:var(--ink);font-family:'FrutigerArabic',Tahoma,Arial,sans-serif;line-height:1.5;
 }
 .student-shell *{box-sizing:border-box}
 .student-shell button,.student-shell a{font:inherit}

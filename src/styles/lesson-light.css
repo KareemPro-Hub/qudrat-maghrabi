@@ -1,5 +1,5 @@
 .lesson-hub-page{--ink:#2f174f;--muted:#7f7489;--purple:#7432d7;--purple-2:#9943e7;--pink:#d33dab;--coral:#ff7d62;--yellow:#ffba17;--line:#e4dced;--surface:#fff;--page:#fff;--green:#1ca56d}
-.lesson-hub-page{margin:0;min-height:100vh;background:var(--page);color:var(--ink);font-family:FrutigerArabic,Tahoma,Arial,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased}
+.lesson-hub-page{margin:0;min-height:100vh;background:var(--page);color:var(--ink);font-family:FrutigerArabic,Tahoma,Arial,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;line-height:1.5}
 .lesson-hub-page .lesson-progress-ring strong,.lesson-hub-page .hub-video-controls>span,.lesson-hub-page .lesson-summary li>span,.lesson-hub-page .pdf-icon,.lesson-hub-page .drawer-progress b{font-family:FrutigerArabic,Tahoma,Arial,sans-serif!important}
 .lesson-hub-page *{box-sizing:border-box}
 .lesson-hub-page button,.lesson-hub-page input{font:inherit}
