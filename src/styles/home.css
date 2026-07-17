@@ -107,8 +107,10 @@
 .qm-arch img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 28px 40px rgba(55,24,105,.28)); }
 
 .qm-trust { margin-top: -2px; height: 126px; padding: 0 25px; background: rgba(255,255,255,.97); border: 1px solid rgba(255,255,255,.7); border-radius: 18px; box-shadow: 0 22px 55px rgba(61,27,91,.2); display: flex; align-items: center; justify-content: space-around; position: relative; z-index: 2; }
-.qm-trust article { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; color: #392251; animation: qmCounterRise .7s ease backwards; }
-.qm-trust article:nth-child(2) { animation-delay: .08s; } .qm-trust article:nth-child(3) { animation-delay: .16s; } .qm-trust article:nth-child(4) { animation-delay: .24s; }
+.qm-trust article { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; color: #392251; opacity: 0; transform: translateY(22px) scale(.94); transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1); }
+.qm-trust-in article { opacity: 1; transform: none; }
+.qm-trust-in article i { animation: qmStatIconPop .55s cubic-bezier(.34,1.56,.64,1) both; animation-delay: inherit; }
+@keyframes qmStatIconPop { 0% { transform: scale(.4) rotate(-12deg); } 70% { transform: scale(1.12) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
 .qm-trust article + article::after { content: ""; position: absolute; right: 0; top: 25%; width: 1px; height: 50%; background: linear-gradient(transparent, #ded3ea, transparent); }
 .qm-trust article i { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; font-style: normal; font-size: 23px; background: linear-gradient(145deg,#efe4ff,#ddc5ff); color: #7f35df; box-shadow: 0 8px 20px rgba(117,52,205,.15); }
 .qm-trust article i svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const trustStats = [
-  { icon: 'student', value: '2,000+', label: 'طالب مسجّل' },
-  { icon: '▶', value: '200+', label: 'درس مرئي' },
-  { icon: 'target', value: '98%', label: 'هدفنا لدرجتك' },
-  { icon: 'question', value: '10,000+', label: 'بنك أسئلة تجميعات' },
+  { icon: 'student', target: 2000, suffix: '+', label: 'طالب مسجّل' },
+  { icon: '▶', target: 200, suffix: '+', label: 'درس مرئي' },
+  { icon: 'target', target: 98, suffix: '%', label: 'هدفنا لدرجتك' },
+  { icon: 'question', target: 10000, suffix: '+', label: 'بنك أسئلة تجميعات' },
 ]
 
 const programs = [
@@ -85,6 +85,58 @@ const testimonials: Testimonial[] = [
   { kind: 'voice', warm: false, name: 'ريم', audio: '/reviews/review-reem.mp3', time: '0:17' },
   { kind: 'voice', warm: true, name: 'فهد', audio: '/reviews/review-fahd.mp3', time: '0:21' },
 ]
+
+// شريط الإحصائيات — كاونتر تصاعدي عند الظهور + دخول متدرج
+function TrustBar() {
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const [started, setStarted] = useState(false)
+  const [counts, setCounts] = useState<number[]>(trustStats.map(() => 0))
+
+  useEffect(() => {
+    const el = barRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setStarted(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.4 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!started) return
+    const duration = 1800
+    const startTime = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 4)
+      setCounts(trustStats.map((s) => Math.round(s.target * eased)))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [started])
+
+  return (
+    <div className={`qm-trust qm-wrap${started ? ' qm-trust-in' : ''}`} ref={barRef}>
+      {trustStats.map((s, i) => (
+        <article key={s.label} style={{ transitionDelay: `${i * 0.12}s` }}>
+          <i><TrustIcon type={s.icon} /></i>
+          <div>
+            <strong>{counts[i].toLocaleString('en-US')}{s.suffix}</strong>
+            <span>{s.label}</span>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
 
 function VoiceMedia({ t }: { t: Testimonial }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -213,14 +265,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="qm-trust qm-wrap">
-          {trustStats.map((s) => (
-            <article key={s.label}>
-              <i><TrustIcon type={s.icon} /></i>
-              <div><strong>{s.value}</strong><span>{s.label}</span></div>
-            </article>
-          ))}
-        </div>
+        <TrustBar />
       </section>
 
       {/* ===== Programs ===== */}
