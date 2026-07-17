@@ -24,22 +24,37 @@ const valuePoints = [
 
 const plans = [
   {
-    key: 'basic', number: '01', kicker: 'بداية ثابتة', name: 'الأساسية', price: '99',
-    features: ['دروس التأسيس', 'اختبارات قصيرة', 'تقارير الأداء'],
-    cta: 'اختر الباقة', extra: 'qm-basic',
-    icon: <><path d="M6 4.5h11a2 2 0 0 1 2 2V20H7a3 3 0 0 1-3-3V6.5a2 2 0 0 1 2-2Z" /><path d="M7 4.5V20M9.5 9H16M9.5 12H15" /></>,
+    key: 'basic', kicker: 'بداية ثابتة', name: 'الأساسية', price: '99',
+    features: [
+      { text: 'دروس التأسيس', ok: true },
+      { text: 'اختبارات قصيرة', ok: true },
+      { text: 'تقارير الأداء', ok: true },
+      { text: 'محاكاة غير محدودة', ok: false },
+      { text: 'دعم مباشر', ok: false },
+    ],
+    cta: 'اختر الباقة', extra: '',
   },
   {
-    key: 'hot', number: '02', kicker: 'رحلة متكاملة', name: 'الشاملة', price: '199',
-    features: ['جميع الدروس', 'محاكاة غير محدودة', 'خطة ذكية مخصصة'],
-    cta: 'ابدأ الآن', extra: 'qm-hot', popular: true,
-    icon: <><circle cx="12" cy="12" r="8" /><path d="m14.8 9.2-1.6 4-4 1.6 1.6-4 4-1.6Z" /></>,
+    key: 'hot', kicker: 'رحلة متكاملة', name: 'الشاملة', price: '199',
+    features: [
+      { text: 'جميع الدروس', ok: true },
+      { text: 'محاكاة غير محدودة', ok: true },
+      { text: 'خطة ذكية مخصصة', ok: true },
+      { text: 'تقارير أداء متقدمة', ok: true },
+      { text: 'جلسات مراجعة خاصة', ok: false },
+    ],
+    cta: 'ابدأ الآن', extra: ' qm-hot',
   },
   {
-    key: 'pro', number: '03', kicker: 'أقصى استفادة', name: 'الاحترافية', price: '299',
-    features: ['كل مزايا الشاملة', 'جلسات مراجعة', 'دعم مباشر'],
-    cta: 'اختر الباقة', extra: 'qm-pro',
-    icon: <><path d="m5 8 3.5 3L12 5l3.5 6L19 8l-1.5 10h-11L5 8Z" /><path d="M7 18h10" /></>,
+    key: 'pro', kicker: 'أقصى استفادة', name: 'الاحترافية', price: '299',
+    features: [
+      { text: 'كل مزايا الشاملة', ok: true },
+      { text: 'جلسات مراجعة', ok: true },
+      { text: 'دعم مباشر', ok: true },
+      { text: 'خطة دراسة شخصية', ok: true },
+      { text: 'تحليل شامل للنتائج', ok: true },
+    ],
+    cta: 'اختر الباقة', extra: ' qm-pro',
   },
 ]
 
@@ -197,26 +212,25 @@ export default function Home() {
 
           <div className="qm-price-grid">
             {plans.map((plan) => (
-              <article key={plan.key} className={`qm-price-card ${plan.extra}${plan.popular ? ' qm-hot' : ''}`}>
-                <span className="qm-plan-aura" aria-hidden="true" />
-                {plan.popular && (
-                  <span className="qm-popular">
-                    <svg viewBox="0 0 24 24"><path d="m12 3 2.5 5.3L20 9l-4 4 .9 5.7-4.9-2.6-4.9 2.6L8 13 4 9l5.5-.7L12 3Z" /></svg>
-                    الأكثر اختيارًا
-                  </span>
-                )}
-                <header className="qm-plan-head">
-                  <span className="qm-plan-icon" aria-hidden="true"><svg viewBox="0 0 24 24">{plan.icon}</svg></span>
-                  <span className="qm-plan-number">{plan.number}</span>
-                  <div><small>{plan.kicker}</small><h3>{plan.name}</h3></div>
+              <article key={plan.key} className={`qm-price-card${plan.extra}`}>
+                <header className="qm-price-cap">
+                  <small>{plan.kicker}</small>
+                  <h3>{plan.name}</h3>
+                  <div className="qm-price-lockup"><strong>{plan.price}</strong><span>ر.س<small>للباقة</small></span></div>
                 </header>
-                <div className="qm-price-lockup"><strong>{plan.price}</strong><span>ر.س<small>للباقة</small></span></div>
-                <ul>
-                  {plan.features.map((f) => (
-                    <li key={f}><svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7" /></svg><span>{f}</span></li>
-                  ))}
-                </ul>
-                <Link to="/register">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
+                <div className="qm-price-pocket">
+                  <ul>
+                    {plan.features.map((f) => (
+                      <li key={f.text} className={f.ok ? undefined : 'qm-unavailable'}>
+                        {f.ok
+                          ? <svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7" /></svg>
+                          : <svg viewBox="0 0 24 24"><path d="m8 8 8 8M16 8l-8 8" /></svg>}
+                        <span>{f.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/register">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
+                </div>
               </article>
             ))}
           </div>
