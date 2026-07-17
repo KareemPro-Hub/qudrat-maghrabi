@@ -9,7 +9,7 @@ import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../c
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 
-const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '', thumbnail_url: '' }
+const emptyForm = { title: '', description: '', price: '', level: 'beginner', duration_hours: '', thumbnail_url: '', parent_course_id: '' }
 const levelLabels: Record<string, string> = { beginner: 'مبتدئ', intermediate: 'متوسط', advanced: 'متقدم' }
 const levelClass: Record<string, string> = { beginner: '', intermediate: 'orange', advanced: 'purple' }
 const coverClass = ['c1', 'c2', 'c3', 'c4']
@@ -88,6 +88,7 @@ export default function AdminCourses() {
       level: (c as any).level || 'beginner',
       duration_hours: String((c as any).duration_hours || ''),
       thumbnail_url: (c as any).thumbnail_url || '',
+      parent_course_id: c.parent_course_id || '',
     })
     setShowModal(true)
   }
@@ -108,15 +109,16 @@ export default function AdminCourses() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title || !form.price) return toast.error('يرجى تعبئة العنوان والسعر')
+    if (!form.title) return toast.error('يرجى تعبئة عنوان الكورس')
     setSaving(true)
     const payload = {
       title: form.title,
       description: form.description,
-      price: Number(form.price),
+      price: form.price ? Number(form.price) : 0,
       level: form.level,
       duration_hours: Number(form.duration_hours) || null,
       thumbnail_url: form.thumbnail_url || null,
+      parent_course_id: form.parent_course_id || null,
     }
     if (editing) {
       const { error } = await supabase.from('courses').update(payload).eq('id', editing.id)
@@ -145,6 +147,13 @@ export default function AdminCourses() {
   const totalStudents = Object.values(statsByCourse).reduce((s, c) => s + c.students, 0)
   const avgCompletion = courses.length ? Math.round(Object.values(statsByCourse).reduce((s, c) => s + c.completion, 0) / courses.length) : 0
   const featured = [...courses].sort((a, b) => (statsByCourse[b.id]?.students || 0) - (statsByCourse[a.id]?.students || 0)).slice(0, 3)
+
+  // الكورسات المؤهلة تبقى "أب" — أي كورس مستقل (مش هو نفسه فرعي) وغير الكورس اللي بيتعدّل حاليًا
+  const parentOptions = courses.filter((c) => !c.parent_course_id && c.id !== editing?.id)
+  const childrenCountByParent: Record<string, number> = {}
+  courses.forEach((c) => { if (c.parent_course_id) childrenCountByParent[c.parent_course_id] = (childrenCountByParent[c.parent_course_id] || 0) + 1 })
+  const titleById: Record<string, string> = {}
+  courses.forEach((c) => { titleById[c.id] = c.title })
 
   return (
     <>
@@ -202,8 +211,14 @@ export default function AdminCourses() {
                             <GripVertical size={14} />
                           </span>
                           <b>{c.title}</b>
+                          {c.parent_course_id && titleById[c.parent_course_id] && (
+                            <small style={{ display: 'block', color: '#a79cad', fontSize: 12, fontWeight: 700, marginTop: 2 }}>فرعي ضمن: {titleById[c.parent_course_id]}</small>
+                          )}
+                          {!c.parent_course_id && childrenCountByParent[c.id] > 0 && (
+                            <small style={{ display: 'block', color: '#8738e7', fontSize: 12, fontWeight: 700, marginTop: 2 }}>باقة · {childrenCountByParent[c.id]} كورس فرعي</small>
+                          )}
                         </td>
-                        <td>{c.price} ر.س</td>
+                        <td>{c.price > 0 ? `${c.price} ر.س` : (childrenCountByParent[c.id] > 0 ? <span className="tag purple">باقة</span> : <span className="tag">مجاني</span>)}</td>
                         <td><span className="tag purple">{levelLabels[(c as any).level] || 'مبتدئ'}</span></td>
                         <td>{s.students}</td>
                         <td><div className="inline-progress"><i><u style={{ width: `${s.completion}%` }} /></i><b>{s.completion}%</b></div></td>
@@ -246,7 +261,7 @@ export default function AdminCourses() {
             <label>عنوان الكورس *<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: القدرات الكمي" /></label>
             <label>الوصف<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للكورس..." /></label>
             <div className="form-grid">
-              <label>السعر *<input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="199" /></label>
+              <label>السعر (اختياري)<input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="اتركه فاضي لو الكورس أب/باقة بدون سعر مباشر" /></label>
               <label>المستوى
                 <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
                   <option value="beginner">مبتدئ</option>
@@ -255,6 +270,16 @@ export default function AdminCourses() {
                 </select>
               </label>
             </div>
+            <label>
+              الكورس الأب (اختياري)
+              <select value={form.parent_course_id} onChange={(e) => setForm({ ...form, parent_course_id: e.target.value })}>
+                <option value="">— كورس مستقل —</option>
+                {parentOptions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+              </select>
+            </label>
+            {form.parent_course_id === '' && !editing?.parent_course_id && (
+              <small className="cell-sub" style={{ marginTop: -12 }}>لو الكورس ده باقة هتحط جواها كورسات فرعية بعدين، سيبه بدون سعر وبدون كورس أب — وبعدين اربط كل كورس فرعي بيه من هنا.</small>
+            )}
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving || uploading}>{saving ? 'جاري الحفظ...' : editing ? 'حفظ التعديلات' : 'إضافة الكورس'}</button>
               <button type="button" className="ghost-button" onClick={() => setShowModal(false)}>إلغاء</button>

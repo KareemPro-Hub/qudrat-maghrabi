@@ -15,6 +15,7 @@ export default function CourseDetail() {
   const [enrolled, setEnrolled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lessons, setLessons] = useState<any[]>([])
+  const [subCourses, setSubCourses] = useState<Course[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -36,6 +37,14 @@ export default function CourseDetail() {
         .eq('course_id', id)
         .order('order_index')
       setLessons(lessonsData || [])
+
+      const { data: subData } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('parent_course_id', id)
+        .eq('is_published', true)
+        .order('order_index')
+      setSubCourses(subData || [])
     }
 
     if (user && data) {
@@ -125,24 +134,64 @@ export default function CourseDetail() {
                   </div>
                 )}
               </div>
-              <div className="text-3xl font-black gradient-text mb-2">{course.price} <SarSymbol /></div>
-              <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
+              {course.price > 0 || subCourses.length === 0 ? (
+                <>
+                  <div className="text-3xl font-black gradient-text mb-2">{course.price} <SarSymbol /></div>
+                  <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
 
-              {enrolled ? (
-                <Link to={`/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
-                  ادرس الآن ←
-                </Link>
+                  {enrolled ? (
+                    <Link to={`/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
+                      ادرس الآن ←
+                    </Link>
+                  ) : (
+                    <button onClick={handleBuy} className="btn-primary w-full py-4 text-lg">
+                      {subCourses.length > 0 ? 'اشترك في الباقة الكاملة' : 'اشترك الآن'}
+                    </button>
+                  )}
+
+                  <p className="text-center text-gray-400 text-xs mt-3">ضمان استرداد خلال ٧ أيام</p>
+                </>
               ) : (
-                <button onClick={handleBuy} className="btn-primary w-full py-4 text-lg">
-                  اشترك الآن
-                </button>
+                <>
+                  <div className="inline-flex items-center gap-2 bg-purple-50 text-brand-purple text-sm font-black px-4 py-2 rounded-full mb-4">باقة كورسات</div>
+                  <p className="text-gray-400 text-sm mb-6">اشترك في كل كورس فرعي بسعره الخاص</p>
+                  <a href="#sub-courses" className="btn-primary w-full text-center py-4 text-lg block">
+                    استعرض الكورسات المتضمنة
+                  </a>
+                </>
               )}
-
-              <p className="text-center text-gray-400 text-xs mt-3">ضمان استرداد خلال ٧ أيام</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* الكورسات المتضمنة (باقة) */}
+      {subCourses.length > 0 && (
+        <div id="sub-courses" className="py-14">
+          <div className="max-w-5xl mx-auto px-4">
+            <h2 className="text-2xl font-black text-brand-navy mb-2 text-right">الكورسات المتضمنة في الباقة</h2>
+            <p className="text-gray-500 text-sm mb-8 text-right">اشترك في أي كورس فرعي لوحده أو في كل الباقة</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {subCourses.map((sc) => (
+                <Link key={sc.id} to={`/courses/${sc.id}`} className="bg-white rounded-2xl shadow-sm hover:shadow-brand transition-shadow overflow-hidden flex items-center gap-4 p-4">
+                  <div className="relative flex-shrink-0 w-28 h-20 rounded-xl overflow-hidden bg-gray-100">
+                    {(sc as any).thumbnail_url ? (
+                      <img src={(sc as any).thumbnail_url} alt={sc.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="gradient-bg w-full h-full flex items-center justify-center"><Play size={20} className="text-white" /></div>
+                    )}
+                  </div>
+                  <div className="flex-1 text-right">
+                    <p className="font-black text-brand-navy">{sc.title}</p>
+                    {sc.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{sc.description}</p>}
+                    <div className="text-brand-purple font-black mt-2">{sc.price} <SarSymbol /></div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Curriculum */}
       {lessons.length > 0 && (
@@ -231,7 +280,7 @@ export default function CourseDetail() {
       </div>
 
       {/* CTA Bottom */}
-      {!enrolled && (
+      {!enrolled && (course.price > 0 || subCourses.length === 0) && (
         <div className="py-10 bg-gray-50">
           <div className="max-w-xl mx-auto px-4 text-center">
             <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>
@@ -239,6 +288,17 @@ export default function CourseDetail() {
             <button onClick={handleBuy} className="btn-primary py-4 px-12 text-lg">
               اشترك الآن بـ {course.price} <SarSymbol />
             </button>
+          </div>
+        </div>
+      )}
+      {subCourses.length > 0 && course.price === 0 && (
+        <div className="py-10 bg-gray-50">
+          <div className="max-w-xl mx-auto px-4 text-center">
+            <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>
+            <p className="text-gray-500 mb-6">اختر الكورس المناسب لك من الباقة وابدأ فورًا</p>
+            <a href="#sub-courses" className="btn-primary py-4 px-12 text-lg inline-block">
+              استعرض الكورسات المتضمنة
+            </a>
           </div>
         </div>
       )}

@@ -20,6 +20,7 @@ export interface Course {
   created_at: string
   lessons_count?: number
   enrolled_count?: number
+  parent_course_id?: string | null
 }
 
 export interface Lesson {

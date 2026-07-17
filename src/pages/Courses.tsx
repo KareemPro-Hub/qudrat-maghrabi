@@ -7,6 +7,7 @@ import SarSymbol from '../components/SarSymbol'
 
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([])
+  const [childCountByParent, setChildCountByParent] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,7 +28,11 @@ export default function Courses() {
         lessons_count: statsByCourse[c.id]?.lessons_count ?? 0,
         enrolled_count: statsByCourse[c.id]?.enrolled_count ?? 0,
       }))
-      setCourses(merged)
+      const childCounts: Record<string, number> = {}
+      merged.forEach((c: any) => { if (c.parent_course_id) childCounts[c.parent_course_id] = (childCounts[c.parent_course_id] || 0) + 1 })
+      setChildCountByParent(childCounts)
+      // الكورسات الفرعية بتظهر جوه صفحة الكورس الأب بتاعها، مش كبلاطة مستقلة هنا
+      setCourses(merged.filter((c: any) => !c.parent_course_id))
       setLoading(false)
     })
   }, [])
@@ -80,10 +85,21 @@ export default function Courses() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-2xl font-black gradient-text">{course.price} <SarSymbol /></div>
-                  <span className="btn-primary py-2 px-6 text-sm">
-                    اشترك الآن
-                  </span>
+                  {course.price > 0 || !childCountByParent[course.id] ? (
+                    <>
+                      <div className="text-2xl font-black gradient-text">{course.price} <SarSymbol /></div>
+                      <span className="btn-primary py-2 px-6 text-sm">
+                        اشترك الآن
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-sm font-black text-brand-purple bg-purple-50 px-3 py-1.5 rounded-full">باقة · {childCountByParent[course.id]} كورس</div>
+                      <span className="btn-primary py-2 px-6 text-sm">
+                        استعرض الباقة
+                      </span>
+                    </>
+                  )}
                 </div>
               </Link>
             ))}
