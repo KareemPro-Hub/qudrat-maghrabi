@@ -182,9 +182,9 @@ export default function CourseDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {subCourses.map((sc) => (
                 <Link key={sc.id} to={`/courses/${sc.id}`} className="bg-white rounded-2xl shadow-sm hover:shadow-brand transition-shadow overflow-hidden flex items-center gap-4 p-4">
-                  <div className="relative flex-shrink-0 w-28 h-20 rounded-xl overflow-hidden bg-gray-100">
+                  <div className="relative flex-shrink-0 w-28 h-20 rounded-xl overflow-hidden bg-black">
                     {(sc as any).thumbnail_url ? (
-                      <img src={(sc as any).thumbnail_url} alt={sc.title} className="w-full h-full object-cover" />
+                      <img src={(sc as any).thumbnail_url} alt={sc.title} className="w-full h-full object-contain" />
                     ) : (
                       <div className="gradient-bg w-full h-full flex items-center justify-center"><Play size={20} className="text-white" /></div>
                     )}
