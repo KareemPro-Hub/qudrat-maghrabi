@@ -1,8 +1,8 @@
 const contactChannels = [
-  { icon: '📧', title: 'البريد الإلكتروني', value: 'Qudrat.Maghrabi.Pro@gmail.com', sub: 'نرد خلال 24 ساعة', href: 'mailto:Qudrat.Maghrabi.Pro@gmail.com' },
-  { icon: '💬', title: 'واتساب', value: '+966 54 806 6321', sub: 'السبت – الخميس، ٩ص – ١٠م', href: 'https://wa.me/966548066321' },
-  { icon: '📺', title: 'يوتيوب', value: 'قدرات المغربي', sub: 'محتوى مجاني ومتجدد', href: 'https://www.youtube.com/@QudratAlmaghrabi' },
-  { icon: '🐦', title: 'تويتر / X', value: '@QudratMaghrabi', sub: 'تابعنا للأخبار والتحديثات', href: '' },
+  { icon: '/contact-icons/email.webp', title: 'البريد الإلكتروني', value: 'Qudrat.Maghrabi.Pro@gmail.com', sub: 'نرد خلال 24 ساعة', href: 'mailto:Qudrat.Maghrabi.Pro@gmail.com' },
+  { icon: '/contact-icons/whatsapp.webp', title: 'واتساب', value: '+966 54 806 6321', sub: 'السبت – الخميس، ٩ص – ١٠م', href: 'https://wa.me/966548066321' },
+  { icon: '/contact-icons/youtube.webp', title: 'يوتيوب', value: 'قدرات المغربي', sub: 'محتوى مجاني ومتجدد', href: 'https://www.youtube.com/@QudratAlmaghrabi' },
+  { icon: '/contact-icons/x.webp', title: 'تويتر / X', value: '@QudratMaghrabi', sub: 'تابعنا للأخبار والتحديثات', href: '' },
 ]
 
 export default function Contact() {
@@ -21,7 +21,7 @@ export default function Contact() {
           {contactChannels.map((item, i) => {
             const content = (
               <>
-                <div className="qm-info-contact-icon">{item.icon}</div>
+                <div className="qm-info-contact-icon"><img src={item.icon} alt="" loading="lazy" /></div>
                 <h3>{item.title}</h3>
                 <p className="qm-info-contact-value" dir="ltr">{item.value}</p>
                 <p className="qm-info-contact-sub">{item.sub}</p>
