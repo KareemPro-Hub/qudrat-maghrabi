@@ -60,10 +60,7 @@ export default function SiteNav() {
               </button>
             </>
           ) : (
-            <>
-              <Link className="qm-topbar-login" to="/login">تسجيل الدخول</Link>
-              <Link className="qm-nav-cta" to="/register">ابدأ الآن</Link>
-            </>
+            <Link className="qm-nav-cta" to="/register">ابدأ الآن</Link>
           )}
           <button className="qm-topbar-toggle qm-topbar-icon-btn" type="button" onClick={() => setOpen((o) => !o)} aria-label="القائمة" aria-expanded={open}>
             {open ? <X size={20} /> : <Menu size={20} />}
