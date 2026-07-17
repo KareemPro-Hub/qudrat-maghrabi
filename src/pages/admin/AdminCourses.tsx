@@ -247,8 +247,8 @@ export default function AdminCourses() {
             <label>
               صورة الغلاف
               {form.thumbnail_url ? (
-                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 140 }}>
-                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: '16 / 9', background: '#000' }}>
+                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="" />
                   <button type="button" onClick={() => setForm((f) => ({ ...f, thumbnail_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
                 </div>
               ) : (
