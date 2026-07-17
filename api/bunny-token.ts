@@ -38,9 +38,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .eq('video_id', videoId)
     .single()
 
-  const isFreePreview = lesson?.is_free_preview === true
+  // الكورس المجاني بالكامل (سعر 0 ومنشور): كل دروسه متاحة
+  const { data: course } = await supabase
+    .from('courses')
+    .select('price, is_published')
+    .eq('id', courseId)
+    .single()
 
-  if (!enrollment && !isFreePreview) {
+  const isFreePreview = lesson?.is_free_preview === true
+  const isFreeCourse = course?.is_published === true && Number(course?.price) === 0
+
+  if (!enrollment && !isFreePreview && !isFreeCourse) {
     return res.status(403).json({ error: 'Not enrolled in this course' })
   }
 
