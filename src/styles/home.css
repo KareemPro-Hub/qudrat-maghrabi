@@ -244,7 +244,8 @@
 .qm-reviews-stars-row svg { width: 26px; height: 26px; fill: var(--qm-yellow); filter: drop-shadow(0 3px 6px rgba(64,28,91,.18)); }
 .qm-reviews-stars-label { font-size: 14px; font-weight: 700; color: var(--qm-muted); background: #fff; border: 1px solid var(--qm-line); border-radius: 22px; padding: 7px 18px; box-shadow: 0 6px 16px rgba(85,39,135,.08); }
 .qm-review-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 46px; align-items: stretch; }
-.qm-testimonial-card { position: relative; overflow: hidden; min-height: 370px; background: linear-gradient(150deg,#fff,#fbf8ff); border: 1px solid #eadff4; border-radius: 25px; padding: 17px; text-align: right; box-shadow: 0 18px 42px rgba(71,32,108,.09); transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; animation: qmTestimonialRise .7s cubic-bezier(.2,.8,.2,1) backwards; }
+.qm-testimonial-card { position: relative; overflow: hidden; min-height: 370px; display: flex; flex-direction: column; background: linear-gradient(150deg,#fff,#fbf8ff); border: 1px solid #eadff4; border-radius: 25px; padding: 17px; text-align: right; box-shadow: 0 18px 42px rgba(71,32,108,.09); transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; animation: qmTestimonialRise .7s cubic-bezier(.2,.8,.2,1) backwards; }
+.qm-testimonial-card footer { margin-top: auto; }
 .qm-testimonial-card:nth-child(2) { animation-delay: .12s; } .qm-testimonial-card:nth-child(3) { animation-delay: .24s; }
 .qm-testimonial-card:hover { transform: translateY(-9px); border-color: #d7c0f2; box-shadow: 0 27px 55px rgba(71,32,108,.16); }
 .qm-testimonial-media { height: 135px; border-radius: 18px; position: relative; overflow: hidden; }
@@ -255,7 +256,7 @@
 .qm-media-label .qm-wa-icon { fill: currentColor; stroke: none; }
 .qm-voice-real .qm-voice-wave i { animation-play-state: paused; }
 .qm-voice-real.qm-playing .qm-voice-wave i { animation-play-state: running; }
-.qm-testimonial-card footer .qm-reviewer-big b { font-size: 17px; }
+.qm-testimonial-card footer .qm-reviewer-big b { font-size: 15px; }
 .qm-voice-play { width: 43px; height: 43px; border: 1px solid rgba(255,255,255,.68); border-radius: 50%; display: grid; place-items: center; background: #fff; color: #7c34dc; box-shadow: 0 9px 22px rgba(48,15,80,.23); cursor: pointer; transition: transform .25s ease, box-shadow .25s ease; }
 .qm-voice-play:hover { transform: scale(1.08); box-shadow: 0 12px 28px rgba(48,15,80,.32); }
 .qm-voice-play svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
