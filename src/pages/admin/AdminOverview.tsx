@@ -160,6 +160,7 @@ export default function AdminOverview() {
   const linePath = smoothPath(points)
   const areaPath = points.length ? `${linePath} V${bottomY + 10} H${points[0].x}Z` : ''
   const totalRevenue6mo = months.reduce((s, m) => s + m.value, 0)
+  const hasRevenue = totalRevenue6mo > 0
   const donutGradient = (() => {
     const total = slices.reduce((s, sl) => s + sl.count, 0) || 1
     let acc = 0
@@ -215,7 +216,7 @@ export default function AdminOverview() {
           </div>
           {loading ? (
             <div className="adm-loading"><i /></div>
-          ) : points.length > 1 ? (
+          ) : hasRevenue && points.length > 1 ? (
             <div className="revenue-chart-shell">
               <svg className="line-chart" viewBox="0 0 760 270" preserveAspectRatio="none">
                 <defs>
@@ -250,7 +251,13 @@ export default function AdminOverview() {
               </div>
             </div>
           ) : (
-            <div className="empty-state">لا توجد بيانات إيرادات كافية بعد</div>
+            <div className="revenue-empty">
+              <span className="revenue-empty-icon">
+                <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l3-3 3 2 4-5" /><circle cx="18" cy="9" r="2.2" /></svg>
+              </span>
+              <h4>لسه معندكش إيرادات مسجّلة</h4>
+              <p>هيظهر هنا رسم بياني بنمو الإيرادات تلقائيًا بمجرد إتمام أول عملية اشتراك مدفوعة</p>
+            </div>
           )}
         </article>
 
