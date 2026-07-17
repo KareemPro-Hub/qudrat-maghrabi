@@ -272,6 +272,7 @@
 .qm-chat-top .qm-chat-avatar { width: 27px; height: 27px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #1c806d; font-weight: 900; font-size: 11px; }
 .qm-chat-top i { width: 7px; height: 7px; border-radius: 50%; background: #56dc9d; box-shadow: 0 0 0 3px rgba(86,220,157,.17); }
 .qm-chat-top b { font-size: 11px; }
+.qm-chat-image { display: block; width: 100%; }
 .qm-chat-bubbles { padding: 12px; display: flex; flex-direction: column; gap: 7px; align-items: flex-start; }
 .qm-chat-bubbles span { max-width: 82%; padding: 7px 10px; border-radius: 9px 9px 3px 9px; background: #fff; color: #493c4e; font-size: 10px; box-shadow: 0 2px 5px rgba(55,42,61,.1); animation: qmChatFloat 2.8s ease-in-out infinite; }
 .qm-chat-bubbles span + span { align-self: flex-end; background: #d8f6cc; border-radius: 9px 9px 9px 3px; animation-delay: .4s; }

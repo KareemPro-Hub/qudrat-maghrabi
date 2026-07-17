@@ -72,13 +72,13 @@ type Testimonial = {
   city?: string
   time?: string
   audio?: string
+  image?: string
   chat?: string[]
 }
 
 const testimonials: Testimonial[] = [
   { kind: 'voice', warm: false, name: 'عبد الله', audio: '/reviews/review-abdullah.mp3', time: '0:37' },
-  { kind: 'whatsapp', quote: 'أكثر شيء أفادني تحليل الأخطاء بعد كل محاكاة.', name: 'عبدالرحمن', city: 'جدة',
-    chat: ['تحليل الأخطاء فرق معي جدًا 👌', 'وكل محاكاة نتيجتي تتحسن !'] },
+  { kind: 'whatsapp', name: 'نواف', image: '/reviews/chat-nawaf.webp' },
   { kind: 'voice', warm: true, name: 'فيصل', audio: '/reviews/review-faisal.mp3', time: '0:17' },
   { kind: 'whatsapp', quote: 'الدروس القصيرة وفرت علي وقت كتير ووصلت لنتيجة ما توقعتها.', name: 'خالد', city: 'مكة المكرمة',
     chat: ['الشرح مركز جدًا 🙌', 'وفرت وقت كتير في المذاكرة !'] },
@@ -327,8 +327,10 @@ export default function Home() {
                 <VoiceMedia t={t} />
               ) : (
                 <div className="qm-testimonial-media qm-whatsapp-shot">
-                  <div className="qm-chat-top"><span className="qm-chat-avatar">ع</span><i /><b>محادثة واتساب</b></div>
-                  <div className="qm-chat-bubbles">{t.chat!.map((c) => <span key={c}>{c}</span>)}</div>
+                  <div className="qm-chat-top"><span className="qm-chat-avatar">{t.name.charAt(0)}</span><i /><b>محادثة واتساب</b></div>
+                  {t.image
+                    ? <img className="qm-chat-image" src={t.image} alt={`محادثة واتساب من ${t.name}`} loading="lazy" />
+                    : <div className="qm-chat-bubbles">{t.chat!.map((c) => <span key={c}>{c}</span>)}</div>}
                 </div>
               )}
               {t.quote && <blockquote>“{t.quote}”</blockquote>}
