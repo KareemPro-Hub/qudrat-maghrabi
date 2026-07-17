@@ -114,15 +114,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <img src={profile.avatar_url || '/admin/default-avatar.png'} alt={profile.full_name || ''} />
           </div>
           <div>
-            <div className="profile-name-row">
-              <strong>{profile.full_name}</strong>
-              <button className="signout-icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج">
-                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-              </button>
-            </div>
+            <strong>{profile.full_name}</strong>
             <span>{ROLE_LABEL[profile.role] || profile.role}</span>
           </div>
-          <i />
+          <button className="signout-icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+          </button>
         </div>
       </aside>
 
