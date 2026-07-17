@@ -52,7 +52,8 @@
 a.qm-info-contact-card:hover { transform: translateY(-5px); border-color: #dfcef5; box-shadow: 0 20px 40px rgba(91,39,133,.14); }
 .qm-info-contact-icon { width: 58px; height: 58px; display: grid; place-items: center; margin: 0 auto 14px; }
 .qm-info-contact-icon img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(45,23,75,.18)); transition: transform .25s ease; }
-a.qm-info-contact-card:hover .qm-info-contact-icon img { transform: scale(1.08) rotate(-3deg); }
+.qm-info-contact-card:hover .qm-info-contact-icon img { transform: scale(1.08) rotate(-3deg); }
+div.qm-info-contact-card:hover { transform: translateY(-5px); border-color: #dfcef5; box-shadow: 0 20px 40px rgba(91,39,133,.14); }
 .qm-info-contact-card h3 { font-size: 16px; font-weight: 900; color: #2d174b; margin: 0 0 5px; }
 .qm-info-contact-card .qm-info-contact-value { color: #d946c6; font-weight: 800; font-size: 14.5px; margin: 0 0 4px; }
 .qm-info-contact-card .qm-info-contact-sub { color: #a297ac; font-size: 12.5px; margin: 0; }
