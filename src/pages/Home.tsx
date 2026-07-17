@@ -79,7 +79,7 @@ const testimonials: Testimonial[] = [
   { kind: 'voice', warm: false, name: 'عبد الله', audio: '/reviews/review-abdullah.mp3', time: '0:37' },
   { kind: 'whatsapp', quote: 'أكثر شيء أفادني تحليل الأخطاء بعد كل محاكاة.', name: 'عبدالرحمن', city: 'جدة',
     chat: ['تحليل الأخطاء فرق معي جدًا 👌', 'وكل محاكاة نتيجتي تتحسن !'] },
-  { kind: 'voice', warm: true, quote: 'الخطة اليومية جعلت المذاكرة أخف ونتيجتي أفضل بكثير.', name: 'نورة', city: 'الدمام', time: '0:36' },
+  { kind: 'voice', warm: true, name: 'فيصل', audio: '/reviews/review-faisal.mp3', time: '0:17' },
   { kind: 'whatsapp', quote: 'الدروس القصيرة وفرت علي وقت كتير ووصلت لنتيجة ما توقعتها.', name: 'خالد', city: 'مكة المكرمة',
     chat: ['الشرح مركز جدًا 🙌', 'وفرت وقت كتير في المذاكرة !'] },
   { kind: 'voice', warm: false, quote: 'بنك الأسئلة غطى كل اللي احتجته للمراجعة قبل الاختبار.', name: 'ريم', city: 'الطائف', time: '0:51' },
