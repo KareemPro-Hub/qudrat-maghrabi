@@ -239,8 +239,23 @@ export default function Home() {
 
       {/* ===== Reviews ===== */}
       <section id="qm-reviews" className="qm-reviews qm-wrap qm-section">
-        <h2>قصص تفوقهم بدأت هنا</h2>
-        <p className="qm-reviews-lead">تجارب حقيقية من طلاب صنعوا فرقًا في مستواهم ودرجاتهم.</p>
+        <header className="qm-reviews-heading">
+          <span className="qm-reviews-heading-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7.5 5.5C5 7 3.8 9.4 3.8 12.4c0 2.6 1.6 4.4 3.7 4.4 1.9 0 3.3-1.4 3.3-3.3 0-1.8-1.3-3.1-3-3.1-.3 0-.6 0-.8.1.3-1.7 1.4-3.2 3-4.2L7.5 5.5Zm9.2 0c-2.5 1.5-3.7 3.9-3.7 6.9 0 2.6 1.6 4.4 3.7 4.4 1.9 0 3.3-1.4 3.3-3.3 0-1.8-1.3-3.1-3-3.1-.3 0-.6 0-.8.1.3-1.7 1.4-3.2 3-4.2l-2.5-.8Z" /></svg>
+          </span>
+          <div>
+            <h2>قصص <span className="qm-reviews-accent">تفوقهم</span> بدأت هنا</h2>
+            <p className="qm-reviews-lead">من خوف الاختبار إلى قصص تستحق الفخر.</p>
+          </div>
+          <span className="qm-reviews-stars" aria-hidden="true">
+            <span className="qm-reviews-stars-row">
+              {[0, 1, 2, 3, 4].map((s) => (
+                <svg key={s} viewBox="0 0 24 24"><path d="m12 3 2.5 5.3L20 9l-4 4 .9 5.7-4.9-2.6-4.9 2.6L8 13 4 9l5.5-.7L12 3Z" /></svg>
+              ))}
+            </span>
+            <span className="qm-reviews-stars-label">تقييم طلابنا</span>
+          </span>
+        </header>
         <div className="qm-review-row">
           {testimonials.map((t) => (
             <article key={t.name} className="qm-testimonial-card">
