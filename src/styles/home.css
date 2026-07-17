@@ -283,7 +283,7 @@
 @keyframes qmChatFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
 /* ---------- Footer (site-wide) ---------- */
-.qm-site-footer { position: relative; overflow: hidden; background: linear-gradient(135deg,#29104c 0%,#32125e 58%,#42156b 100%); color: #fff; padding: 0 0 65px; margin-top: 110px; font-family: 'FrutigerArabic', sans-serif; }
+.qm-site-footer { position: relative; background: linear-gradient(135deg,#29104c 0%,#32125e 58%,#42156b 100%); color: #fff; padding: 0 0 65px; margin-top: 110px; font-family: 'FrutigerArabic', sans-serif; }
 .qm-site-footer > .qm-wrap { position: relative; z-index: 2; }
 .qm-footer-orb { position: absolute; border-radius: 50%; filter: blur(2px); pointer-events: none; }
 .qm-footer-orb-one { width: 520px; height: 520px; right: -250px; top: -210px; background: radial-gradient(circle,#c946c54a,transparent 68%); }
