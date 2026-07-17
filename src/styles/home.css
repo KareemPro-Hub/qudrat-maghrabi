@@ -274,10 +274,10 @@
 .qm-chat-bubbles span + span { align-self: flex-end; background: #d8f6cc; border-radius: 9px 9px 9px 3px; animation-delay: .4s; }
 .qm-testimonial-card blockquote { min-height: 76px; margin: 21px 5px 15px; padding: 0; border: 0; background: none; box-shadow: none; font-size: 15px; line-height: 1.9; color: #352047; }
 .qm-testimonial-card footer { position: relative; z-index: 2; display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 10px; padding: 13px 5px 2px; border-top: 1px solid #eee6f4; }
-.qm-student-avatar { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(145deg,#9342ec,#7431da); color: #fff; font-weight: 900; }
+.qm-student-avatar { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(145deg,#9342ec,#7431da); color: #fff; font-weight: 900; line-height: 1; padding-bottom: 6px; }
 .qm-testimonial-card footer b { display: block; font-size: 13px; color: #3c2551; }
 .qm-testimonial-card footer small { display: block; margin-top: 2px; color: #978b9f; font-size: 10px; }
-.qm-verified { font-size: 9px; color: #299776; background: #e6f8f1; border-radius: 20px; padding: 6px 8px; white-space: nowrap; }
+.qm-verified { font-size: 12px; font-weight: 700; color: #299776; background: #e6f8f1; border-radius: 20px; padding: 8px 13px; white-space: nowrap; }
 @keyframes qmTestimonialRise { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: none; } }
 @keyframes qmVoicePulse { from { transform: scaleY(.48); opacity: .62; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes qmChatFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
