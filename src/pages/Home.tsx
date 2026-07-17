@@ -269,7 +269,7 @@ export default function Home() {
         <div className="qm-wrap">
           <header className="qm-pricing-heading">
             <span className="qm-pricing-heading-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m12 3 2.1 4.9L19 10l-4.9 2.1L12 17l-2.1-4.9L5 10l4.9-2.1L12 3Z" /><path d="m19 16 .8 1.8 1.7.7-1.7.8L19 21l-.8-1.7-1.7-.8 1.7-.7L19 16Z" /></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 3.5 20 8l-8 4.5L4 8l8-4.5Z" /><path d="m4 12 8 4.5L20 12" /><path d="m4 16 8 4.5L20 16" /></svg>
             </span>
             <div><h2>اختر <span className="qm-pricing-accent">أفضل باقة</span> مناسبة لك</h2><p className="qm-section-sub">خطط مرنة تناسب هدفك وموعد اختبارك</p></div>
           </header>
