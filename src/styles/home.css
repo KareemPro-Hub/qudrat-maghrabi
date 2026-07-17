@@ -71,7 +71,7 @@
   box-shadow: 0 8px 24px rgba(64,28,91,.16);
   font-family: 'FrutigerArabic', sans-serif;
 }
-.qm-topbar .qm-nav { height: 84px; }
+.qm-topbar .qm-nav { height: 84px; width: min(1180px, calc(100% - 150px)); }
 .qm-topbar-actions { display: flex; align-items: center; gap: 12px; }
 .qm-topbar-login { color: #f5ebff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 7px 4px; transition: color .2s ease; }
 .qm-topbar-login:hover { color: #fff; }
