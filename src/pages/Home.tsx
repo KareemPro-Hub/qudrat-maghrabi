@@ -80,8 +80,7 @@ const testimonials: Testimonial[] = [
   { kind: 'voice', warm: false, name: 'عبد الله', audio: '/reviews/review-abdullah.mp3', time: '0:37' },
   { kind: 'whatsapp', name: 'نواف', image: '/reviews/chat-nawaf.webp' },
   { kind: 'voice', warm: true, name: 'فيصل', audio: '/reviews/review-faisal.mp3', time: '0:17' },
-  { kind: 'whatsapp', quote: 'الدروس القصيرة وفرت علي وقت كتير ووصلت لنتيجة ما توقعتها.', name: 'خالد', city: 'مكة المكرمة',
-    chat: ['الشرح مركز جدًا 🙌', 'وفرت وقت كتير في المذاكرة !'] },
+  { kind: 'whatsapp', name: 'خالد', image: '/reviews/chat-khalid.webp' },
   { kind: 'voice', warm: false, name: 'ريم', audio: '/reviews/review-reem.mp3', time: '0:17' },
   { kind: 'voice', warm: true, name: 'فهد', audio: '/reviews/review-fahd.mp3', time: '0:21' },
 ]
