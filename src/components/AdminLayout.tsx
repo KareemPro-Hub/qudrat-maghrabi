@@ -123,7 +123,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
           تسجيل الخروج
         </button>
-        <Link className="back-site" to="/"><svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg>عرض صفحة المنصة</Link>
       </aside>
 
       <main className="admin-main">
