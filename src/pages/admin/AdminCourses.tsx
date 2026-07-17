@@ -131,7 +131,8 @@ export default function AdminCourses() {
   }
 
   async function togglePublish(c: Course) {
-    await supabase.from('courses').update({ is_published: !c.is_published }).eq('id', c.id)
+    const { error } = await supabase.from('courses').update({ is_published: !c.is_published }).eq('id', c.id)
+    if (error) { toast.error('حدث خطأ أثناء تغيير حالة النشر'); return }
     toast.success(c.is_published ? 'تم إخفاء الكورس' : 'تم نشر الكورس ✅')
     fetchCourses()
   }
