@@ -18,22 +18,38 @@ function fmtMoney(n: number) {
   return Math.round(n).toLocaleString('en')
 }
 
-// Catmull-Rom -> cubic bezier smoothing for the revenue line
-function smoothPath(points: { x: number; y: number }[]) {
-  if (points.length < 2) return ''
-  let d = `M${points[0].x} ${points[0].y}`
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i - 1] || points[i]
-    const p1 = points[i]
-    const p2 = points[i + 1]
-    const p3 = points[i + 2] || p2
-    const cp1x = p1.x + (p2.x - p0.x) / 6
-    const cp1y = p1.y + (p2.y - p0.y) / 6
-    const cp2x = p2.x - (p3.x - p1.x) / 6
-    const cp2y = p2.y - (p3.y - p1.y) / 6
-    d += ` C${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`
+// "نايس" أرقام لمحور Y بدل تقريب عشوائي يطلع قيم مكررة
+function niceNumber(range: number, round: boolean) {
+  const exponent = Math.floor(Math.log10(range || 1))
+  const fraction = range / Math.pow(10, exponent)
+  let niceFraction: number
+  if (round) {
+    if (fraction < 1.5) niceFraction = 1
+    else if (fraction < 3) niceFraction = 2
+    else if (fraction < 7) niceFraction = 5
+    else niceFraction = 10
+  } else {
+    if (fraction <= 1) niceFraction = 1
+    else if (fraction <= 2) niceFraction = 2
+    else if (fraction <= 5) niceFraction = 5
+    else niceFraction = 10
   }
-  return d
+  return niceFraction * Math.pow(10, exponent)
+}
+
+function niceMaxAndStep(max: number, ticks = 4) {
+  const safeMax = Math.max(max, 1)
+  const range = niceNumber(safeMax, false)
+  const step = niceNumber(range / ticks, true)
+  const niceMax = Math.ceil(safeMax / step) * step
+  return { niceMax, step }
+}
+
+// مستطيل بحواف علوية دائرية فقط (شكل عمود بار شارت احترافي)
+function roundedTopRect(x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.min(r, w / 2, Math.max(h, 0))
+  if (h <= 0) return `M${x} ${y} H${x + w} V${y} H${x}Z`
+  return `M${x} ${y + h} V${y + rr} Q${x} ${y} ${x + rr} ${y} H${x + w - rr} Q${x + w} ${y} ${x + w} ${y + rr} V${y + h} Z`
 }
 
 export default function AdminOverview() {
@@ -153,12 +169,17 @@ export default function AdminOverview() {
     load()
   }, [])
 
-  const maxValue = Math.max(...months.map((m) => m.value), 1) * 1.15 || 1
-  const chartX = [65, 190, 322, 454, 586, 724]
-  const topY = 42, bottomY = 228
-  const points = months.map((m, i) => ({ x: chartX[i] ?? chartX[chartX.length - 1], y: bottomY - (m.value / maxValue) * (bottomY - topY) }))
-  const linePath = smoothPath(points)
-  const areaPath = points.length ? `${linePath} V${bottomY + 10} H${points[0].x}Z` : ''
+  const topY = 26, bottomY = 210
+  const plotLeft = 58, plotRight = 726
+  const { niceMax, step } = niceMaxAndStep(Math.max(...months.map((m) => m.value), 0), 4)
+  const gridTicks = [0, 1, 2, 3, 4].map((i) => step * i).filter((v) => v <= niceMax)
+  const barSlot = (plotRight - plotLeft) / Math.max(months.length, 1)
+  const barWidth = Math.min(46, barSlot * 0.44)
+  const bars = months.map((m, i) => {
+    const cx = plotLeft + barSlot * i + barSlot / 2
+    const h = niceMax > 0 ? (m.value / niceMax) * (bottomY - topY) : 0
+    return { x: cx - barWidth / 2, y: bottomY - h, h, cx }
+  })
   const totalRevenue6mo = months.reduce((s, m) => s + m.value, 0)
   const hasRevenue = totalRevenue6mo > 0
   const donutGradient = (() => {
@@ -216,30 +237,52 @@ export default function AdminOverview() {
           </div>
           {loading ? (
             <div className="adm-loading"><i /></div>
-          ) : hasRevenue && points.length > 1 ? (
+          ) : hasRevenue ? (
             <div className="revenue-chart-shell">
-              <svg className="line-chart" viewBox="0 0 760 270" preserveAspectRatio="none">
+              <svg className="bar-chart" viewBox="0 0 760 232" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bd40db" stopOpacity=".32" /><stop offset=".55" stopColor="#eb4d98" stopOpacity=".13" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></linearGradient>
-                  <linearGradient id="chartLine" x1="0" x2="1"><stop stopColor="#f6b42e" /><stop offset=".4" stopColor="#f06b62" /><stop offset=".72" stopColor="#dd429a" /><stop offset="1" stopColor="#8738e7" /></linearGradient>
+                  <linearGradient id="barActive" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0" stopColor="#8738e7" />
+                    <stop offset=".55" stopColor="#dd429a" />
+                    <stop offset="1" stopColor="#f6b42e" />
+                  </linearGradient>
+                  <linearGradient id="barMuted" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0" stopColor="#c8b3ec" />
+                    <stop offset="1" stopColor="#ecd3e6" />
+                  </linearGradient>
                 </defs>
-                <g className="chart-grid"><path d="M65 42H724M65 96H724M65 150H724M65 204H724" /></g>
-                <g className="chart-y-labels">
-                  <text x="52" y="46">{fmtMoney(maxValue)}</text>
-                  <text x="52" y="100">{fmtMoney(maxValue * 0.65)}</text>
-                  <text x="52" y="154">{fmtMoney(maxValue * 0.35)}</text>
-                  <text x="52" y="208">{fmtMoney(maxValue * 0.1)}</text>
+                <g className="chart-grid">
+                  {gridTicks.map((v, i) => {
+                    const y = bottomY - (v / niceMax) * (bottomY - topY)
+                    return <path key={i} className={v === 0 ? 'chart-baseline' : ''} d={`M${plotLeft} ${y}H${plotRight}`} />
+                  })}
                 </g>
-                <path className="chart-area" d={areaPath} />
-                <path className="chart-path chart-path-shadow" d={linePath} />
-                <path className="chart-path" d={linePath} />
-                <g className="chart-points">
-                  {points.map((p, i) => (
-                    <g key={i} className={`chart-point${i === points.length - 1 ? ' latest' : ''}`} onMouseEnter={() => setActiveMonth(i)}>
-                      {i === points.length - 1 ? <circle className="latest-pulse" cx={p.x} cy={p.y} r="15" /> : <circle className="point-halo" cx={p.x} cy={p.y} r="12" />}
-                      <circle cx={p.x} cy={p.y} r={i === points.length - 1 ? 7 : 5} />
-                    </g>
+                <g className="chart-y-labels">
+                  {gridTicks.map((v, i) => (
+                    <text key={i} x={plotLeft - 12} y={bottomY - (v / niceMax) * (bottomY - topY) + 4}>{fmtMoney(v)}</text>
                   ))}
+                </g>
+                <g className="chart-bars">
+                  {bars.map((b, i) => {
+                    const active = i === activeMonth
+                    return (
+                      <g key={i} className={`chart-bar${active ? ' active' : ''}`} onMouseEnter={() => setActiveMonth(i)}>
+                        <path className="bar-track" d={roundedTopRect(b.x, topY, barWidth, bottomY - topY, barWidth / 2)} />
+                        <path
+                          className="bar-fill"
+                          style={{ animationDelay: `${i * 70}ms` }}
+                          d={roundedTopRect(b.x, b.y, barWidth, Math.max(b.h, 3), barWidth / 2)}
+                          fill={active ? 'url(#barActive)' : 'url(#barMuted)'}
+                        />
+                        {active && (
+                          <g className="bar-tooltip" transform={`translate(${b.cx} ${b.y - 16})`}>
+                            <rect x="-40" y="-28" width="80" height="26" rx="8" />
+                            <text y="-9">{fmtMoney(months[i].value)} ر.س</text>
+                          </g>
+                        )}
+                      </g>
+                    )
+                  })}
                 </g>
               </svg>
               <div className="chart-months">
