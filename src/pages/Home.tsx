@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const trustStats = [
@@ -58,8 +58,25 @@ const plans = [
   },
 ]
 
-const testimonials = [
-  { kind: 'voice', warm: false, quote: 'شرح بسيط ومباشر، ارتفعت درجتي من 72 إلى 91 خلال شهرين.', name: 'سارة', city: 'الرياض', time: '0:42' },
+const WhatsAppIcon = () => (
+  <svg viewBox="0 0 24 24" className="qm-wa-icon">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413" />
+  </svg>
+)
+
+type Testimonial = {
+  kind: 'voice' | 'whatsapp'
+  name: string
+  warm?: boolean
+  quote?: string
+  city?: string
+  time?: string
+  audio?: string
+  chat?: string[]
+}
+
+const testimonials: Testimonial[] = [
+  { kind: 'voice', warm: false, name: 'عبد الله', audio: '/reviews/review-abdullah.mp3', time: '0:37' },
   { kind: 'whatsapp', quote: 'أكثر شيء أفادني تحليل الأخطاء بعد كل محاكاة.', name: 'عبدالرحمن', city: 'جدة',
     chat: ['تحليل الأخطاء فرق معي جدًا 👌', 'وكل محاكاة نتيجتي تتحسن !'] },
   { kind: 'voice', warm: true, quote: 'الخطة اليومية جعلت المذاكرة أخف ونتيجتي أفضل بكثير.', name: 'نورة', city: 'الدمام', time: '0:36' },
@@ -68,6 +85,53 @@ const testimonials = [
   { kind: 'voice', warm: false, quote: 'بنك الأسئلة غطى كل اللي احتجته للمراجعة قبل الاختبار.', name: 'ريم', city: 'الطائف', time: '0:51' },
   { kind: 'voice', warm: true, quote: 'كنت خايف من الكمي بس المنصة خلته أسهل بكتير.', name: 'فهد', city: 'الدمام', time: '0:39' },
 ]
+
+function VoiceMedia({ t }: { t: Testimonial }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [playing, setPlaying] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  const fmt = (s: number) => {
+    if (!isFinite(s) || s <= 0) return t.time ?? '0:00'
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+  }
+
+  const toggle = () => {
+    const a = audioRef.current
+    if (!a) return
+    if (a.paused) a.play()
+    else a.pause()
+  }
+
+  return (
+    <div className={`qm-testimonial-media qm-voice-record${t.warm ? ' qm-warm' : ''}${t.audio ? ' qm-voice-real' : ''}${playing ? ' qm-playing' : ''}`}>
+      <div className="qm-media-label">
+        <WhatsAppIcon />
+        <span>تسجيل واتساب</span>
+      </div>
+      {t.audio && (
+        <audio
+          ref={audioRef}
+          src={t.audio}
+          preload="metadata"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => { setPlaying(false); setElapsed(0) }}
+          onTimeUpdate={(e) => setElapsed(e.currentTarget.currentTime)}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        />
+      )}
+      <button className="qm-voice-play" aria-label={playing ? `إيقاف تسجيل ${t.name}` : `تشغيل تسجيل ${t.name}`} type="button" onClick={toggle}>
+        {playing
+          ? <svg viewBox="0 0 24 24"><path d="M8 6h3v12H8V6Zm5 0h3v12h-3V6Z" /></svg>
+          : <svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z" /></svg>}
+      </button>
+      <div className="qm-voice-wave" aria-hidden="true">{Array.from({ length: 12 }).map((_, i) => <i key={i} />)}</div>
+      <time>{playing || elapsed > 0 ? fmt(elapsed) : fmt(duration)}</time>
+    </div>
+  )
+}
 
 function TrustIcon({ type }: { type: string }) {
   if (type === 'student') return <span className="qm-trust-icon-img qm-mask-icon" style={{ WebkitMaskImage: "url(/home/nav-icons/book-open-reader.png)", maskImage: "url(/home/nav-icons/book-open-reader.png)" }} />
@@ -260,27 +324,17 @@ export default function Home() {
           {testimonials.map((t) => (
             <article key={t.name} className="qm-testimonial-card">
               {t.kind === 'voice' ? (
-                <div className={`qm-testimonial-media qm-voice-record${t.warm ? ' qm-warm' : ''}`}>
-                  <div className="qm-media-label">
-                    <svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 1 1-3-6.2L20 4l-1.3 3A8 8 0 0 1 20 11.5Z" /><path d="M8.5 8.2c.5 3 2.3 4.8 5.3 5.3l1-1.6-2.2-1-1 1c-1.1-.5-2-1.4-2.5-2.5l1-1-1-2.2-1.6 1Z" /></svg>
-                    <span>تسجيل واتساب</span>
-                  </div>
-                  <button className="qm-voice-play" aria-label={`تشغيل تسجيل ${t.name}`} type="button">
-                    <svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z" /></svg>
-                  </button>
-                  <div className="qm-voice-wave" aria-hidden="true">{Array.from({ length: 12 }).map((_, i) => <i key={i} />)}</div>
-                  <time>{t.time}</time>
-                </div>
+                <VoiceMedia t={t} />
               ) : (
                 <div className="qm-testimonial-media qm-whatsapp-shot">
                   <div className="qm-chat-top"><span className="qm-chat-avatar">ع</span><i /><b>محادثة واتساب</b></div>
                   <div className="qm-chat-bubbles">{t.chat!.map((c) => <span key={c}>{c}</span>)}</div>
                 </div>
               )}
-              <blockquote>“{t.quote}”</blockquote>
+              {t.quote && <blockquote>“{t.quote}”</blockquote>}
               <footer>
                 <span className="qm-student-avatar">{t.name.charAt(0)}</span>
-                <div><b>{t.name}</b><small>{t.city}</small></div>
+                <div className={t.city ? undefined : 'qm-reviewer-big'}><b>{t.name}</b>{t.city && <small>{t.city}</small>}</div>
                 <span className="qm-verified">✓ تجربة موثّقة</span>
               </footer>
             </article>

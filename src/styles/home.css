@@ -238,7 +238,7 @@
 .qm-reviews-heading h2 { font-size: 42px; letter-spacing: -1.2px; color: #321650; margin: 0; }
 .qm-reviews-accent { position: relative; isolation: isolate; padding: 0 2px; background: linear-gradient(120deg, var(--qm-purple), var(--qm-pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .qm-reviews-accent::after { content: ""; position: absolute; z-index: -1; right: 0; left: 0; bottom: 6px; height: 11px; border-radius: 5px; background: rgba(255,200,62,.5); }
-.qm-reviews-lead { margin: 10px 0 0; color: var(--qm-muted); font-size: 16px; font-weight: 300; }
+.qm-reviews-lead { margin: 10px 0 0; color: var(--qm-muted); font-size: 16px; font-weight: 300; text-align: center; }
 .qm-reviews-stars { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .qm-reviews-stars-row { display: flex; gap: 5px; }
 .qm-reviews-stars-row svg { width: 26px; height: 26px; fill: var(--qm-yellow); filter: drop-shadow(0 3px 6px rgba(64,28,91,.18)); }
@@ -252,6 +252,10 @@
 .qm-voice-record.qm-warm { background: radial-gradient(circle at 82% 12%, rgba(255,218,104,.38), transparent 25%), linear-gradient(135deg,#8c36dd,#c344c0 65%,#ee7970); }
 .qm-media-label { position: absolute; top: 13px; right: 14px; display: flex; align-items: center; gap: 7px; color: rgba(255,255,255,.86); font-size: 11px; font-weight: 700; }
 .qm-media-label svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.qm-media-label .qm-wa-icon { fill: currentColor; stroke: none; }
+.qm-voice-real .qm-voice-wave i { animation-play-state: paused; }
+.qm-voice-real.qm-playing .qm-voice-wave i { animation-play-state: running; }
+.qm-testimonial-card footer .qm-reviewer-big b { font-size: 17px; }
 .qm-voice-play { width: 43px; height: 43px; border: 1px solid rgba(255,255,255,.68); border-radius: 50%; display: grid; place-items: center; background: #fff; color: #7c34dc; box-shadow: 0 9px 22px rgba(48,15,80,.23); cursor: pointer; transition: transform .25s ease, box-shadow .25s ease; }
 .qm-voice-play:hover { transform: scale(1.08); box-shadow: 0 12px 28px rgba(48,15,80,.32); }
 .qm-voice-play svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
