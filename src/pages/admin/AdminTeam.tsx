@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { SectionToolbar, Spinner, EmptyState, initials } from '../../components/admin/lightKit'
+import { Spinner, EmptyState, initials } from '../../components/admin/lightKit'
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'مدير المنصة',
@@ -57,12 +57,10 @@ export default function AdminTeam() {
 
   return (
     <>
-      <SectionToolbar title="فريق العمل" subtitle="إدارة الفريق وتوزيع الأدوار والصلاحيات." />
-
       {loading ? <Spinner /> : members.length === 0 ? (
         <EmptyState text="لا يوجد أعضاء فريق مسجّلون بعد" />
       ) : (
-        <div className="team-grid" data-searchable>
+        <div className={`team-grid${members.length === 1 ? ' team-grid-single' : ''}`} data-searchable>
           {members.map((m, i) => (
             <article className="member-card" key={m.id}>
               <div className={`member-cover ${coverClass[i % coverClass.length]}`} />
