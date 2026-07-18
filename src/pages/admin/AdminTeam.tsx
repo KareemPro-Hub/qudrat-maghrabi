@@ -35,7 +35,6 @@ export default function AdminTeam() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ full_name: '', email: '', role: 'quiz_manager' })
   const [saving, setSaving] = useState(false)
-  const [inviteLink, setInviteLink] = useState('')
 
   useEffect(() => { load() }, [])
 
@@ -81,7 +80,6 @@ export default function AdminTeam() {
 
   function openAdd() {
     setForm({ full_name: '', email: '', role: 'quiz_manager' })
-    setInviteLink('')
     setShowAdd(true)
   }
 
@@ -101,8 +99,10 @@ export default function AdminTeam() {
         } catch { /* keep default */ }
         toast.error(msg)
       } else {
-        setInviteLink(result?.invite_link || '')
-        toast.success('تم إنشاء حساب العضو الجديد ✅')
+        toast.success(result?.existing
+          ? 'الحساب موجود مسبقًا — اتبعت له إيميل لتعيين كلمة المرور وتم تحديث دوره ✅'
+          : 'تم إرسال دعوة للعضو الجديد على إيميله ✅')
+        setShowAdd(false)
         load()
       }
     } catch {
@@ -147,30 +147,7 @@ export default function AdminTeam() {
         </div>
       )}
 
-      {showAdd && inviteLink && (
-        <Modal title="تم إنشاء الحساب ✅" onClose={() => setShowAdd(false)}>
-          <div className="admin-form">
-            <p className="adm-hint" style={{ marginTop: 0 }}>
-              انسخ رابط الدعوة ده وابعته للعضو بأي طريقة (واتساب مثلًا). أول ما يفتحه هيظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.
-            </p>
-            <label>رابط الدعوة
-              <input value={inviteLink} readOnly dir="ltr" onFocus={(e) => e.target.select()} />
-            </label>
-            <div className="form-row">
-              <button
-                type="button"
-                className="primary-admin"
-                onClick={() => { navigator.clipboard.writeText(inviteLink); toast.success('تم نسخ الرابط ✅') }}
-              >
-                نسخ الرابط
-              </button>
-              <button type="button" className="ghost-button" onClick={() => setShowAdd(false)}>إغلاق</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {showAdd && !inviteLink && (
+      {showAdd && (
         <Modal title="إضافة عضو جديد لفريق العمل" onClose={() => setShowAdd(false)}>
           <form className="admin-form" onSubmit={handleAdd}>
             <label>الاسم الكامل<input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="مثال: أحمد محمد" /></label>
@@ -180,9 +157,9 @@ export default function AdminTeam() {
                 {ADDABLE_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </label>
-            <p className="adm-hint">هيتولّد لك رابط دعوة تبعته للعضو، يقدر من خلاله يظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.</p>
+            <p className="adm-hint">هيتبعتله إيميل دعوة يقدر من خلاله يظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.</p>
             <div className="form-row">
-              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الإنشاء...' : 'إنشاء الدعوة'}</button>
+              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الإرسال...' : 'إرسال الدعوة'}</button>
               <button type="button" className="ghost-button" onClick={() => setShowAdd(false)}>إلغاء</button>
             </div>
           </form>
