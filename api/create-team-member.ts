@@ -25,7 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // التحقق من هوية المستخدم المرسل للطلب
   const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-  if (userError || !user) return res.status(401).json({ error: 'Invalid token' })
+  if (userError || !user) {
+    console.error('getUser failed:', userError?.message, 'tokenLen:', token?.length)
+    return res.status(401).json({ error: `Invalid token: ${userError?.message || 'no user'} (len=${token?.length ?? 0})` })
+  }
 
   // التحقق من إن المستخدم مدير منصة فعلاً — فقط الأدمن يقدر يضيف أعضاء فريق
   const { data: callerProfile, error: profileError } = await supabase
