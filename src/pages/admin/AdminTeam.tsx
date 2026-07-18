@@ -22,9 +22,8 @@ const ADDABLE_ROLES: { value: string; label: string }[] = [
   { value: 'content_manager', label: 'مشرف محتوى' },
   { value: 'student_manager', label: 'مسؤول الطلاب' },
   { value: 'quiz_manager', label: 'مشرف الاختبارات' },
-  { value: 'admin', label: 'مدير المنصة' },
 ]
-const MANAGEABLE_ROLES = ADDABLE_ROLES.filter((role) => role.value !== 'admin')
+const MANAGEABLE_ROLES = ADDABLE_ROLES
 
 type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number; questions: number }
 type InviteResult = { success?: boolean; existing?: boolean; invite_link?: string | null }

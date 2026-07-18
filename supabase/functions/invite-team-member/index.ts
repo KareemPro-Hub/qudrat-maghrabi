@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.106.2'
 
 const ALLOWED_ROLES = new Set([
-  'admin',
   'teacher',
   'content_manager',
   'student_manager',
