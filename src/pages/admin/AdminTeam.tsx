@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { Spinner, EmptyState, initials, Modal } from '../../components/admin/lightKit'
@@ -24,9 +24,20 @@ const ADDABLE_ROLES: { value: string; label: string }[] = [
   { value: 'quiz_manager', label: 'مشرف الاختبارات' },
   { value: 'admin', label: 'مدير المنصة' },
 ]
+const MANAGEABLE_ROLES = ADDABLE_ROLES.filter((role) => role.value !== 'admin')
 
 type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number; questions: number }
 type InviteResult = { success?: boolean; existing?: boolean; invite_link?: string | null }
+type ManageResult = { success?: boolean }
+
+async function functionErrorMessage(error: unknown, fallback: string) {
+  try {
+    const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context?.json?.()
+    return body?.error || fallback
+  } catch {
+    return fallback
+  }
+}
 
 export default function AdminTeam() {
   const { profile } = useAuth()
@@ -36,7 +47,10 @@ export default function AdminTeam() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ full_name: '', email: '', role: 'quiz_manager' })
   const [saving, setSaving] = useState(false)
-  const [inviteLink, setInviteLink] = useState('')
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [deletingMember, setDeletingMember] = useState<Member | null>(null)
+  const [editRole, setEditRole] = useState('quiz_manager')
+  const [managing, setManaging] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -82,21 +96,58 @@ export default function AdminTeam() {
 
   function openAdd() {
     setForm({ full_name: '', email: '', role: 'quiz_manager' })
-    setInviteLink('')
     setShowAdd(true)
   }
 
   function closeAdd() {
     setShowAdd(false)
-    setInviteLink('')
   }
 
-  async function copyInviteLink() {
+  function openRoleEditor(member: Member) {
+    setEditRole(member.role)
+    setEditingMember(member)
+  }
+
+  async function updateMemberRole(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingMember) return
+    setManaging(true)
     try {
-      await navigator.clipboard.writeText(inviteLink)
-      toast.success('تم نسخ الرابط ✅')
+      const { data: result, error } = await supabase.functions.invoke<ManageResult>('manage-team-member', {
+        body: { action: 'update_role', member_id: editingMember.id, role: editRole },
+      })
+      if (error || !result?.success) {
+        toast.error(await functionErrorMessage(error, 'تعذّر تحديث صلاحيات العضو'))
+        return
+      }
+      setEditingMember(null)
+      await load()
+      toast.success('تم تحديث صلاحيات العضو ✅')
     } catch {
-      toast.error('تعذّر النسخ التلقائي — حدّد الرابط وانسخه يدويًا')
+      toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
+    } finally {
+      setManaging(false)
+    }
+  }
+
+  async function deleteMember() {
+    if (!deletingMember) return
+    setManaging(true)
+    try {
+      const { data: result, error } = await supabase.functions.invoke<ManageResult>('manage-team-member', {
+        body: { action: 'delete', member_id: deletingMember.id },
+      })
+      if (error || !result?.success) {
+        toast.error(await functionErrorMessage(error, 'تعذّر حذف العضو'))
+        return
+      }
+      setDeletingMember(null)
+      await load()
+      toast.success('تم حذف العضو وحساب تسجيل دخوله ✅')
+    } catch {
+      toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
+    } finally {
+      setManaging(false)
     }
   }
 
@@ -105,24 +156,51 @@ export default function AdminTeam() {
     if (!form.full_name.trim() || !form.email.trim()) return toast.error('يرجى تعبئة الاسم والبريد الإلكتروني')
     setSaving(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('انتهت الجلسة، سجّل الدخول من جديد')
+        return
+      }
+
       const { data: result, error } = await supabase.functions.invoke<InviteResult>('invite-team-member', {
         body: { email: form.email.trim(), full_name: form.full_name.trim(), role: form.role },
       })
       if (error) {
-        let msg = 'حدث خطأ أثناء الإضافة'
-        try {
-          const body = await (error as any).context?.json()
-          if (body?.error) msg = body.error
-        } catch { /* keep default */ }
-        toast.error(msg)
+        toast.error(await functionErrorMessage(error, 'حدث خطأ أثناء الإضافة'))
       } else {
         const link = result?.invite_link?.trim()
         if (!result?.success || !link) {
-          toast.error('تمت الإضافة لكن لم يصل رابط الدعوة. حاول مرة أخرى.')
+          toast.error('تم إنشاء العضو لكن تعذّر تجهيز رسالة الدعوة. حاول مرة أخرى.')
           return
         }
-        setInviteLink(link)
-        toast.success(result.existing ? 'تم تجديد رابط الدعوة للحساب الموجود ✅' : 'تم إنشاء حساب العضو الجديد ✅')
+
+        const emailResponse = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            to: form.email.trim().toLowerCase(),
+            type: 'team_invite',
+            data: {
+              memberName: form.full_name.trim(),
+              inviteLink: link,
+              roleLabel: ROLE_LABEL[form.role] || form.role,
+            },
+          }),
+        })
+
+        if (!emailResponse.ok) {
+          await load()
+          toast.error('تم إنشاء العضو، لكن تعذّر إرسال الإيميل. اضغط إرسال الدعوة مرة أخرى للمحاولة.')
+          return
+        }
+
+        toast.success(result.existing
+          ? 'تم تحديث العضو وإرسال دعوة جديدة إلى بريده ✅'
+          : 'تمت إضافة العضو وإرسال الدعوة إلى بريده ✅')
+        setShowAdd(false)
         await load()
       }
     } catch {
@@ -163,36 +241,33 @@ export default function AdminTeam() {
                   </>
                 )}
               </div>
+              {isAdmin && m.role !== 'admin' && (
+                <div className="member-actions">
+                  <button
+                    type="button"
+                    className="member-action"
+                    onClick={() => openRoleEditor(m)}
+                    aria-label={`تعديل صلاحيات ${m.full_name}`}
+                  >
+                    <Pencil size={15} /> الصلاحيات
+                  </button>
+                  <button
+                    type="button"
+                    className="member-action danger"
+                    onClick={() => setDeletingMember(m)}
+                    aria-label={`حذف ${m.full_name}`}
+                  >
+                    <Trash2 size={15} /> حذف
+                  </button>
+                </div>
+              )}
             </article>
           ))}
         </div>
       )}
 
-      {showAdd && inviteLink && (
-        <Modal title="رابط الدعوة جاهز ✅" onClose={closeAdd}>
-          <div className="admin-form">
-            <p className="adm-hint" style={{ marginTop: 0 }}>
-              انسخ رابط الدعوة ده وابعته للعضو بأي طريقة (واتساب مثلًا). أول ما يفتحه هيظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.
-            </p>
-            <label>رابط الدعوة
-              <input value={inviteLink} readOnly dir="ltr" onFocus={(e) => e.target.select()} />
-            </label>
-            <div className="form-row">
-              <button
-                type="button"
-                className="primary-admin"
-                onClick={copyInviteLink}
-              >
-                نسخ الرابط
-              </button>
-              <button type="button" className="ghost-button" onClick={closeAdd}>إغلاق</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {showAdd && !inviteLink && (
-        <Modal title="إضافة عضو جديد لفريق العمل" onClose={closeAdd}>
+      {showAdd && (
+        <Modal title="إضافة عضو جديد لفريق العمل" onClose={() => { if (!saving) closeAdd() }}>
           <form className="admin-form" onSubmit={handleAdd}>
             <label>الاسم الكامل<input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="مثال: أحمد محمد" /></label>
             <label>البريد الإلكتروني<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@example.com" dir="ltr" /></label>
@@ -201,12 +276,49 @@ export default function AdminTeam() {
                 {ADDABLE_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </label>
-            <p className="adm-hint">هيتولّد لك رابط دعوة تبعته للعضو، يقدر من خلاله يظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.</p>
+            <p className="adm-hint">بمجرد الإضافة، هيتبعت للعضو إيميل تلقائي يعيّن منه كلمة المرور ويدخل المنصة بالدور المحدد.</p>
             <div className="form-row">
-              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الإنشاء...' : 'إنشاء الدعوة'}</button>
+              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الإضافة والإرسال...' : 'إضافة العضو وإرسال الدعوة'}</button>
               <button type="button" className="ghost-button" onClick={closeAdd} disabled={saving}>إلغاء</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {editingMember && (
+        <Modal title={`تعديل صلاحيات ${editingMember.full_name}`} onClose={() => { if (!managing) setEditingMember(null) }}>
+          <form className="admin-form" onSubmit={updateMemberRole}>
+            <p className="adm-hint" style={{ marginTop: 0 }}>
+              اختر الدور المناسب. تتغير صفحات وأدوات العضو حسب الصلاحيات المرتبطة بهذا الدور.
+            </p>
+            <label>الدور والصلاحيات
+              <select value={editRole} onChange={(e) => setEditRole(e.target.value)}>
+                {MANAGEABLE_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+              </select>
+            </label>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={managing}>
+                {managing ? 'جاري الحفظ...' : 'حفظ الصلاحيات'}
+              </button>
+              <button type="button" className="ghost-button" onClick={() => setEditingMember(null)} disabled={managing}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {deletingMember && (
+        <Modal title="تأكيد حذف العضو" onClose={() => { if (!managing) setDeletingMember(null) }}>
+          <div className="admin-form">
+            <p className="delete-member-warning">
+              هل تريد حذف <strong>{deletingMember.full_name}</strong> نهائيًا؟ سيُحذف حساب تسجيل الدخول ويمكنك دعوته من جديد لاحقًا.
+            </p>
+            <div className="form-row">
+              <button type="button" className="danger-admin" onClick={deleteMember} disabled={managing}>
+                <Trash2 size={16} /> {managing ? 'جاري الحذف...' : 'حذف العضو'}
+              </button>
+              <button type="button" className="ghost-button" onClick={() => setDeletingMember(null)} disabled={managing}>إلغاء</button>
+            </div>
+          </div>
         </Modal>
       )}
     </>

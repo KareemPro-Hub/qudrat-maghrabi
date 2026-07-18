@@ -1,5 +1,8 @@
 type ApiRequest = {
   method?: string
+  headers?: {
+    authorization?: string
+  }
   body?: {
     to?: string
     type?: string
@@ -13,6 +16,9 @@ type ApiRequest = {
       courseId?: string
       title?: string
       body?: string
+      memberName?: string
+      inviteLink?: string
+      roleLabel?: string
     }
   }
 }
@@ -20,6 +26,63 @@ type ApiRequest = {
 type ApiResponse = {
   status(code: number): ApiResponse
   json(body: unknown): ApiResponse
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  })[character] || character)
+}
+
+async function isAdminRequest(req: ApiRequest) {
+  const authHeader = req.headers?.authorization ?? ''
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+
+  if (!authHeader.startsWith('Bearer ') || !supabaseUrl || !supabaseAnonKey) return false
+
+  const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      Authorization: authHeader,
+      apikey: supabaseAnonKey,
+    },
+  })
+  if (!authResponse.ok) return false
+
+  const user = await authResponse.json() as { id?: string }
+  if (!user.id) return false
+
+  const profileResponse = await fetch(
+    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=role`,
+    {
+      headers: {
+        Authorization: authHeader,
+        apikey: supabaseAnonKey,
+      },
+    },
+  )
+  if (!profileResponse.ok) return false
+
+  const profiles = await profileResponse.json() as Array<{ role?: string }>
+  return profiles.length === 1 && profiles[0].role === 'admin'
+}
+
+function isTrustedInviteLink(value: string) {
+  try {
+    const inviteUrl = new URL(value)
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) return false
+    const expectedOrigin = new URL(supabaseUrl).origin
+    return inviteUrl.protocol === 'https:'
+      && inviteUrl.origin === expectedOrigin
+      && inviteUrl.pathname === '/auth/v1/verify'
+  } catch {
+    return false
+  }
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -57,7 +120,45 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   `
   const footer = `<p style="color:#aaa;font-size:12px;text-align:center;margin-top:20px;">منصة قدرات المغربي | qudrat-maghrabi.vercel.app</p>`
 
-  if (type === 'enrollment') {
+  if (type === 'team_invite') {
+    if (!await isAdminRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const memberName = data?.memberName?.trim() || ''
+    const inviteLink = data?.inviteLink?.trim() || ''
+    const roleLabel = data?.roleLabel?.trim() || ''
+    if (!memberName || !inviteLink || !roleLabel || !isTrustedInviteLink(inviteLink)) {
+      return res.status(400).json({ error: 'Invalid team invitation data' })
+    }
+
+    const safeMemberName = escapeHtml(memberName)
+    const safeInviteLink = escapeHtml(inviteLink)
+    const safeRoleLabel = escapeHtml(roleLabel)
+    subject = 'دعوة للانضمام إلى فريق قدرات المغربي'
+    html = `
+      <div dir="rtl" style="${baseStyle}">
+        ${header}
+        <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #7c36db;">
+          <h2 style="color:#1B1B5E;">أهلًا ${safeMemberName} 👋</h2>
+          <p style="color:#444;line-height:1.9;">
+            تمت دعوتك للانضمام إلى فريق منصة قدرات المغربي بدور
+            <strong>${safeRoleLabel}</strong>.
+            اضغط الزر التالي لتعيين كلمة المرور والدخول إلى حسابك.
+          </p>
+          <div style="text-align:center;margin:30px 0;">
+            <a href="${safeInviteLink}"
+               style="display:inline-block;background:linear-gradient(135deg,#7c36db,#E91E8C);color:white;padding:14px 38px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
+              تعيين كلمة المرور والدخول
+            </a>
+          </div>
+          <p style="color:#888;font-size:13px;line-height:1.7;">
+            إذا لم تطلب الانضمام إلى الفريق، يمكنك تجاهل هذه الرسالة.
+          </p>
+        </div>
+        ${footer}
+      </div>`
+  } else if (type === 'enrollment') {
     subject = 'تم تفعيل اشتراكك بنجاح 🎉 — قدرات المغربي'
     html = `
       <div dir="rtl" style="${baseStyle}">
@@ -178,7 +279,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'قدرات المغربي <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@kareempro.com>',
         to: [to],
         subject,
         html,
