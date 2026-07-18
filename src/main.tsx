@@ -9,6 +9,7 @@ import './styles/parent-light.css'
 import './styles/lesson-light.css'
 import './styles/auth.css'
 import './styles/info-pages.css'
+import './styles/primary-buttons.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

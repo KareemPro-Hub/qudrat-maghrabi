@@ -420,7 +420,7 @@ function EmptyPanel({ text, cta }: { text: string; cta?: { label: string; to: st
     <div className="empty-panel">
       <svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg>
       <p>{text}</p>
-      {cta && <Link to={cta.to} className="primary-study-button compact" style={{ background: 'linear-gradient(135deg,#7935EB,#D946C6)', color: '#fff' }}>{cta.label}</Link>}
+      {cta && <Link to={cta.to} className="primary-study-button primary-study-button--alternate compact" style={{ background: 'linear-gradient(135deg,#7935EB,#D946C6)', color: '#fff' }}>{cta.label}</Link>}
     </div>
   )
 }

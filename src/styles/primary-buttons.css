@@ -1,0 +1,175 @@
+/* Shared gold CTA treatment — matches the homepage "ابدأ الآن" button. */
+:root {
+  --qm-cta-gold: linear-gradient(135deg, #ffdc67 0%, #ffc337 58%, #ffb91e 100%);
+  --qm-cta-ink: #432d35;
+  --qm-cta-border: rgba(255, 255, 255, .48);
+  --qm-cta-shadow: 0 8px 22px rgba(64, 28, 91, .2), inset 0 1px 0 rgba(255, 255, 255, .7);
+  --qm-cta-shadow-hover: 0 12px 28px rgba(64, 28, 91, .28), inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-inline: 27px;
+  border: 1px solid var(--qm-cta-border);
+  border-radius: 10px;
+  background: var(--qm-cta-gold);
+  color: var(--qm-cta-ink);
+  box-shadow: var(--qm-cta-shadow);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+)::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -45% auto -45% -55%;
+  width: 34%;
+  transform: skewX(-22deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .58), transparent);
+  transition: left .55s ease;
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--qm-cta-shadow-hover);
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+):hover::after {
+  left: 125%;
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+):active {
+  transform: translateY(0) scale(.98);
+}
+
+:is(
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button
+)::before {
+  content: none;
+}
+
+:is(.primary-admin, .primary-study-button, .auth-submit):disabled {
+  opacity: .58;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--qm-cta-shadow);
+}
+
+:is(.primary-admin, .primary-study-button, .auth-submit):disabled::after {
+  display: none;
+}
+
+:is(
+  .qm-nav-cta,
+  .qm-primary,
+  .qm-footer-cta > a,
+  .quick-button,
+  .primary-admin,
+  .primary-study-button:not(.primary-study-button--alternate),
+  .parent-shell .primary-parent-button,
+  .lesson-hub-page .start-training-button,
+  .lesson-hub-page .training-panel-button,
+  .auth-submit
+):focus-visible {
+  outline: 3px solid rgba(121, 53, 235, .32);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .qm-nav-cta,
+    .qm-primary,
+    .qm-footer-cta > a,
+    .quick-button,
+    .primary-admin,
+    .primary-study-button:not(.primary-study-button--alternate),
+    .parent-shell .primary-parent-button,
+    .lesson-hub-page .start-training-button,
+    .lesson-hub-page .training-panel-button,
+    .auth-submit
+  ) {
+    transition: none;
+  }
+
+  :is(
+    .qm-nav-cta,
+    .qm-primary,
+    .qm-footer-cta > a,
+    .quick-button,
+    .primary-admin,
+    .primary-study-button:not(.primary-study-button--alternate),
+    .parent-shell .primary-parent-button,
+    .lesson-hub-page .start-training-button,
+    .lesson-hub-page .training-panel-button,
+    .auth-submit
+  )::after {
+    display: none;
+  }
+}
