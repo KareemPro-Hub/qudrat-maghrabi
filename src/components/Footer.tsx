@@ -19,7 +19,7 @@ export default function Footer() {
           <Link className="qm-brand" to="/">
             <img src="/home/brand/logo.png" alt="قدرات المغربي" />
           </Link>
-          <p>نصنع لك بدايةً أقوى نحو حلمك المنشود<br />ونمضي معك بثقة حتى الدرجة التي تستحقها</p>
+          <p>نـصنع لـك بـدايـةً أقـوى نـحـو حـلمـك المنـشـود<br />ونمضي معك بثقة حتى الدرجة التي تستحقها</p>
           <div className="qm-social-links">
             <a href="#" aria-label="إكس">
               <span className="qm-social-icon qm-social-icon-x" />
