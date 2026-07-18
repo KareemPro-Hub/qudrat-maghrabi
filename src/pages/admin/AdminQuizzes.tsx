@@ -271,6 +271,8 @@ export default function AdminQuizzes() {
               <label>درجة السؤال<input type="number" min={1} value={qForm.marks} onChange={(e) => setQForm({ ...qForm, marks: Number(e.target.value) })} /></label>
             </div>
             <label>شرح الإجابة — نص (اختياري)<input value={qForm.explanation} onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })} placeholder="سيظهر للطالب بعد الاختبار" /></label>
+            <label>شرح الإجابة — رقم فيديو Bunny (اختياري)<input value={qForm.explanation_video_id} onChange={(e) => setQForm({ ...qForm, explanation_video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" /></label>
+            <p className="adm-hint">هيظهر للطالب زر "عرفني الإجابة الصحيحة" بعد تسليم الاختبار، سواء جاوب صح أو غلط.</p>
 
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة الاختبار'}</button>

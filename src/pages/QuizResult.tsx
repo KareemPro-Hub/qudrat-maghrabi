@@ -216,7 +216,7 @@ export default function QuizResult() {
                     <button
                       onClick={() => setExplanationVideo({ videoId: q.explanation_video_id, courseId: quiz.course_id })}
                       className="mt-2 flex items-center gap-2 text-xs font-bold text-brand-purple bg-purple-50 hover:bg-purple-100 px-3 py-2 rounded-lg transition-colors w-full justify-center">
-                      <Play size={13} /> شرح الإجابة بالفيديو
+                      <Play size={13} /> عرفني الإجابة الصحيحة
                     </button>
                   )}
                 </div>
