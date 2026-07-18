@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, Video, Upload, GripVertical, ArrowRight, Layers } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, Video, Upload, ArrowRight, Layers } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
-import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
+import { SectionToolbar, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
@@ -27,7 +27,6 @@ export default function AdminCourses() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [viewParentId, setViewParentId] = useState<string | null>(null)
-  const dragIndex = useRef<number | null>(null)
 
   useEffect(() => { fetchCourses() }, [])
 
@@ -64,19 +63,6 @@ export default function AdminCourses() {
       setStatsByCourse({})
     }
     setLoading(false)
-  }
-
-  function handleDragStart(i: number) { dragIndex.current = i }
-
-  async function handleDrop(dropIndex: number) {
-    if (dragIndex.current === null || dragIndex.current === dropIndex) return
-    const reordered = [...courses]
-    const [moved] = reordered.splice(dragIndex.current, 1)
-    reordered.splice(dropIndex, 0, moved)
-    setCourses(reordered)
-    dragIndex.current = null
-    await Promise.all(reordered.map((c, i) => supabase.from('courses').update({ order_index: i }).eq('id', c.id)))
-    toast.success('تم حفظ الترتيب ✅')
   }
 
   function openAdd() { setEditing(null); setForm(emptyForm); setShowModal(true) }
@@ -214,9 +200,21 @@ export default function AdminCourses() {
                           <small className={`course-label ${levelClass[(c as any).level] || ''}`}>{levelLabels[(c as any).level] || 'مبتدئ'}</small>
                         )}
                         <h3>{c.title}</h3>
+                        {c.parent_course_id && titleById[c.parent_course_id] && (
+                          <small className="cell-sub">فرعي ضمن: {titleById[c.parent_course_id]}</small>
+                        )}
                         <p>{isBundle ? 'اضغط لعرض الكورسات الفرعية' : `${s.lessons} درسًا · ${s.students} طالب`}</p>
                         {!isBundle && <i><u style={{ width: `${s.completion}%` }} /></i>}
-                        <footer><span>{isBundle ? '' : `${s.completion}% إكمال`}</span><b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b></footer>
+                        <footer>
+                          <span>{isBundle ? '' : c.price > 0 ? `${c.price} ر.س` : 'مجاني'}</span>
+                          <b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b>
+                        </footer>
+                        <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                          <button className="row-action" onClick={() => navigate(`/admin/lessons/${c.id}`)}><Video size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الدروس</button>
+                          <button className="row-action" onClick={() => openEdit(c)}><Edit size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تعديل</button>
+                          <button className="row-action" onClick={() => togglePublish(c)}>{c.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+                          <button className="row-action" onClick={() => deleteCourse(c.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                        </div>
                       </div>
                     </article>
                   )
@@ -225,48 +223,9 @@ export default function AdminCourses() {
             </>
           )}
 
-          <article className="admin-card data-card" data-searchable>
-            <header className="card-head"><div><h3>جميع الكورسات</h3><p>تحكم كامل في المحتوى والحالة</p></div></header>
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>الكورس</th><th>السعر</th><th>المستوى</th><th>الطلاب</th><th>الإكمال</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                <tbody>
-                  {courses.map((c, i) => {
-                    const s = statsByCourse[c.id] || { lessons: 0, students: 0, completion: 0 }
-                    return (
-                      <tr key={c.id} draggable onDragStart={() => handleDragStart(i)} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(i)}>
-                        <td>
-                          <span className={`table-course ${coverClass[i % coverClass.length]}`} style={{ cursor: 'grab' }}>
-                            <GripVertical size={14} />
-                          </span>
-                          <b>{c.title}</b>
-                          {c.parent_course_id && titleById[c.parent_course_id] && (
-                            <small style={{ display: 'block', color: '#a79cad', fontSize: 12, fontWeight: 700, marginTop: 2 }}>فرعي ضمن: {titleById[c.parent_course_id]}</small>
-                          )}
-                          {!c.parent_course_id && childrenCountByParent[c.id] > 0 && (
-                            <small style={{ display: 'block', color: '#8738e7', fontSize: 12, fontWeight: 700, marginTop: 2 }}>باقة · {childrenCountByParent[c.id]} كورس فرعي</small>
-                          )}
-                        </td>
-                        <td>{c.price > 0 ? `${c.price} ر.س` : (childrenCountByParent[c.id] > 0 ? <span className="tag purple">باقة</span> : <span className="tag">مجاني</span>)}</td>
-                        <td><span className="tag purple">{levelLabels[(c as any).level] || 'مبتدئ'}</span></td>
-                        <td>{s.students}</td>
-                        <td><div className="inline-progress"><i><u style={{ width: `${s.completion}%` }} /></i><b>{s.completion}%</b></div></td>
-                        <td><StatusBadge variant={c.is_published ? 'success' : 'neutral'}>{c.is_published ? 'منشور' : 'مسودة'}</StatusBadge></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button className="row-action" onClick={() => navigate(`/admin/lessons/${c.id}`)}><Video size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الدروس</button>
-                            <button className="row-action" onClick={() => openEdit(c)}><Edit size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تعديل</button>
-                            <button className="row-action" onClick={() => togglePublish(c)}>{c.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
-                            <button className="row-action" onClick={() => deleteCourse(c.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </article>
+          {gridCourses.length === 0 && (
+            <EmptyState text={viewParent ? 'مفيش كورسات فرعية جوه الكورس ده لسة' : 'لا يوجد كورسات رئيسية بعد'} action={<button className="primary-admin" onClick={openAdd}>أضف كورس</button>} />
+          )}
         </>
       )}
 
