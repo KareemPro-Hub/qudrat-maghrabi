@@ -99,7 +99,8 @@
 .adm-question-card{background:#fbf9fd;border:1px solid var(--adm-line);border-radius:14px;padding:14px}
 .adm-option{font-size:14px;padding:8px 12px;border-radius:9px;font-weight:700;background:#f3eef7;color:#6f6378;border:1px solid var(--adm-line)}
 .adm-option.correct{background:#e3f7ef;color:#249a6a;border-color:#c7ecd9}
-.adm-thumb-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;height:130px;border:1.5px dashed #d9cfe4;border-radius:14px;cursor:pointer;background:#fbf9fd;color:#9689a1;font-size:15px;font-weight:700;gap:6px}
+.admin-form label.adm-thumb-drop,.adm-thumb-drop{display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;height:130px;border:1.5px dashed #d9cfe4;border-radius:14px;cursor:pointer;background:#fbf9fd;color:#9689a1;font-size:15px;font-weight:700;gap:6px}
+.adm-thumb-drop span{width:100%;text-align:center}
 
 /* Responsive */
 @media(max-width:1180px){.admin-app{--adm-sidebar:235px}.admin-sidebar{padding-inline:13px}.admin-brand img{width:132px}.admin-nav-item{font-size:16px}.admin-content{padding-inline:20px}.metric-grid{grid-template-columns:1fr 1fr}.team-grid{grid-template-columns:1fr 1fr}.overview-grid,.lower-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.subscription-mini{grid-template-columns:100px 1fr}.course-card-grid{grid-template-columns:1fr 1fr}.notification-layout{grid-template-columns:1fr}}
