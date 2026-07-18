@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, Video, Upload, GripVertical } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, Video, Upload, GripVertical, ArrowRight, Layers } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
@@ -26,6 +26,7 @@ export default function AdminCourses() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [viewParentId, setViewParentId] = useState<string | null>(null)
   const dragIndex = useRef<number | null>(null)
 
   useEffect(() => { fetchCourses() }, [])
@@ -147,7 +148,6 @@ export default function AdminCourses() {
   const totalLessons = Object.values(statsByCourse).reduce((s, c) => s + c.lessons, 0)
   const totalStudents = Object.values(statsByCourse).reduce((s, c) => s + c.students, 0)
   const avgCompletion = courses.length ? Math.round(Object.values(statsByCourse).reduce((s, c) => s + c.completion, 0) / courses.length) : 0
-  const featured = [...courses].sort((a, b) => (statsByCourse[b.id]?.students || 0) - (statsByCourse[a.id]?.students || 0)).slice(0, 3)
 
   // الكورسات المؤهلة تبقى "أب" — أي كورس مستقل (مش هو نفسه فرعي) وغير الكورس اللي بيتعدّل حاليًا
   const parentOptions = courses.filter((c) => !c.parent_course_id && c.id !== editing?.id)
@@ -155,6 +155,18 @@ export default function AdminCourses() {
   courses.forEach((c) => { if (c.parent_course_id) childrenCountByParent[c.parent_course_id] = (childrenCountByParent[c.parent_course_id] || 0) + 1 })
   const titleById: Record<string, string> = {}
   courses.forEach((c) => { titleById[c.id] = c.title })
+
+  // الكروت بتعرض الكورسات الرئيسية بس (اللي مالهاش أب) — الضغط على كورس أب (باقة) يفتح الفرعيين اللي جواه
+  const viewParent = viewParentId ? courses.find((c) => c.id === viewParentId) || null : null
+  const gridCourses = (viewParentId
+    ? courses.filter((c) => c.parent_course_id === viewParentId)
+    : courses.filter((c) => !c.parent_course_id)
+  ).sort((a, b) => (statsByCourse[b.id]?.students || 0) - (statsByCourse[a.id]?.students || 0))
+
+  function handleCardClick(c: Course) {
+    if (!viewParentId && childrenCountByParent[c.id] > 0) setViewParentId(c.id)
+    else navigate(`/admin/lessons/${c.id}`)
+  }
 
   return (
     <>
@@ -175,26 +187,42 @@ export default function AdminCourses() {
         <EmptyState text="لا يوجد كورسات بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول كورس</button>} />
       ) : (
         <>
-          {featured.length > 0 && (
-            <div className="course-card-grid">
-              {featured.map((c, i) => {
-                const s = statsByCourse[c.id] || { lessons: 0, students: 0, completion: 0 }
-                return (
-                  <article className="course-manage-card" key={c.id}>
-                    <span className={`course-cover ${coverClass[i % coverClass.length]}`}>
-                      {(c as any).thumbnail_url ? <img src={(c as any).thumbnail_url} alt="" /> : c.title.charAt(0)}
-                    </span>
-                    <div>
-                      <small className={`course-label ${levelClass[(c as any).level] || ''}`}>{levelLabels[(c as any).level] || 'مبتدئ'}</small>
-                      <h3>{c.title}</h3>
-                      <p>{s.lessons} درسًا · {s.students} طالب</p>
-                      <i><u style={{ width: `${s.completion}%` }} /></i>
-                      <footer><span>{s.completion}% إكمال</span><b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b></footer>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+          {gridCourses.length > 0 && (
+            <>
+              {viewParent && (
+                <div className="course-grid-head">
+                  <button type="button" className="course-grid-back" onClick={() => setViewParentId(null)}>
+                    <ArrowRight size={14} /> كل الكورسات
+                  </button>
+                  <h4>الكورسات الفرعية داخل: {viewParent.title}</h4>
+                </div>
+              )}
+              <div className="course-card-grid">
+                {gridCourses.map((c, i) => {
+                  const s = statsByCourse[c.id] || { lessons: 0, students: 0, completion: 0 }
+                  const childCount = childrenCountByParent[c.id] || 0
+                  const isBundle = !viewParentId && childCount > 0
+                  return (
+                    <article className="course-manage-card" key={c.id} onClick={() => handleCardClick(c)}>
+                      <span className={`course-cover ${coverClass[i % coverClass.length]}`}>
+                        {(c as any).thumbnail_url ? <img src={(c as any).thumbnail_url} alt="" /> : c.title.charAt(0)}
+                      </span>
+                      <div>
+                        {isBundle ? (
+                          <span className="course-bundle-badge"><Layers size={12} /> باقة · {childCount} كورس فرعي</span>
+                        ) : (
+                          <small className={`course-label ${levelClass[(c as any).level] || ''}`}>{levelLabels[(c as any).level] || 'مبتدئ'}</small>
+                        )}
+                        <h3>{c.title}</h3>
+                        <p>{isBundle ? 'اضغط لعرض الكورسات الفرعية' : `${s.lessons} درسًا · ${s.students} طالب`}</p>
+                        {!isBundle && <i><u style={{ width: `${s.completion}%` }} /></i>}
+                        <footer><span>{isBundle ? '' : `${s.completion}% إكمال`}</span><b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b></footer>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </>
           )}
 
           <article className="admin-card data-card" data-searchable>
