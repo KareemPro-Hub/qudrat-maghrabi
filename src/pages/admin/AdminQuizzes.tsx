@@ -65,10 +65,21 @@ export default function AdminQuizzes() {
   async function handleSaveQuiz(e: React.FormEvent) {
     e.preventDefault()
     if (!quizForm.title || !quizForm.course_id) return toast.error('عنوان الاختبار والكورس مطلوبان')
+    if (!qForm.question_text || !qForm.option_a || !qForm.option_b || !qForm.option_c || !qForm.option_d) return toast.error('يرجى تعبئة نص السؤال الأول والاختيارات الأربعة')
     setSaving(true)
-    const { error } = await supabase.from('quizzes').insert({ ...quizForm, lesson_id: quizForm.lesson_id || null, time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null })
-    if (error) toast.error('حدث خطأ')
-    else { toast.success('تم إضافة الاختبار ✅'); setShowQuizModal(false); setQuizForm(emptyQuiz); fetchAll() }
+    const { data: newQuiz, error } = await supabase
+      .from('quizzes')
+      .insert({ ...quizForm, lesson_id: quizForm.lesson_id || null, time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null })
+      .select('id')
+      .single()
+    if (error || !newQuiz) { toast.error('حدث خطأ أثناء إنشاء الاختبار'); setSaving(false); return }
+    const { error: qError } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: newQuiz.id, order_index: 0 })
+    if (qError) toast.error('تم إنشاء الاختبار، لكن حدث خطأ أثناء حفظ السؤال — أضفه يدويًا من زر "+ سؤال"')
+    else toast.success('تم إضافة الاختبار والسؤال الأول ✅')
+    setShowQuizModal(false)
+    setQuizForm(emptyQuiz)
+    setQForm(emptyQ)
+    fetchAll()
     setSaving(false)
   }
 
@@ -207,7 +218,7 @@ export default function AdminQuizzes() {
       )}
 
       {showQuizModal && (
-        <Modal title="إضافة اختبار جديد" onClose={() => setShowQuizModal(false)}>
+        <Modal title="إضافة اختبار جديد" onClose={() => { setShowQuizModal(false); setQForm(emptyQ) }} wide>
           <form onSubmit={handleSaveQuiz} className="admin-form">
             <label>عنوان الاختبار *<input value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} placeholder="مثال: اختبار الوحدة الأولى" /></label>
             <label>الكورس *
@@ -228,9 +239,42 @@ export default function AdminQuizzes() {
               <label>درجة النجاح<input type="number" value={quizForm.pass_marks} onChange={(e) => setQuizForm({ ...quizForm, pass_marks: Number(e.target.value) })} /></label>
               <label>الوقت (دقيقة)<input type="number" value={quizForm.time_limit_minutes} onChange={(e) => setQuizForm({ ...quizForm, time_limit_minutes: e.target.value })} placeholder="اختياري" /></label>
             </div>
+
+            <hr style={{ border: 0, borderTop: '1px solid var(--adm-line)', margin: '6px 0 10px' }} />
+            <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: 15 }}>السؤال الأول</p>
+            <small className="cell-sub" style={{ marginTop: -10, marginBottom: 4 }}>هتقدر تضيف أسئلة إضافية بعد إنشاء الاختبار من زر "+ سؤال"</small>
+
+            <label>نص السؤال *<textarea rows={3} value={qForm.question_text} onChange={(e) => setQForm({ ...qForm, question_text: e.target.value })} placeholder="اكتب السؤال هنا..." /></label>
+            <label>
+              صورة السؤال (اختياري)
+              {qForm.question_image_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', maxHeight: 180, background: '#000' }}>
+                  <img src={qForm.question_image_url} alt="" style={{ width: '100%', maxHeight: 180, objectFit: 'contain' }} />
+                  <button type="button" onClick={() => setQForm((f) => ({ ...f, question_image_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop">
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
+                </label>
+              )}
+            </label>
+            {(['a', 'b', 'c', 'd'] as const).map((opt) => (
+              <label key={opt}>الخيار {optionLabels[opt]} *<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]}`} /></label>
+            ))}
+            <div className="form-grid">
+              <label>الإجابة الصحيحة *
+                <select value={qForm.correct_answer} onChange={(e) => setQForm({ ...qForm, correct_answer: e.target.value })}>
+                  <option value="a">الخيار أ</option><option value="b">الخيار ب</option><option value="c">الخيار ج</option><option value="d">الخيار د</option>
+                </select>
+              </label>
+              <label>درجة السؤال<input type="number" min={1} value={qForm.marks} onChange={(e) => setQForm({ ...qForm, marks: Number(e.target.value) })} /></label>
+            </div>
+            <label>شرح الإجابة — نص (اختياري)<input value={qForm.explanation} onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })} placeholder="سيظهر للطالب بعد الاختبار" /></label>
+
             <div className="form-row">
-              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إضافة الاختبار'}</button>
-              <button type="button" className="ghost-button" onClick={() => setShowQuizModal(false)}>إلغاء</button>
+              <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة الاختبار'}</button>
+              <button type="button" className="ghost-button" onClick={() => { setShowQuizModal(false); setQForm(emptyQ) }}>إلغاء</button>
             </div>
           </form>
         </Modal>
