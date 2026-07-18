@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import SarSymbol from '../components/SarSymbol'
 
 const trustStats = [
   { icon: 'student', target: 2000, suffix: '+', label: 'طالب مسجّل' },
@@ -322,9 +323,9 @@ export default function Home() {
             {plans.map((plan) => (
               <article key={plan.key} className={`qm-price-card${plan.extra}`}>
                 <header className="qm-price-cap">
-                  <small>{plan.kicker}</small>
                   <h3>{plan.name}</h3>
-                  <div className="qm-price-lockup"><strong>{plan.price}</strong><span>ر.س<small>للباقة</small></span></div>
+                  <small className="qm-price-duration">{plan.kicker}</small>
+                  <div className="qm-price-lockup"><strong>{plan.price}</strong><span><SarSymbol className="qm-price-sar" /><small>للباقة</small></span></div>
                 </header>
                 <div className="qm-price-pocket">
                   <ul>
