@@ -308,10 +308,9 @@
 .qm-footer-cta > a:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(64,28,91,.28), inset 0 1px 0 rgba(255,255,255,.8); }
 .qm-footer-main { display: grid; grid-template-columns: 1.35fr .7fr .7fr 1fr; gap: 62px; padding-top: 12px; padding-bottom: 55px; }
 .qm-footer-brand { display: flex; flex-direction: column; align-items: center; width: max-content; max-width: 100%; }
-.qm-footer-brand .qm-brand img { height: 82px; max-width: 210px; }
-.qm-footer-brand > p { width: max-content; max-width: 315px; color: #bbaacf; line-height: 1.9; font-size: 14px; margin: 18px 0 22px; }
+.qm-footer-brand > p { width: max-content; max-width: 315px; color: #bbaacf; line-height: 1.9; font-size: 14px; margin: 0 0 22px; }
 .qm-footer-brand .qm-social-links { justify-content: center; }
-.qm-footer-brand .qm-store-badges { justify-content: center; }
+.qm-footer-brand .qm-store-badges { flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
 .qm-social-links { display: flex; gap: 10px; }
 .qm-social-links a { width: 39px; height: 39px; border: 1px solid rgba(255,255,255,.16); border-radius: 11px; display: grid; place-items: center; color: #fff; text-decoration: none; background: rgba(255,255,255,.05); transition: .25s; }
 .qm-social-links a:hover { background: var(--qm-yellow, #ffc83e); color: #351649; border-color: #ffc83e; transform: translateY(-3px); }
