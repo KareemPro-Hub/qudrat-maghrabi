@@ -209,9 +209,8 @@
 .qm-price-cap > small.qm-price-duration { position: relative; z-index: 1; margin: 0 0 11px; color: rgba(255,255,255,.9); font-size: 14px; font-weight: 700; }
 .qm-price-lockup { position: relative; z-index: 1; margin: 0; display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
 .qm-price-lockup strong { display: block; color: #fff; font-size: 49px; line-height: .85; font-weight: 900; letter-spacing: -1.5px; text-shadow: 0 5px 15px rgba(62,12,85,.22); }
-.qm-price-lockup > span { display: flex; flex-direction: column; align-items: flex-start; color: #fff; font-size: 11px; font-weight: 700; line-height: 1.05; }
-.qm-price-lockup > span small { margin-top: 3px; color: rgba(255,255,255,.7); font-size: 8px; font-weight: 400; }
-.qm-price-sar { height: 15px !important; color: #fff; margin: 0 0 2px !important; }
+.qm-price-lockup > span { display: flex; align-items: center; color: #fff; }
+.qm-price-sar { height: 26px !important; color: #fff; margin: 0 0 6px !important; }
 .qm-price-pocket { position: relative; z-index: 2; min-height: 420px; margin-top: -28px; padding: 72px 38px 25px; display: flex; flex-direction: column; border-radius: 0 0 27px 27px; clip-path: polygon(0 0, 17% 0, 23% 28px, 77% 28px, 83% 0, 100% 0, 100% 100%, 0 100%); background: radial-gradient(circle at 13% 3%, rgba(255,255,255,.78), transparent 25%), linear-gradient(155deg, var(--pocket-top) 0%, color-mix(in srgb, var(--pocket-top) 82%, #fff) 38%, var(--pocket-bottom) 100%); border: 1px solid rgba(255,255,255,.74); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset -18px -20px 34px rgba(255,255,255,.12); color: #fff; backdrop-filter: blur(15px); }
 .qm-price-pocket::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(115deg, rgba(255,255,255,.24), transparent 43%, rgba(255,255,255,.06)); pointer-events: none; }
 .qm-price-pocket ul { list-style: none; padding: 0; margin: 0 0 22px; display: grid; gap: 13px; color: #fff; line-height: 1.4; text-align: right; }
