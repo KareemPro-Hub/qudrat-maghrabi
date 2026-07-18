@@ -65,7 +65,7 @@ export default function AdminQuizzes() {
   async function handleSaveQuiz(e: React.FormEvent) {
     e.preventDefault()
     if (!quizForm.title || !quizForm.course_id) return toast.error('عنوان الاختبار والكورس مطلوبان')
-    if (!qForm.question_text || !qForm.option_a || !qForm.option_b || !qForm.option_c || !qForm.option_d) return toast.error('يرجى تعبئة نص السؤال الأول والاختيارات الأربعة')
+    if (!qForm.question_text) return toast.error('يرجى تعبئة نص السؤال الأول')
     setSaving(true)
     const { data: newQuiz, error } = await supabase
       .from('quizzes')
@@ -99,7 +99,7 @@ export default function AdminQuizzes() {
 
   async function handleSaveQuestion(e: React.FormEvent) {
     e.preventDefault()
-    if (!qForm.question_text || !qForm.option_a || !qForm.option_b || !qForm.option_c || !qForm.option_d) return toast.error('يرجى تعبئة جميع الحقول')
+    if (!qForm.question_text) return toast.error('يرجى تعبئة نص السؤال')
     setSaving(true)
     const questionsCount = questions[showQModal!]?.length || 0
     const { error } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: showQModal, order_index: questionsCount })
@@ -260,7 +260,7 @@ export default function AdminQuizzes() {
               )}
             </label>
             {(['a', 'b', 'c', 'd'] as const).map((opt) => (
-              <label key={opt}>الخيار {optionLabels[opt]} *<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]}`} /></label>
+              <label key={opt}>الخيار {optionLabels[opt]}<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]} (اختياري)`} /></label>
             ))}
             <div className="form-grid">
               <label>الإجابة الصحيحة *
@@ -303,7 +303,7 @@ export default function AdminQuizzes() {
               <label>نص الرابط<input value={qForm.question_link_text} onChange={(e) => setQForm({ ...qForm, question_link_text: e.target.value })} placeholder="مثال: اقرأ النص" /></label>
             </div>
             {(['a', 'b', 'c', 'd'] as const).map((opt) => (
-              <label key={opt}>الخيار {optionLabels[opt]} *<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]}`} /></label>
+              <label key={opt}>الخيار {optionLabels[opt]}<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]} (اختياري)`} /></label>
             ))}
             <div className="form-grid">
               <label>الإجابة الصحيحة *
