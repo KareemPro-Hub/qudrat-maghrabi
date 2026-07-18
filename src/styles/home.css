@@ -402,11 +402,10 @@
   .qm-footer-cta > a { margin: 22px auto 0; width: max-content; }
   .qm-footer-main { grid-template-columns: 1fr 1fr; gap: 36px 25px; padding-top: 0; }
   .qm-footer-brand, .qm-footer-news { grid-column: 1/-1; }
-  .qm-footer-brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .qm-footer-brand > p { margin-inline: auto; }
-  .qm-footer-brand .qm-brand { margin-inline: auto; }
-  .qm-footer-brand .qm-social-links { justify-content: center; width: 100%; }
-  .qm-footer-brand .qm-store-badges { justify-content: center; width: 100%; }
+  .qm-footer-brand { display: flex; flex-direction: column; }
+  .qm-footer-brand .qm-brand { width: 315px; justify-content: center; }
+  .qm-footer-brand .qm-social-links { width: 315px; justify-content: center; }
+  .qm-footer-brand .qm-store-badges { width: 315px; justify-content: center; }
   .qm-footer-column { align-items: center; }
   .qm-footer-news { text-align: center; }
   .qm-footer-news form { max-width: 420px; margin: auto; }
