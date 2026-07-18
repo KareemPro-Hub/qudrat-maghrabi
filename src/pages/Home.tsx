@@ -260,7 +260,7 @@ export default function Home() {
           </div>
           <div className="qm-hero-art">
             <div className="qm-arch">
-              <img src="/home/hero-student.png" alt="طالب سعودي يحمل آيفون يعرض شعار المنصة وبطاقة معادلة" />
+              <img src="/home/hero-student.webp" alt="طالب سعودي يحمل آيفون يعرض شعار المنصة وبطاقة معادلة" />
             </div>
           </div>
         </div>
