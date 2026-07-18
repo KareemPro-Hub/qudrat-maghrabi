@@ -24,7 +24,7 @@ const valuePoints = [
 
 const plans = [
   {
-    key: 'basic', kicker: 'بداية ثابتة', name: 'الأساسية', price: '99',
+    key: 'basic', kicker: 'لمدة شهر واحد', name: 'الأساسية', price: '49',
     features: [
       { text: 'دروس التأسيس', ok: true },
       { text: 'اختبارات قصيرة', ok: true },
@@ -32,10 +32,10 @@ const plans = [
       { text: 'محاكاة غير محدودة', ok: false },
       { text: 'دعم مباشر', ok: false },
     ],
-    cta: 'اختر الباقة', extra: '',
+    cta: 'ابدأ الآن', extra: '',
   },
   {
-    key: 'hot', kicker: 'رحلة متكاملة', name: 'الشاملة', price: '199',
+    key: 'hot', kicker: 'لمدة 3 أشهر', name: 'المميزة', price: '99',
     features: [
       { text: 'جميع الدروس', ok: true },
       { text: 'محاكاة غير محدودة', ok: true },
@@ -46,15 +46,15 @@ const plans = [
     cta: 'ابدأ الآن', extra: ' qm-hot',
   },
   {
-    key: 'pro', kicker: 'أقصى استفادة', name: 'الاحترافية', price: '299',
+    key: 'pro', kicker: 'لمدة 6 أشهر', name: 'الاحترافية', price: '179',
     features: [
-      { text: 'كل مزايا الشاملة', ok: true },
+      { text: 'كل مزايا المميزة', ok: true },
       { text: 'جلسات مراجعة', ok: true },
       { text: 'دعم مباشر', ok: true },
       { text: 'خطة دراسة شخصية', ok: true },
       { text: 'تحليل شامل للنتائج', ok: true },
     ],
-    cta: 'اختر الباقة', extra: ' qm-pro',
+    cta: 'ابدأ الآن', extra: ' qm-pro',
   },
 ]
 

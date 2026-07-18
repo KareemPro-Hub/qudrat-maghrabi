@@ -55,16 +55,9 @@ export default function AdminTeam() {
     load()
   }, [])
 
-  const onlineCount = members.length // no real presence tracking yet — shown as total active accounts
-
   return (
     <>
       <SectionToolbar title="فريق العمل" subtitle="إدارة الفريق وتوزيع الأدوار والصلاحيات." />
-
-      <div className="team-summary">
-        <article><span className="team-summary-icon">👥</span><div><strong>{loading ? '…' : `${members.length} أعضاء`}</strong><p>إجمالي فريق العمل</p></div></article>
-        <article><span className="team-summary-icon">●</span><div><strong>{loading ? '…' : `${onlineCount} حساب نشط`}</strong><p>حسابات الإدارة والمحتوى</p></div></article>
-      </div>
 
       {loading ? <Spinner /> : members.length === 0 ? (
         <EmptyState text="لا يوجد أعضاء فريق مسجّلون بعد" />
