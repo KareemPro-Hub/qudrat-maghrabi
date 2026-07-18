@@ -1,8 +1,11 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
+
+const CLOUDINARY_CLOUD = 'dzgfvs0gi'
+const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 
 const optionLabels: Record<string, string> = { a: 'أ', b: 'ب', c: 'ج', d: 'د' }
 const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
@@ -21,6 +24,7 @@ export default function AdminQuizzes() {
   const [quizForm, setQuizForm] = useState(emptyQuiz)
   const [qForm, setQForm] = useState(emptyQ)
   const [saving, setSaving] = useState(false)
+  const [uploadingQImage, setUploadingQImage] = useState(false)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -66,6 +70,20 @@ export default function AdminQuizzes() {
     if (error) toast.error('حدث خطأ')
     else { toast.success('تم إضافة الاختبار ✅'); setShowQuizModal(false); setQuizForm(emptyQuiz); fetchAll() }
     setSaving(false)
+  }
+
+  async function handleQuestionImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingQImage(true)
+    const data = new FormData()
+    data.append('file', file)
+    data.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+    const json = await res.json()
+    if (json.secure_url) { setQForm((f) => ({ ...f, question_image_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
+    else toast.error('فشل رفع الصورة')
+    setUploadingQImage(false)
   }
 
   async function handleSaveQuestion(e: React.FormEvent) {
@@ -222,9 +240,19 @@ export default function AdminQuizzes() {
         <Modal title="إضافة سؤال" onClose={() => setShowQModal(null)} wide>
           <form onSubmit={handleSaveQuestion} className="admin-form">
             <label>نص السؤال *<textarea rows={3} value={qForm.question_text} onChange={(e) => setQForm({ ...qForm, question_text: e.target.value })} placeholder="اكتب السؤال هنا..." /></label>
-            <label>صورة السؤال (رابط URL)
-              <input value={qForm.question_image_url} onChange={(e) => setQForm({ ...qForm, question_image_url: e.target.value })} placeholder="https://..." dir="ltr" />
-              {qForm.question_image_url && <img src={qForm.question_image_url} alt="preview" style={{ marginTop: 8, borderRadius: 12, maxHeight: 150, objectFit: 'contain', border: '1px solid var(--adm-line)' }} />}
+            <label>
+              صورة السؤال (اختياري)
+              {qForm.question_image_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', maxHeight: 180, background: '#000' }}>
+                  <img src={qForm.question_image_url} alt="" style={{ width: '100%', maxHeight: 180, objectFit: 'contain' }} />
+                  <button type="button" onClick={() => setQForm((f) => ({ ...f, question_image_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop">
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
+                </label>
+              )}
             </label>
             <div className="form-grid">
               <label>رابط إضافي (URL)<input value={qForm.question_link_url} onChange={(e) => setQForm({ ...qForm, question_link_url: e.target.value })} placeholder="https://..." dir="ltr" /></label>
@@ -244,7 +272,7 @@ export default function AdminQuizzes() {
             <label>شرح الإجابة — نص (اختياري)<input value={qForm.explanation} onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })} placeholder="سيظهر للطالب بعد الاختبار" /></label>
             <label>شرح الإجابة — رقم فيديو Bunny (اختياري)<input value={qForm.explanation_video_id} onChange={(e) => setQForm({ ...qForm, explanation_video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" /></label>
             <div className="form-row">
-              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إضافة السؤال ✅'}</button>
+              <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة السؤال ✅'}</button>
               <button type="button" className="ghost-button" onClick={() => setShowQModal(null)}>إغلاق</button>
             </div>
           </form>
