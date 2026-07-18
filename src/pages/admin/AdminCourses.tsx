@@ -210,7 +210,9 @@ export default function AdminCourses() {
                           <b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b>
                         </footer>
                         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-                          <button className="row-action" onClick={() => navigate(`/admin/lessons/${c.id}`)}><Video size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الدروس</button>
+                          {!isBundle && (
+                            <button className="row-action" onClick={() => navigate(`/admin/lessons/${c.id}`)}><Video size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الدروس</button>
+                          )}
                           <button className="row-action" onClick={() => openEdit(c)}><Edit size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تعديل</button>
                           <button className="row-action" onClick={() => togglePublish(c)}>{c.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
                           <button className="row-action" onClick={() => deleteCourse(c.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
