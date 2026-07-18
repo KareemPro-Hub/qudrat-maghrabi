@@ -87,16 +87,17 @@ export default function AdminTeam() {
     e.preventDefault()
     if (!form.full_name.trim() || !form.email.trim()) return toast.error('يرجى تعبئة الاسم والبريد الإلكتروني')
     setSaving(true)
-    const { data: { session } } = await supabase.auth.getSession()
     try {
-      const res = await fetch('/api/create-team-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ email: form.email.trim(), full_name: form.full_name.trim(), role: form.role }),
+      const { error } = await supabase.functions.invoke('invite-team-member', {
+        body: { email: form.email.trim(), full_name: form.full_name.trim(), role: form.role },
       })
-      const result = await res.json()
-      if (!res.ok) {
-        toast.error(result.error || 'حدث خطأ أثناء الإضافة')
+      if (error) {
+        let msg = 'حدث خطأ أثناء الإضافة'
+        try {
+          const body = await (error as any).context?.json()
+          if (body?.error) msg = body.error
+        } catch { /* keep default */ }
+        toast.error(msg)
       } else {
         toast.success('تم إرسال دعوة للعضو الجديد ✅ — هيستلم إيميل لتفعيل حسابه')
         setShowAdd(false)
