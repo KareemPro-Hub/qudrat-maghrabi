@@ -145,7 +145,7 @@ export default function AdminTeam() {
       ) : (
         <div className={`team-grid${members.length === 1 ? ' team-grid-single' : ''}`} data-searchable>
           {members.map((m, i) => (
-            <article className="member-card" key={m.id}>
+            <article className={`member-card${m.role === 'admin' ? ' member-card-owner' : ''}`} key={m.id}>
               <div className={`member-cover ${coverClass[i % coverClass.length]}`} />
               <span className={`member-avatar ${avatarClass[i % avatarClass.length]}`}>
                 {m.avatar_url ? <img src={m.avatar_url} alt="" /> : initials(m.full_name)}
