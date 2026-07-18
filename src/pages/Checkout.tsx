@@ -21,6 +21,8 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true)
   const [enrollmentId, setEnrollmentId] = useState<string | null>(null)
   const [moyasarReady, setMoyasarReady] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [redeeming, setRedeeming] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -70,6 +72,23 @@ export default function Checkout() {
     setCourse(data)
     setEnrollmentId(eid || null)
     setLoading(false)
+  }
+
+  async function handleApplyCoupon() {
+    if (!couponCode.trim() || !courseId) return
+    setRedeeming(true)
+    const { data, error } = await supabase.rpc('redeem_discount_code', { p_code: couponCode.trim(), p_course_id: courseId })
+    setRedeeming(false)
+    if (error) {
+      toast.error('حدث خطأ أثناء تطبيق الكود، حاول مرة أخرى')
+      return
+    }
+    if (data?.success) {
+      toast.success('تم تفعيل الكود ✅ جاري تفعيل اشتراكك مجانًا')
+      navigate(`/payment/success?enrollmentId=${data.enrollment_id}&courseId=${courseId}&status=paid`)
+    } else {
+      toast.error(data?.message || 'كود الخصم غير صالح')
+    }
   }
 
   function loadMoyasar() {
@@ -169,6 +188,27 @@ export default function Checkout() {
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                   <span className="font-black text-xl gradient-text">{course.price} <SarSymbol /></span>
                   <span className="font-black text-brand-navy">الإجمالي</span>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <p className="text-xs font-bold text-gray-500 mb-2 text-right">لديك كود خصم؟</p>
+                <div className="flex gap-2">
+                  <input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    placeholder="ادخل الكود هنا"
+                    dir="ltr"
+                    className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-sm text-left focus:outline-none focus:border-brand-pink"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={redeeming || !couponCode.trim()}
+                    className="px-5 h-11 rounded-xl bg-brand-navy text-white text-sm font-bold disabled:opacity-50 shrink-0"
+                  >
+                    {redeeming ? '...' : 'تطبيق'}
+                  </button>
                 </div>
               </div>
 

@@ -36,6 +36,7 @@ const AdminEnrollments = lazy(() => import('./pages/admin/AdminEnrollments'))
 const AdminQuizzes = lazy(() => import('./pages/admin/AdminQuizzes'))
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'))
 const AdminTeam = lazy(() => import('./pages/admin/AdminTeam'))
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
 const AdminLessons = lazy(() => import('./pages/admin/AdminLessons'))
 
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="/admin/quizzes" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminQuizzes /></AdminLayout></Suspense>} />
         <Route path="/admin/notifications" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminNotifications /></AdminLayout></Suspense>} />
         <Route path="/admin/team" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminTeam /></AdminLayout></Suspense>} />
+        <Route path="/admin/coupons" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminCoupons /></AdminLayout></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminSettings /></AdminLayout></Suspense>} />
         <Route path="/quiz/:quizId" element={<Layout><Quiz /></Layout>} />
         <Route path="/quiz/:quizId/result/:resultId" element={<Layout><QuizResult /></Layout>} />
