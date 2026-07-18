@@ -14,7 +14,7 @@ const ROLE_ORDER: Record<string, number> = { admin: 0, teacher: 1, quiz_manager:
 const coverClass = ['', 'c2', 'c3', 'c4']
 const avatarClass = ['m1', 'm2', 'm3', 'm4']
 
-type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number }
+type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number; questions: number }
 
 export default function AdminTeam() {
   const [members, setMembers] = useState<Member[]>([])
@@ -44,9 +44,16 @@ export default function AdminTeam() {
         })
       }
 
+      const { data: questionsData } = await supabase.from('quiz_questions').select('id, created_by').in('created_by', ids)
+      const questionCount: Record<string, number> = {}
+      ;(questionsData || []).forEach((q: any) => {
+        if (!q.created_by) return
+        questionCount[q.created_by] = (questionCount[q.created_by] || 0) + 1
+      })
+
       const mapped = list.map((m: any) => ({
         id: m.id, full_name: m.full_name, email: m.email, role: m.role, avatar_url: m.avatar_url,
-        courses: courseCount[m.id] || 0, students: studentsByOwner[m.id] || 0,
+        courses: courseCount[m.id] || 0, students: studentsByOwner[m.id] || 0, questions: questionCount[m.id] || 0,
       }))
       mapped.sort((a, b) => (ROLE_ORDER[a.role] ?? 99) - (ROLE_ORDER[b.role] ?? 99))
       setMembers(mapped)
@@ -71,8 +78,14 @@ export default function AdminTeam() {
               <p>{m.email}</p>
               <span className={`role ${ROLE_BADGE[m.role] || ''}`}>{ROLE_LABEL[m.role] || m.role}</span>
               <div className="member-stats">
-                <span><b>{m.courses}</b> كورسات</span>
-                <span><b>{m.students}</b> طالب</span>
+                {m.role === 'quiz_manager' ? (
+                  <span><b>{m.questions}</b> سؤال</span>
+                ) : (
+                  <>
+                    <span><b>{m.courses}</b> كورسات</span>
+                    <span><b>{m.students}</b> طالب</span>
+                  </>
+                )}
               </div>
             </article>
           ))}

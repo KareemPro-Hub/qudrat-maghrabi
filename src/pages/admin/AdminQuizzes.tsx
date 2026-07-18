@@ -13,7 +13,7 @@ const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', to
 const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
 
 export default function AdminQuizzes() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const isQuizManager = profile?.role === 'quiz_manager'
   const [quizzes, setQuizzes] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
@@ -76,7 +76,7 @@ export default function AdminQuizzes() {
       .select('id')
       .single()
     if (error || !newQuiz) { toast.error('حدث خطأ أثناء إنشاء الاختبار'); setSaving(false); return }
-    const { error: qError } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: newQuiz.id, order_index: 0 })
+    const { error: qError } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: newQuiz.id, order_index: 0, created_by: user?.id })
     if (qError) toast.error('تم إنشاء الاختبار، لكن حدث خطأ أثناء حفظ السؤال — أضفه يدويًا من زر "+ سؤال"')
     else toast.success('تم إضافة الاختبار والسؤال الأول ✅')
     setShowQuizModal(false)
@@ -105,7 +105,7 @@ export default function AdminQuizzes() {
     if (!qForm.question_text) return toast.error('يرجى تعبئة نص السؤال')
     setSaving(true)
     const questionsCount = questions[showQModal!]?.length || 0
-    const { error } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: showQModal, order_index: questionsCount })
+    const { error } = await supabase.from('quiz_questions').insert({ ...qForm, quiz_id: showQModal, order_index: questionsCount, created_by: user?.id })
     if (error) toast.error('حدث خطأ')
     else { toast.success('تمت إضافة السؤال ✅'); setQForm(emptyQ); fetchQuestions(showQModal!) }
     setSaving(false)
