@@ -1,11 +1,21 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+type ApiRequest = {
+  method?: string
+  body?: Record<string, unknown>
+  headers: { authorization?: string }
+}
+
+type ApiResponse = {
+  status(code: number): ApiResponse
+  json(body: unknown): ApiResponse
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { videoId, courseId } = req.body
+  const { videoId, courseId } = req.body ?? {}
   if (!videoId || !courseId) return res.status(400).json({ error: 'videoId and courseId required' })
 
   // التحقق من الجلسة

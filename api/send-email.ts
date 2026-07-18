@@ -1,11 +1,33 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+type ApiRequest = {
+  method?: string
+  body?: {
+    to?: string
+    type?: string
+    data?: {
+      studentName?: string
+      courseName?: string
+      lessonName?: string
+      quizTitle?: string
+      score?: string | number
+      totalMarks?: string | number
+      courseId?: string
+      title?: string
+      body?: string
+    }
+  }
+}
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+type ApiResponse = {
+  status(code: number): ApiResponse
+  json(body: unknown): ApiResponse
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, type, data } = req.body
+  const { to, type, data } = req.body ?? {}
 
   if (!to || !type) {
     return res.status(400).json({ error: 'Missing required fields' })
