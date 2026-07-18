@@ -338,11 +338,11 @@
 .qm-payment-chip { display: grid; place-items: center; height: 40px; padding: 0 16px; border-radius: 11px; background: rgba(255,255,255,.94); box-shadow: 0 8px 20px rgba(20,4,42,.18); transition: transform .2s ease, background .2s ease; }
 .qm-payment-chip:hover { transform: translateY(-2px); background: #fff; }
 .qm-payment-chip img { height: 18px; width: auto; max-width: 62px; object-fit: contain; display: block; }
-.qm-footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; color: #8f7aa8; }
+.qm-footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: #8f7aa8; }
 .qm-footer-bottom p { margin: 0; font-size: 12px; }
 .qm-footer-bottom > div { display: flex; align-items: center; gap: 12px; font-size: 11px; }
 .qm-footer-bottom i { width: 4px; height: 4px; border-radius: 50%; background: #ffc83e; display: inline-block; }
-.qm-footer-credit { margin-top: 14px; text-align: center; font-size: 12px; color: #bbaacf; }
+.qm-footer-credit { margin-top: 10px; text-align: center; font-size: 12px; color: #bbaacf; }
 .qm-footer-credit a { color: #ffc83e; font-weight: 800; text-decoration: none; }
 .qm-footer-credit a:hover { opacity: .8; }
 

@@ -88,7 +88,7 @@ export default function Footer() {
       <div className="qm-wrap">
         <div className="qm-footer-bottom">
           <p>© {new Date().getFullYear()} قدرات المغربي. جميع الحقوق محفوظة.</p>
-          <div><span>صنع للطلاب الطموحين</span><i /><span>المملكة العربية السعودية</span></div>
+          <div><span>المملكة العربية السعودية</span></div>
         </div>
         <div className="qm-footer-credit">
           نُسِجَت ملامح هذا الإبداع البصري والرقمي بروح وإبداع{' '}
