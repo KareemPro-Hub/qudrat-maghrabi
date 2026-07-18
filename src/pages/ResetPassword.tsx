@@ -1,24 +1,39 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Lock, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+
+type LinkStatus = 'checking' | 'ready' | 'invalid'
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [linkStatus, setLinkStatus] = useState<LinkStatus>('checking')
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Supabase يتعامل مع الـ hash تلقائيًا عند فتح الصفحة
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    let mounted = true
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
       if (event === 'PASSWORD_RECOVERY') {
         toast('أدخل كلمة مرور جديدة', { icon: '🔐' })
       }
+      if (session) setLinkStatus('ready')
     })
-    return () => subscription.unsubscribe()
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!mounted) return
+      setLinkStatus(!error && session ? 'ready' : 'invalid')
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,12 +42,32 @@ export default function ResetPassword() {
     if (password !== confirm) return toast.error('كلمتا المرور غير متطابقتين')
     if (password.length < 8) return toast.error('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
     setLoading(true)
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setLinkStatus('invalid')
+      toast.error('رابط تعيين كلمة المرور غير صالح أو انتهت صلاحيته')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.updateUser({ password })
     if (error) {
-      toast.error('حدث خطأ، حاول مجددًا')
+      toast.error(error.message.toLowerCase().includes('same password')
+        ? 'اختر كلمة مرور مختلفة عن كلمة المرور الحالية'
+        : 'تعذّر حفظ كلمة المرور، حاول مجددًا')
     } else {
       toast.success('تم تغيير كلمة المرور بنجاح ✅')
-      navigate('/login')
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+
+      const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
+      if (profile && adminRoles.includes(profile.role)) navigate('/admin')
+      else if (profile?.role === 'parent') navigate('/parent')
+      else navigate('/dashboard')
     }
     setLoading(false)
   }
@@ -45,46 +80,63 @@ export default function ResetPassword() {
           <div className="text-center mb-8">
             <img src="/logo.png" alt="قدرات المغربي" className="h-16 w-auto object-contain mx-auto mb-4" />
             <h1 className="text-2xl font-black text-brand-navy">تعيين كلمة مرور جديدة</h1>
-            <p className="text-gray-500 text-sm mt-1">أدخل كلمة مرور قوية وسهلة التذكر</p>
+            <p className="text-gray-500 text-sm mt-1">
+              {linkStatus === 'invalid' ? 'رابط تعيين كلمة المرور غير صالح أو انتهت صلاحيته' : 'أدخل كلمة مرور قوية وسهلة التذكر'}
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-brand-navy mb-2">كلمة المرور الجديدة</label>
-              <div className="relative">
-                <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="٨ أحرف على الأقل"
-                  className="input-field pr-10 pl-10"
-                  dir="ltr"
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+          {linkStatus === 'checking' ? (
+            <div className="py-10 flex justify-center" aria-label="جاري التحقق من الرابط">
+              <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
             </div>
-            <div>
-              <label className="block text-sm font-bold text-brand-navy mb-2">تأكيد كلمة المرور</label>
-              <div className="relative">
-                <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  placeholder="أعد كتابة كلمة المرور"
-                  className="input-field pr-10"
-                  dir="ltr"
-                />
-              </div>
+          ) : linkStatus === 'invalid' ? (
+            <div className="space-y-3">
+              <Link to="/forgot-password" className="btn-primary w-full py-4 text-lg text-center block">
+                طلب رابط جديد
+              </Link>
+              <Link to="/login" className="block text-center text-brand-purple font-bold">
+                العودة لتسجيل الدخول
+              </Link>
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full py-4 text-lg mt-2">
-              {loading ? 'جاري الحفظ...' : 'حفظ كلمة المرور الجديدة ←'}
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">كلمة المرور الجديدة</label>
+                <div className="relative">
+                  <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="٨ أحرف على الأقل"
+                    className="input-field pr-10 pl-10"
+                    dir="ltr"
+                  />
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">تأكيد كلمة المرور</label>
+                <div className="relative">
+                  <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    value={confirm}
+                    onChange={e => setConfirm(e.target.value)}
+                    placeholder="أعد كتابة كلمة المرور"
+                    className="input-field pr-10"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary w-full py-4 text-lg mt-2">
+                {loading ? 'جاري الحفظ...' : 'حفظ كلمة المرور الجديدة ←'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

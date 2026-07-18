@@ -26,6 +26,7 @@ const ADDABLE_ROLES: { value: string; label: string }[] = [
 ]
 
 type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number; questions: number }
+type InviteResult = { success?: boolean; existing?: boolean; invite_link?: string | null }
 
 export default function AdminTeam() {
   const { profile } = useAuth()
@@ -85,12 +86,26 @@ export default function AdminTeam() {
     setShowAdd(true)
   }
 
+  function closeAdd() {
+    setShowAdd(false)
+    setInviteLink('')
+  }
+
+  async function copyInviteLink() {
+    try {
+      await navigator.clipboard.writeText(inviteLink)
+      toast.success('تم نسخ الرابط ✅')
+    } catch {
+      toast.error('تعذّر النسخ التلقائي — حدّد الرابط وانسخه يدويًا')
+    }
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.full_name.trim() || !form.email.trim()) return toast.error('يرجى تعبئة الاسم والبريد الإلكتروني')
     setSaving(true)
     try {
-      const { data: result, error } = await supabase.functions.invoke('invite-team-member', {
+      const { data: result, error } = await supabase.functions.invoke<InviteResult>('invite-team-member', {
         body: { email: form.email.trim(), full_name: form.full_name.trim(), role: form.role },
       })
       if (error) {
@@ -101,14 +116,20 @@ export default function AdminTeam() {
         } catch { /* keep default */ }
         toast.error(msg)
       } else {
-        setInviteLink(result?.invite_link || '')
-        toast.success('تم إنشاء حساب العضو الجديد ✅')
-        load()
+        const link = result?.invite_link?.trim()
+        if (!result?.success || !link) {
+          toast.error('تمت الإضافة لكن لم يصل رابط الدعوة. حاول مرة أخرى.')
+          return
+        }
+        setInviteLink(link)
+        toast.success(result.existing ? 'تم تجديد رابط الدعوة للحساب الموجود ✅' : 'تم إنشاء حساب العضو الجديد ✅')
+        await load()
       }
     } catch {
       toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   return (
@@ -148,7 +169,7 @@ export default function AdminTeam() {
       )}
 
       {showAdd && inviteLink && (
-        <Modal title="تم إنشاء الحساب ✅" onClose={() => setShowAdd(false)}>
+        <Modal title="رابط الدعوة جاهز ✅" onClose={closeAdd}>
           <div className="admin-form">
             <p className="adm-hint" style={{ marginTop: 0 }}>
               انسخ رابط الدعوة ده وابعته للعضو بأي طريقة (واتساب مثلًا). أول ما يفتحه هيظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.
@@ -160,18 +181,18 @@ export default function AdminTeam() {
               <button
                 type="button"
                 className="primary-admin"
-                onClick={() => { navigator.clipboard.writeText(inviteLink); toast.success('تم نسخ الرابط ✅') }}
+                onClick={copyInviteLink}
               >
                 نسخ الرابط
               </button>
-              <button type="button" className="ghost-button" onClick={() => setShowAdd(false)}>إغلاق</button>
+              <button type="button" className="ghost-button" onClick={closeAdd}>إغلاق</button>
             </div>
           </div>
         </Modal>
       )}
 
       {showAdd && !inviteLink && (
-        <Modal title="إضافة عضو جديد لفريق العمل" onClose={() => setShowAdd(false)}>
+        <Modal title="إضافة عضو جديد لفريق العمل" onClose={closeAdd}>
           <form className="admin-form" onSubmit={handleAdd}>
             <label>الاسم الكامل<input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="مثال: أحمد محمد" /></label>
             <label>البريد الإلكتروني<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@example.com" dir="ltr" /></label>
@@ -183,7 +204,7 @@ export default function AdminTeam() {
             <p className="adm-hint">هيتولّد لك رابط دعوة تبعته للعضو، يقدر من خلاله يظبط كلمة المرور بنفسه ويدخل المنصة مباشرة بالدور المحدد.</p>
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الإنشاء...' : 'إنشاء الدعوة'}</button>
-              <button type="button" className="ghost-button" onClick={() => setShowAdd(false)}>إلغاء</button>
+              <button type="button" className="ghost-button" onClick={closeAdd} disabled={saving}>إلغاء</button>
             </div>
           </form>
         </Modal>
