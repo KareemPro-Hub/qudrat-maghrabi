@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'parent' | 'teacher' | 'content_manager' | 'student_manager' | 'admin'
+export type UserRole = 'student' | 'parent' | 'teacher' | 'content_manager' | 'student_manager' | 'admin' | 'quiz_manager'
 
 export interface Profile {
   id: string

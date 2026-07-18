@@ -30,7 +30,11 @@ const ROLE_LABEL: Record<string, string> = {
   teacher: 'معلم',
   content_manager: 'مشرف محتوى',
   student_manager: 'مسؤول الطلاب',
+  quiz_manager: 'مشرف الاختبارات',
 }
+
+// مشرف الاختبارات: صلاحية واحدة فقط، رفع/إدارة أسئلة الاختبارات — ممنوع من أي قسم آخر
+const QUIZ_MANAGER_ALLOWED_PATH = '/admin/quizzes'
 
 function isNavActive(pathname: string, to: string, exact?: boolean) {
   if (exact) return pathname === to
@@ -83,11 +87,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!user || !profile) return <Navigate to="/login" />
-  if (!['admin', 'teacher', 'content_manager', 'student_manager'].includes(profile.role)) {
+  if (!['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager'].includes(profile.role)) {
     return <Navigate to="/dashboard" />
+  }
+  const isQuizManager = profile.role === 'quiz_manager'
+  if (isQuizManager && !location.pathname.startsWith(QUIZ_MANAGER_ALLOWED_PATH)) {
+    return <Navigate to={QUIZ_MANAGER_ALLOWED_PATH} replace />
   }
 
   const meta = metaFor(location.pathname)
+  const visibleNavDefs = isQuizManager ? navDefs.filter((item) => item.to === QUIZ_MANAGER_ALLOWED_PATH) : navDefs
 
   return (
     <div className="admin-app" dir="rtl">
@@ -97,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
 
         <nav className="admin-nav" aria-label="التنقل داخل لوحة الإدارة">
-          {navDefs.map((item) => {
+          {visibleNavDefs.map((item) => {
             const active = isNavActive(location.pathname, item.to, item.exact)
             return (
               <Link key={item.to} to={item.to} className={`admin-nav-item${active ? ' active' : ''}`}>
@@ -131,11 +140,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
               <input type="search" placeholder="ابحث في القسم الحالي..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </label>
-            <Link className="icon-button" to="/admin/notifications" aria-label="الإشعارات">
-              <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8ZM10 21h4" /></svg>
-              {unread > 0 && <b>{unread}</b>}
-            </Link>
-            {meta.action && (
+            {!isQuizManager && (
+              <Link className="icon-button" to="/admin/notifications" aria-label="الإشعارات">
+                <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8ZM10 21h4" /></svg>
+                {unread > 0 && <b>{unread}</b>}
+              </Link>
+            )}
+            {!isQuizManager && meta.action && (
               <Link className="quick-button" to={meta.action.to}>
                 <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
                 {meta.action.label}

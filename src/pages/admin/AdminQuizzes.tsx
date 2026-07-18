@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../hooks/useAuth'
 import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
@@ -12,6 +13,8 @@ const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', to
 const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
 
 export default function AdminQuizzes() {
+  const { profile } = useAuth()
+  const isQuizManager = profile?.role === 'quiz_manager'
   const [quizzes, setQuizzes] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [lessons, setLessons] = useState<any[]>([])
@@ -139,7 +142,7 @@ export default function AdminQuizzes() {
         action={<button className="primary-admin" onClick={() => setShowQuizModal(true)}><Plus size={16} /> إنشاء اختبار</button>}
       />
 
-      {!loading && quizzes.length > 0 && (
+      {!isQuizManager && !loading && quizzes.length > 0 && (
         <div className="insight-banner tests-banner">
           <div>
             <span className="banner-icon"><svg viewBox="0 0 24 24"><path d="M8 4h8M9 3v3h6V3M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z" /><path d="m8 12 2 2 5-5" /></svg></span>
@@ -149,12 +152,14 @@ export default function AdminQuizzes() {
         </div>
       )}
 
-      <div className="mini-metrics">
-        <article><span>{loading ? '…' : quizzes.length}</span><p>إجمالي الاختبارات<small>{publishedCount} منشور</small></p></article>
-        <article><span>{loading ? '…' : quizzes.filter((q) => q.lesson_id).length}</span><p>اختبارات دروس<small>مرتبطة بدرس محدد</small></p></article>
-        <article><span>{loading ? '…' : totalAttempts}</span><p>محاولة مكتملة<small>عبر كل الاختبارات</small></p></article>
-        <article><span>{loading ? '…' : `${avgScoreAll}%`}</span><p>متوسط الدرجات<small>لكل المحاولات</small></p></article>
-      </div>
+      {!isQuizManager && (
+        <div className="mini-metrics">
+          <article><span>{loading ? '…' : quizzes.length}</span><p>إجمالي الاختبارات<small>{publishedCount} منشور</small></p></article>
+          <article><span>{loading ? '…' : quizzes.filter((q) => q.lesson_id).length}</span><p>اختبارات دروس<small>مرتبطة بدرس محدد</small></p></article>
+          <article><span>{loading ? '…' : totalAttempts}</span><p>محاولة مكتملة<small>عبر كل الاختبارات</small></p></article>
+          <article><span>{loading ? '…' : `${avgScoreAll}%`}</span><p>متوسط الدرجات<small>لكل المحاولات</small></p></article>
+        </div>
+      )}
 
       {loading ? <Spinner /> : quizzes.length === 0 ? (
         <EmptyState text="لا توجد اختبارات بعد" action={<button className="primary-admin" onClick={() => setShowQuizModal(true)}>أضف أول اختبار</button>} />
@@ -163,7 +168,7 @@ export default function AdminQuizzes() {
           <header className="card-head"><div><h3>قائمة الاختبارات</h3><p>الاختبارات المنشورة والمسودات</p></div></header>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>الاختبار</th><th>الكورس</th><th>الدرجة الكاملة</th><th>المدة</th><th>المحاولات</th><th>متوسط الدرجة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الاختبار</th><th>الكورس</th><th>الدرجة الكاملة</th><th>المدة</th>{!isQuizManager && (<><th>المحاولات</th><th>متوسط الدرجة</th></>)}<th>الحالة</th><th>الإجراءات</th></tr></thead>
               <tbody>
                 {quizzes.map((quiz) => (
                   <Fragment key={quiz.id}>
@@ -172,8 +177,12 @@ export default function AdminQuizzes() {
                       <td><TagBadge variant="purple">{quiz.courses?.title}</TagBadge></td>
                       <td>{quiz.total_marks} (نجاح {quiz.pass_marks})</td>
                       <td>{quiz.time_limit_minutes ? `${quiz.time_limit_minutes} دقيقة` : 'بدون وقت'}</td>
-                      <td>{attempts[quiz.id]?.count || 0}</td>
-                      <td>{attempts[quiz.id] ? <strong className={`score ${attempts[quiz.id].avg >= 85 ? 'high' : attempts[quiz.id].avg >= 65 ? '' : 'low'}`}>{attempts[quiz.id].avg}%</strong> : '—'}</td>
+                      {!isQuizManager && (
+                        <>
+                          <td>{attempts[quiz.id]?.count || 0}</td>
+                          <td>{attempts[quiz.id] ? <strong className={`score ${attempts[quiz.id].avg >= 85 ? 'high' : attempts[quiz.id].avg >= 65 ? '' : 'low'}`}>{attempts[quiz.id].avg}%</strong> : '—'}</td>
+                        </>
+                      )}
                       <td><StatusBadge variant={quiz.is_published ? 'success' : 'neutral'}>{quiz.is_published ? 'منشور' : 'مسودة'}</StatusBadge></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -188,7 +197,7 @@ export default function AdminQuizzes() {
                     </tr>
                     {expanded === quiz.id && (
                       <tr>
-                        <td colSpan={8} style={{ background: '#fbf9fd' }}>
+                        <td colSpan={isQuizManager ? 6 : 8} style={{ background: '#fbf9fd' }}>
                           <div style={{ padding: '10px 4px', display: 'grid', gap: 10 }}>
                             {!questions[quiz.id] || questions[quiz.id].length === 0 ? (
                               <div className="empty-state">لا توجد أسئلة بعد — اضغط "+ سؤال" لإضافة أسئلة</div>

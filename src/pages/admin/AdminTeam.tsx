@@ -7,8 +7,10 @@ const ROLE_LABEL: Record<string, string> = {
   teacher: 'معلم',
   content_manager: 'مشرف محتوى',
   student_manager: 'مسؤول الطلاب',
+  quiz_manager: 'مشرف الاختبارات',
 }
-const ROLE_BADGE: Record<string, string> = { admin: 'owner', teacher: '', content_manager: 'design', student_manager: 'support' }
+const ROLE_BADGE: Record<string, string> = { admin: 'owner', teacher: '', content_manager: 'design', student_manager: 'support', quiz_manager: 'support' }
+const ROLE_ORDER: Record<string, number> = { admin: 0, teacher: 1, quiz_manager: 2, content_manager: 3, student_manager: 4 }
 const coverClass = ['', 'c2', 'c3', 'c4']
 const avatarClass = ['m1', 'm2', 'm3', 'm4']
 
@@ -20,7 +22,7 @@ export default function AdminTeam() {
 
   useEffect(() => {
     async function load() {
-      const { data: profiles } = await supabase.from('profiles').select('*').in('role', ['admin', 'teacher', 'content_manager', 'student_manager']).order('created_at')
+      const { data: profiles } = await supabase.from('profiles').select('*').in('role', ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']).order('created_at')
       const list = profiles || []
       if (!list.length) { setMembers([]); setLoading(false); return }
 
@@ -42,10 +44,12 @@ export default function AdminTeam() {
         })
       }
 
-      setMembers(list.map((m: any) => ({
+      const mapped = list.map((m: any) => ({
         id: m.id, full_name: m.full_name, email: m.email, role: m.role, avatar_url: m.avatar_url,
         courses: courseCount[m.id] || 0, students: studentsByOwner[m.id] || 0,
-      })))
+      }))
+      mapped.sort((a, b) => (ROLE_ORDER[a.role] ?? 99) - (ROLE_ORDER[b.role] ?? 99))
+      setMembers(mapped)
       setLoading(false)
     }
     load()
@@ -60,7 +64,6 @@ export default function AdminTeam() {
       <div className="team-summary">
         <article><span className="team-summary-icon">👥</span><div><strong>{loading ? '…' : `${members.length} أعضاء`}</strong><p>إجمالي فريق العمل</p></div></article>
         <article><span className="team-summary-icon">●</span><div><strong>{loading ? '…' : `${onlineCount} حساب نشط`}</strong><p>حسابات الإدارة والمحتوى</p></div></article>
-        <article><span className="team-summary-icon">✓</span><div><strong>{loading ? '…' : members.reduce((s, m) => s + m.courses, 0)}</strong><p>كورسات تم إنشاؤها</p></div></article>
       </div>
 
       {loading ? <Spinner /> : members.length === 0 ? (

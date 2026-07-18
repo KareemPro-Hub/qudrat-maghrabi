@@ -49,7 +49,7 @@ export default function Auth() {
         .single()
 
       toast.success('مرحبًا بك !')
-      const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager']
+      const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
       if (profile && adminRoles.includes(profile.role)) {
         navigate('/admin')
       } else if (profile && profile.role === 'parent') {
