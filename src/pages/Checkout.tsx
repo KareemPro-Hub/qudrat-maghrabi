@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ShieldCheck, Lock } from 'lucide-react'
-import SarSymbol from '../components/SarSymbol'
+import CurrencySymbol from '../components/CurrencySymbol'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Course } from '../types'
 import toast from 'react-hot-toast'
-
-declare global {
-  interface Window {
-    Moyasar: any
-  }
-}
 
 export default function Checkout() {
   const { courseId } = useParams<{ courseId: string }>()
@@ -19,8 +13,7 @@ export default function Checkout() {
   const { user, loading: authLoading } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
-  const [enrollmentId, setEnrollmentId] = useState<string | null>(null)
-  const [moyasarReady, setMoyasarReady] = useState(false)
+  const [paymentLoading, setPaymentLoading] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [redeeming, setRedeeming] = useState(false)
 
@@ -33,12 +26,6 @@ export default function Checkout() {
       fetchCourse()
     }
   }, [user, authLoading, courseId])
-
-  useEffect(() => {
-    if (course && enrollmentId && !moyasarReady) {
-      loadMoyasar()
-    }
-  }, [course, enrollmentId])
 
   async function fetchCourse() {
     const { data } = await supabase.from('courses').select('*').eq('id', courseId).single()
@@ -58,19 +45,7 @@ export default function Checkout() {
       return
     }
 
-    // Create or reuse pending enrollment
-    let eid = existing?.id
-    if (!eid) {
-      const { data: newEnrollment } = await supabase
-        .from('enrollments')
-        .insert({ student_id: user!.id, course_id: courseId!, payment_status: 'pending', amount_paid: data.price })
-        .select('id')
-        .single()
-      eid = newEnrollment?.id
-    }
-
     setCourse(data)
-    setEnrollmentId(eid || null)
     setLoading(false)
   }
 
@@ -85,40 +60,58 @@ export default function Checkout() {
     }
     if (data?.success) {
       toast.success('تم تفعيل الكود ✅ جاري تفعيل اشتراكك مجانًا')
-      navigate(`/payment/success?enrollmentId=${data.enrollment_id}&courseId=${courseId}&status=paid`)
+      navigate(`/payment/success?source=coupon&courseId=${courseId}`)
     } else {
       toast.error(data?.message || 'كود الخصم غير صالح')
     }
   }
 
-  function loadMoyasar() {
-    if (!course || !enrollmentId) return
+  async function handleStartPayment() {
+    if (!courseId || paymentLoading) return
+    setPaymentLoading(true)
 
-    // Load Moyasar CSS
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://cdn.moyasar.com/mpf/1.14.1/moyasar.css'
-    document.head.appendChild(link)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        navigate('/login')
+        return
+      }
 
-    // Load Moyasar JS
-    const script = document.createElement('script')
-    script.src = 'https://cdn.moyasar.com/mpf/1.14.1/moyasar.js'
-    script.onload = () => {
-      setMoyasarReady(true)
-      window.Moyasar.init({
-        element: '.moyasar-form',
-        amount: course.price * 100, // halalas
-        currency: 'SAR',
-        description: course.title,
-        publishable_api_key: import.meta.env.VITE_MOYASAR_PUBLISHABLE_KEY || 'pk_test_your_key_here',
-        callback_url: `${window.location.origin}/payment/success?enrollmentId=${enrollmentId}&courseId=${courseId}`,
-        methods: ['creditcard', 'stcpay'],
-        on_failure: () => {
-          window.location.href = `${window.location.origin}/payment/failed?courseId=${courseId}`
-        }
+      const response = await fetch('/api/paymob/create-intention', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ courseId }),
       })
+      const result = await response.json().catch(() => ({}))
+
+      if (response.status === 409 && result.error === 'ALREADY_ENROLLED') {
+        toast('أنت مشترك بالفعل في هذا الكورس')
+        navigate(`/learn/${courseId}`)
+        return
+      }
+      if (!response.ok || !result.checkoutUrl || !result.attemptId) {
+        const message = result.error === 'PAYMENT_NOT_CONFIGURED'
+          ? 'بوابة الدفع قيد التجهيز، حاول بعد قليل'
+          : result.error === 'STUDENT_ACCOUNT_REQUIRED'
+            ? 'الدفع متاح من حساب الطالب'
+            : result.error === 'PAYMENT_CURRENCY_MISMATCH'
+              ? 'عملة الكورس غير متوافقة مع بوابة الدفع، تواصل مع إدارة المنصة'
+            : 'تعذّر بدء عملية الدفع، حاول مرة أخرى'
+        toast.error(message)
+        return
+      }
+
+      sessionStorage.setItem('paymob_attempt_id', result.attemptId)
+      sessionStorage.setItem('paymob_course_id', courseId)
+      window.location.assign(result.checkoutUrl)
+    } catch {
+      toast.error('تعذّر الاتصال ببوابة الدفع، تحقق من الإنترنت وحاول مجددًا')
+    } finally {
+      setPaymentLoading(false)
     }
-    document.body.appendChild(script)
   }
 
   if (loading || authLoading) return (
@@ -146,19 +139,40 @@ export default function Checkout() {
           <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-6">
               <Lock size={18} className="text-brand-pink" />
-              <h2 className="text-lg font-black text-brand-navy">بيانات الدفع</h2>
+              <h2 className="text-lg font-black text-brand-navy">الدفع الآمن</h2>
               <span className="text-xs text-gray-400 mr-auto">مشفّر وآمن ١٠٠٪</span>
             </div>
 
-            {/* Moyasar Form Container */}
-            <div className="moyasar-form"></div>
-
-            {!moyasarReady && (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <div className="w-8 h-8 rounded-full border-4 border-brand-pink border-t-transparent animate-spin mb-3" />
-                <p className="text-sm font-semibold">جاري تحميل نموذج الدفع...</p>
+            <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-6 text-right">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white border border-purple-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={24} className="text-brand-purple" />
+                </div>
+                <div>
+                  <h3 className="font-black text-brand-navy mb-1">أكمل الدفع عبر Paymob</h3>
+                  <p className="text-sm text-gray-500 leading-7">
+                    ستنتقل إلى صفحة Paymob المؤمّنة لاختيار وسيلة الدفع المناسبة وإتمام العملية، ثم تعود للمنصة تلقائيًا.
+                  </p>
+                </div>
               </div>
-            )}
+
+              <button
+                type="button"
+                onClick={handleStartPayment}
+                disabled={paymentLoading}
+                className="qm-primary w-full mt-6 py-4 text-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {paymentLoading ? 'جاري تجهيز الدفع...' : (
+                  <>
+                    ادفع الآن {course.price} <CurrencySymbol currency={course.currency} />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <p className="mt-5 text-xs text-gray-400 leading-6 text-right">
+              لا تحفظ المنصة بيانات بطاقتك. تتم معالجة بيانات الدفع بالكامل داخل بوابة Paymob الآمنة.
+            </p>
           </div>
 
           {/* Order Summary */}
@@ -178,7 +192,7 @@ export default function Checkout() {
 
               <div className="space-y-3 text-sm text-right">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-brand-navy">{course.price} <SarSymbol /></span>
+                  <span className="font-black text-brand-navy">{course.price} <CurrencySymbol currency={course.currency} /></span>
                   <span className="text-gray-500">سعر الكورس</span>
                 </div>
                 <div className="flex justify-between items-center text-green-600">
@@ -186,7 +200,7 @@ export default function Checkout() {
                   <span>ضريبة القيمة المضافة</span>
                 </div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                  <span className="font-black text-xl gradient-text">{course.price} <SarSymbol /></span>
+                  <span className="font-black text-xl gradient-text">{course.price} <CurrencySymbol currency={course.currency} /></span>
                   <span className="font-black text-brand-navy">الإجمالي</span>
                 </div>
               </div>
@@ -214,7 +228,7 @@ export default function Checkout() {
 
               <div className="mt-5 flex items-center gap-2 text-gray-400 text-xs justify-center">
                 <ShieldCheck size={14} />
-                <span>مدفوعات آمنة عبر Moyasar</span>
+                <span>مدفوعات آمنة عبر Paymob</span>
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-100">
@@ -222,8 +236,7 @@ export default function Checkout() {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   {[
                     ['visa.png', 'Visa'], ['mastercard.png', 'Mastercard'], ['apple-pay.png', 'Apple Pay'],
-                    ['alrajhi-bank.png', 'مصرف الراجحي'], ['stc-bank.png', 'STC Bank'], ['urpay.png', 'Urpay'],
-                    ['instapay.png', 'InstaPay'], ['vodafone-cash.png', 'Vodafone Cash'], ['orange-cash.png', 'Orange Cash'], ['paymob.png', 'Paymob'],
+                    ['paymob.png', 'Paymob'],
                   ].map(([file, alt]) => (
                     <span key={file} className="h-9 px-3 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-lg">
                       <img src={`/payments/${file}`} alt={alt} loading="lazy" className="h-4 w-auto object-contain" />

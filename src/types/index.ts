@@ -16,6 +16,7 @@ export interface Course {
   description: string
   thumbnail_url?: string
   price: number
+  currency: string
   is_published: boolean
   created_at: string
   lessons_count?: number

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { BookOpen, Clock, Users, Star, CheckCircle, Lock, Play, ArrowRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import SarSymbol from '../components/SarSymbol'
+import CurrencySymbol from '../components/CurrencySymbol'
 import { Course } from '../types'
 import toast from 'react-hot-toast'
 
@@ -136,7 +136,7 @@ export default function CourseDetail() {
               </div>
               {course.price > 0 ? (
                 <>
-                  <div className="text-3xl font-black gradient-text mb-2">{course.price} <SarSymbol /></div>
+                  <div className="text-3xl font-black gradient-text mb-2">{course.price} <CurrencySymbol currency={course.currency} /></div>
                   <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
 
                   {enrolled ? (
@@ -193,7 +193,7 @@ export default function CourseDetail() {
                     <p className="font-black text-brand-navy">{sc.title}</p>
                     {sc.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{sc.description}</p>}
                     {sc.price > 0 ? (
-                      <div className="text-brand-purple font-black mt-2">{sc.price} <SarSymbol /></div>
+                      <div className="text-brand-purple font-black mt-2">{sc.price} <CurrencySymbol currency={sc.currency} /></div>
                     ) : (
                       <div className="inline-block text-green-600 bg-green-50 text-xs font-black px-3 py-1 rounded-full mt-2">مجاني</div>
                     )}
@@ -298,7 +298,7 @@ export default function CourseDetail() {
             <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>
             <p className="text-gray-500 mb-6">انضم لآلاف الطلاب الذين حققوا نتائج مميزة</p>
             <button onClick={handleBuy} className="btn-primary py-4 px-12 text-lg">
-              اشترك الآن بـ {course.price} <SarSymbol />
+              اشترك الآن بـ {course.price} <CurrencySymbol currency={course.currency} />
             </button>
           </div>
         </div>

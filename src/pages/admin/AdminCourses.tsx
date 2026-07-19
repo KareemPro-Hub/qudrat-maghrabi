@@ -102,6 +102,7 @@ export default function AdminCourses() {
       title: form.title,
       description: form.description,
       price: form.price ? Number(form.price) : 0,
+      currency: 'EGP',
       level: form.level,
       duration_hours: Number(form.duration_hours) || null,
       thumbnail_url: form.thumbnail_url || null,
@@ -206,7 +207,7 @@ export default function AdminCourses() {
                         <p>{isBundle ? 'اضغط لعرض الكورسات الفرعية' : `${s.lessons} درسًا · ${s.students} طالب`}</p>
                         {!isBundle && <i><u style={{ width: `${s.completion}%` }} /></i>}
                         <footer>
-                          <span>{isBundle ? '' : c.price > 0 ? `${c.price} ر.س` : 'مجاني'}</span>
+                          <span>{isBundle ? '' : c.price > 0 ? `${c.price} ج.م` : 'مجاني'}</span>
                           <b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b>
                         </footer>
                         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
@@ -251,7 +252,7 @@ export default function AdminCourses() {
             <label>عنوان الكورس *<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: القدرات الكمي" /></label>
             <label>الوصف<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للكورس..." /></label>
             <div className="form-grid">
-              <label>السعر (اختياري)<input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="اتركه فاضي لو الكورس أب/باقة بدون سعر مباشر" /></label>
+              <label>السعر بالجنيه المصري (اختياري)<input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="اتركه فاضي لو الكورس أب/باقة بدون سعر مباشر" /></label>
               <label>المستوى
                 <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
                   <option value="beginner">مبتدئ</option>

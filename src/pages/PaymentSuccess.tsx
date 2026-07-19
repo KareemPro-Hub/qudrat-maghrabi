@@ -1,88 +1,142 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { CheckCircle, BookOpen } from 'lucide-react'
+import { CheckCircle, BookOpen, Clock3, RefreshCw, XCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+
+type PaymentState = 'checking' | 'paid' | 'pending' | 'failed' | 'error'
+
+function isAttemptId(value: string | null) {
+  return !!value
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams()
-  const enrollmentId = searchParams.get('enrollmentId')
-  const courseId = searchParams.get('courseId')
-  const paymentId = searchParams.get('id')
-  const status = searchParams.get('status')
-  const [done, setDone] = useState(false)
+  const couponSuccess = searchParams.get('source') === 'coupon'
+  const queryAttemptId = [
+    searchParams.get('attemptId'),
+    searchParams.get('special_reference'),
+    searchParams.get('merchant_order_id'),
+  ].find(isAttemptId) || null
+  const [state, setState] = useState<PaymentState>(couponSuccess ? 'paid' : 'checking')
+  const [courseId, setCourseId] = useState<string | null>(
+    searchParams.get('courseId') || sessionStorage.getItem('paymob_course_id'),
+  )
+  const [paymentId, setPaymentId] = useState<string | null>(searchParams.get('id'))
 
-  useEffect(() => {
-    if (enrollmentId && status === 'paid') {
-      activateEnrollment()
-    } else {
-      setDone(true)
+  const checkPayment = useCallback(async (poll = false) => {
+    const attemptId = queryAttemptId || sessionStorage.getItem('paymob_attempt_id')
+    if (!attemptId) {
+      setState('error')
+      return
     }
-  }, [])
 
-  async function activateEnrollment() {
-    // تفعيل الاشتراك
-    await supabase
-      .from('enrollments')
-      .update({ payment_status: 'paid' })
-      .eq('id', enrollmentId!)
+    setState('checking')
+    const maxChecks = poll ? 10 : 1
 
-    // جلب بيانات الطالب والكورس لإرسال الإيميل
-    const { data: enrollment } = await supabase
-      .from('enrollments')
-      .select('*, profiles(full_name, email), courses(title)')
-      .eq('id', enrollmentId!)
-      .single()
+    for (let check = 0; check < maxChecks; check++) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setState('error')
+        return
+      }
 
-    if (enrollment?.profiles?.email) {
       try {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: enrollment.profiles.email,
-            type: 'enrollment',
-            data: {
-              studentName: enrollment.profiles.full_name,
-              courseName: enrollment.courses?.title,
-            }
-          })
+        const response = await fetch(`/api/paymob/status?attemptId=${encodeURIComponent(attemptId)}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
         })
-      } catch (e) {
-        // الإيميل اختياري — مش هيوقف التفعيل لو فشل
-        console.log('Email notification skipped')
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          setState('error')
+          return
+        }
+
+        setCourseId(result.courseId || null)
+        setPaymentId(result.paymentId || null)
+        if (result.status === 'paid') {
+          sessionStorage.removeItem('paymob_attempt_id')
+          sessionStorage.removeItem('paymob_course_id')
+          setState('paid')
+          return
+        }
+        if (result.status === 'failed') {
+          setState('failed')
+          return
+        }
+      } catch {
+        setState('error')
+        return
+      }
+
+      if (check < maxChecks - 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1800))
       }
     }
 
-    setDone(true)
-  }
+    setState('pending')
+  }, [queryAttemptId])
 
-  if (!done) return (
+  useEffect(() => {
+    if (!couponSuccess) void checkPayment(true)
+  }, [checkPayment, couponSuccess])
+
+  if (state === 'checking') return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
+      <div className="text-center px-4">
+        <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin mx-auto mb-4" />
+        <p className="font-black text-brand-navy">جاري تأكيد الدفع بأمان...</p>
+        <p className="text-sm text-gray-400 mt-2">لا تغلق الصفحة، يستغرق ذلك ثوانٍ قليلة</p>
+      </div>
     </div>
   )
+
+  const paid = state === 'paid'
+  const failed = state === 'failed'
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #2D174B 0%, #3D1070 100%)' }}>
       <div className="bg-white rounded-3xl shadow-brand-lg p-10 max-w-md w-full text-center">
 
-        <div className="w-20 h-20 rounded-full gradient-bg flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={40} className="text-white" />
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${paid ? 'gradient-bg' : failed ? 'bg-red-100' : 'bg-amber-100'}`}>
+          {paid
+            ? <CheckCircle size={40} className="text-white" />
+            : failed
+              ? <XCircle size={40} className="text-red-500" />
+              : <Clock3 size={40} className="text-amber-600" />}
         </div>
 
-        <h1 className="text-2xl font-black text-brand-navy mb-2">تم الاشتراك بنجاح ! 🎉</h1>
+        <h1 className="text-2xl font-black text-brand-navy mb-2">
+          {paid ? 'تم الاشتراك بنجاح! 🎉' : failed ? 'لم تكتمل عملية الدفع' : 'الدفع قيد التأكيد'}
+        </h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
-          مبروك ! تم تفعيل الكورس في حسابك. تحقق من بريدك للتأكيد.
+          {paid
+            ? 'مبروك! تم تأكيد الدفع وتفعيل الكورس في حسابك، ويمكنك البدء الآن.'
+            : failed
+              ? 'لم تؤكد بوابة الدفع العملية. يمكنك العودة والمحاولة مجددًا دون أي تفعيل مكرر.'
+              : state === 'pending'
+                ? 'استلمنا عودتك من بوابة الدفع، لكن التأكيد النهائي لم يصل بعد. أعد التحقق بعد لحظات.'
+                : 'تعذّر التحقق من العملية الآن. أعد المحاولة، وإن تم الخصم سيُفعّل الكورس تلقائيًا فور وصول التأكيد.'}
         </p>
 
-        {paymentId && (
+        {paid && paymentId && (
           <p className="text-xs text-gray-400 mb-6">رقم العملية: <span className="font-mono">{paymentId}</span></p>
         )}
 
         <div className="space-y-3">
-          {courseId && (
+          {paid && courseId && (
             <Link to={`/learn/${courseId}`} className="btn-primary w-full py-4 text-lg block text-center">
               ابدأ الدراسة الآن ←
+            </Link>
+          )}
+          {!paid && (
+            <button type="button" onClick={() => void checkPayment(false)} className="qm-primary w-full py-4">
+              <RefreshCw size={17} />
+              تحقق مرة أخرى
+            </button>
+          )}
+          {failed && courseId && (
+            <Link to={`/checkout/${courseId}`} className="btn-outline w-full py-3 block text-center">
+              العودة للدفع
             </Link>
           )}
           <Link to="/dashboard" className="btn-outline w-full py-3 block text-center">

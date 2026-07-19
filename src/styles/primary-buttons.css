@@ -115,14 +115,14 @@
   content: none;
 }
 
-:is(.primary-admin, .primary-study-button, .auth-submit):disabled {
+:is(.qm-primary, .primary-admin, .primary-study-button, .auth-submit):disabled {
   opacity: .58;
   cursor: not-allowed;
   transform: none;
   box-shadow: var(--qm-cta-shadow);
 }
 
-:is(.primary-admin, .primary-study-button, .auth-submit):disabled::after {
+:is(.qm-primary, .primary-admin, .primary-study-button, .auth-submit):disabled::after {
   display: none;
 }
 

@@ -57,7 +57,7 @@ export default function AdminEnrollments() {
       <div className="revenue-hero">
         <div>
           <small>إجمالي الإيرادات (كل الوقت)</small>
-          <strong>{Math.round(totalRevenue).toLocaleString('en')} <b>ر.س</b></strong>
+          <strong>{Math.round(totalRevenue).toLocaleString('en')} <b>ج.م</b></strong>
           <p><span>{growth >= 0 ? '↑' : '↓'} {Math.abs(growth)}%</span> مقارنة بالشهر الماضي</p>
         </div>
         <div className="revenue-spark">
@@ -69,7 +69,7 @@ export default function AdminEnrollments() {
         <div className="package-grid">
           {packages.length === 0 ? <EmptyState text="لا توجد اشتراكات مدفوعة بعد" /> : packages.map((p, i) => (
             <article className={`package-card ${packageClass[i]}`} key={p.title}>
-              <header><span>{p.title}</span><b>{p.price} ر.س</b></header>
+              <header><span>{p.title}</span><b>{p.price} ج.م</b></header>
               <strong>{p.count}</strong>
               <p>اشتراك مدفوع</p>
               <i><u style={{ width: `${Math.round((p.count / totalPaidCount) * 100)}%` }} /></i>
@@ -95,7 +95,7 @@ export default function AdminEnrollments() {
                       <td><span className={`person-avatar ${avatarClass(i)}`}>{initials(e.profiles?.full_name)}</span><b>{e.profiles?.full_name || '—'}</b></td>
                       <td>{e.courses?.title || '—'}</td>
                       <td>{new Date(e.enrolled_at).toLocaleDateString('ar-SA')}</td>
-                      <td><strong>{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} ر.س</strong></td>
+                      <td><strong>{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} ج.م</strong></td>
                       <td>{e.payment_method || '—'}</td>
                       <td><StatusBadge variant={statusVariant[e.payment_status] || 'neutral'}>{statusLabels[e.payment_status] || e.payment_status}</StatusBadge></td>
                     </tr>
