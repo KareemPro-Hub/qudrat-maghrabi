@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { avatarClass } from './admin/lightKit'
 
 const navDefs = [
   { to: '/admin', exact: true, label: 'نظرة عامة', icon: <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></> },
@@ -128,7 +129,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="sidebar-profile">
           <div className="avatar">
-            <img src={profile.avatar_url || '/admin/default-avatar.png'} alt={profile.full_name || ''} />
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={profile.full_name || ''} />
+              : <span className={`avatar-fallback ${avatarClass(profile.full_name?.length || 0)}`}>{initialsOf(profile.full_name)}</span>}
           </div>
           <div>
             <strong>{profile.full_name}</strong>
