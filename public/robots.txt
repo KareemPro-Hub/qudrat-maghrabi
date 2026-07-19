@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /parent
 
-Sitemap: https://qudrat-maghrabi.vercel.app/sitemap.xml
+Sitemap: https://www.qudratmaghrabi.com/sitemap.xml
