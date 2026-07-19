@@ -282,7 +282,7 @@ export async function sendEnrollmentEmail(input: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@kareempro.com>',
+        from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@qudratmaghrabi.com>',
         to: [input.email],
         subject: 'تم تفعيل اشتراكك بنجاح 🎉 — قدرات المغربي',
         html: `

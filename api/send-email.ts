@@ -370,7 +370,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@kareempro.com>',
+        from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@qudratmaghrabi.com>',
         to: [to],
         subject,
         html,
