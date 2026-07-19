@@ -6,6 +6,31 @@ import toast from 'react-hot-toast'
 
 type Mode = 'login' | 'signup'
 
+type LoginError = {
+  code?: string
+  message?: string
+  status?: number
+}
+
+function getLoginErrorMessage(error: LoginError) {
+  switch (error.code) {
+    case 'invalid_credentials':
+      return 'بيانات الدخول غير صحيحة. تأكد من كلمة المرور أو أعد تعيينها'
+    case 'email_not_confirmed':
+      return 'يرجى تأكيد البريد الإلكتروني أولًا'
+    case 'over_request_rate_limit':
+    case 'over_email_send_rate_limit':
+      return 'محاولات كثيرة، انتظر قليلًا ثم حاول مجددًا'
+    case 'user_banned':
+      return 'هذا الحساب موقوف. تواصل مع إدارة المنصة'
+    default:
+      if (error.message?.toLowerCase().includes('fetch')) {
+        return 'تعذّر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وحاول مجددًا'
+      }
+      return 'تعذّر تسجيل الدخول الآن. حاول مجددًا'
+  }
+}
+
 export default function Auth() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -36,29 +61,50 @@ export default function Auth() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (!loginEmail || !loginPassword) return toast.error('يرجى تعبئة جميع الحقول')
+    const email = loginEmail.trim().toLowerCase()
+    if (!email || !loginPassword) return toast.error('يرجى تعبئة جميع الحقول')
+
     setLoginLoading(true)
-    const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (error) {
-      toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة')
-    } else {
-      const { data: profile } = await supabase
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: loginPassword,
+      })
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Login failed', { code: error.code, status: error.status })
+        }
+        toast.error(getLoginErrorMessage(error))
+        return
+      }
+
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user!.id)
         .single()
 
+      if (profileError || !profile) {
+        await supabase.auth.signOut()
+        toast.error('تم التحقق من الحساب لكن تعذّر تحديد صلاحياته. حاول مجددًا')
+        return
+      }
+
       toast.success('مرحبًا بك !')
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
-      if (profile && adminRoles.includes(profile.role)) {
+      if (adminRoles.includes(profile.role)) {
         navigate('/admin')
-      } else if (profile && profile.role === 'parent') {
+      } else if (profile.role === 'parent') {
         navigate('/parent')
       } else {
         navigate('/dashboard')
       }
+    } catch {
+      toast.error('تعذّر الاتصال بخدمة تسجيل الدخول. حاول مجددًا')
+    } finally {
+      setLoginLoading(false)
     }
-    setLoginLoading(false)
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -70,7 +116,7 @@ export default function Auth() {
 
     setSignupLoading(true)
     const { error } = await supabase.auth.signUp({
-      email: form.email,
+      email: form.email.trim().toLowerCase(),
       password: form.password,
       options: {
         data: { full_name: form.full_name, phone: form.phone, role },

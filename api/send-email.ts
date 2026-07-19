@@ -28,6 +28,8 @@ type ApiResponse = {
   json(body: unknown): ApiResponse
 }
 
+const PLATFORM_URL = 'https://www.qudratmaghrabi.com'
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -123,7 +125,7 @@ export function buildTeamInviteEmail(memberName: string, roleLabel: string, invi
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:18px;">
                   <tr>
                     <td align="center" style="padding:10px 20px;">
-                      <img src="https://qudrat-maghrabi.vercel.app/home/brand/logo.png" width="118" alt="قدرات المغربي" style="display:block;width:118px;max-width:118px;height:auto;">
+                      <img src="${PLATFORM_URL}/home/brand/logo.png" width="118" alt="قدرات المغربي" style="display:block;width:118px;max-width:118px;height:auto;">
                     </td>
                   </tr>
                 </table>
@@ -183,7 +185,7 @@ export function buildTeamInviteEmail(memberName: string, roleLabel: string, invi
                   <tr>
                     <td align="center" style="padding-top:22px;color:#9a90a3;font-size:12px;line-height:22px;">
                       وصلت إليك هذه الرسالة لأن مدير المنصة أضافك إلى فريق العمل.<br>
-                      <a href="https://qudrat-maghrabi.vercel.app" style="color:#6e2ca6;text-decoration:none;font-weight:700;">منصة قدرات المغربي</a>
+                      <a href="${PLATFORM_URL}" style="color:#6e2ca6;text-decoration:none;font-weight:700;">منصة قدرات المغربي</a>
                       &nbsp;•&nbsp; طريقك للتفوّق في القدرات
                     </td>
                   </tr>
@@ -231,7 +233,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       <p style="color:#E91E8C;font-size:14px;margin:4px 0 0;">منصتك للتفوق في القدرات</p>
     </div>
   `
-  const footer = `<p style="color:#aaa;font-size:12px;text-align:center;margin-top:20px;">منصة قدرات المغربي | qudrat-maghrabi.vercel.app</p>`
+  const footer = `<p style="color:#aaa;font-size:12px;text-align:center;margin-top:20px;">منصة قدرات المغربي | qudratmaghrabi.com</p>`
 
   if (type === 'team_invite') {
     if (!await isAdminRequest(req)) {
@@ -260,7 +262,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             يمكنك الآن الدخول للمنصة والبدء في الدراسة فوراً.
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="https://qudrat-maghrabi.vercel.app/dashboard"
+            <a href="${PLATFORM_URL}/dashboard"
                style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               ابدأ الدراسة الآن ←
             </a>
@@ -283,7 +285,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             يمكنك المحاولة مجدداً من خلال الرابط أدناه.
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="https://qudrat-maghrabi.vercel.app/courses"
+            <a href="${PLATFORM_URL}/courses"
                style="background:linear-gradient(135deg,#3D1070,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               حاول مجدداً ←
             </a>
@@ -304,7 +306,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             تم إضافة درس جديد <strong>${data?.lessonName || ''}</strong> في كورس <strong>${data?.courseName || ''}</strong>.
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="https://qudrat-maghrabi.vercel.app/dashboard"
+            <a href="${PLATFORM_URL}/dashboard"
                style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               شاهد الدرس الآن ←
             </a>
@@ -325,7 +327,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             يمكنك الآن الانتقال للدرس التالي.
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="https://qudrat-maghrabi.vercel.app/learn/${data?.courseId || ''}"
+            <a href="${PLATFORM_URL}/learn/${data?.courseId || ''}"
                style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               تابع التعلم الآن ←
             </a>
@@ -347,7 +349,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             ${data?.body || ''}
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="https://qudrat-maghrabi.vercel.app/dashboard"
+            <a href="${PLATFORM_URL}/dashboard"
                style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               الذهاب للمنصة ←
             </a>

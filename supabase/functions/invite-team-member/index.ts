@@ -6,7 +6,7 @@ const ALLOWED_ROLES = new Set([
   'student_manager',
   'quiz_manager',
 ])
-const REDIRECT_TO = 'https://qudrat-maghrabi.vercel.app/reset-password'
+const REDIRECT_TO = 'https://www.qudratmaghrabi.com/reset-password'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
