@@ -40,6 +40,7 @@ export default function AdminLessons() {
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [fetchingBunny, setFetchingBunny] = useState(false)
 
   useEffect(() => { if (courseId) fetchData() }, [courseId])
 
@@ -159,6 +160,31 @@ export default function AdminLessons() {
       else { toast.success('تمت الإضافة ✅'); fetchData(); setShowModal(false) }
     }
     setSaving(false)
+  }
+
+  async function fetchFromBunny() {
+    if (!form.video_id) return toast.error('اكتب رقم الفيديو (Bunny Video ID) الأول')
+    setFetchingBunny(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/bunny-video-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ videoId: form.video_id }),
+      })
+      const json = await res.json()
+      if (!res.ok) { toast.error(json.error || 'فشل جلب بيانات الفيديو'); return }
+      setForm((f) => ({
+        ...f,
+        thumbnail_url: json.thumbnail_url || f.thumbnail_url,
+        duration_minutes: json.duration_minutes != null ? String(json.duration_minutes) : f.duration_minutes,
+      }))
+      toast.success('تم جلب الغلاف والمدة من Bunny ✅')
+    } catch {
+      toast.error('فشل الاتصال بـ Bunny')
+    } finally {
+      setFetchingBunny(false)
+    }
   }
 
   async function deleteLesson(id: string) {
@@ -379,11 +405,16 @@ export default function AdminLessons() {
             <label>الوصف<textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للدرس..." /></label>
             <label>
               رقم الفيديو (Bunny Video ID)
-              <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" style={{ flex: 1 }} />
+                <button type="button" className="ghost-button" onClick={fetchFromBunny} disabled={fetchingBunny} style={{ whiteSpace: 'nowrap' }}>
+                  {fetchingBunny ? 'جاري الجلب...' : 'جلب الغلاف والمدة من Bunny'}
+                </button>
+              </div>
             </label>
             <label>
               رابط صورة الغلاف (Thumbnail URL)
-              <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })} placeholder="https://..." dir="ltr" />
+              <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })} placeholder="اضغط «جلب من Bunny» فوق أو الصقه يدويًا" dir="ltr" />
             </label>
             <div className="form-grid">
               <label>المدة (دقيقة)<input type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: e.target.value })} placeholder="15" /></label>
