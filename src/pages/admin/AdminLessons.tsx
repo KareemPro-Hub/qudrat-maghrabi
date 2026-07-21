@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText, Upload, Layers } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
-import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
+import { SectionToolbar, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
@@ -380,51 +380,42 @@ export default function AdminLessons() {
       ) : currentLessons.length === 0 ? (
         <EmptyState text="لا توجد دروس في هذا الباب بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول درس</button>} />
       ) : (
-        <article className="admin-card data-card">
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>الدرس</th>
-                  <th>المدة</th>
-                  <th>الفيديو</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentLessons.map((lesson, i) => (
-                  <tr key={lesson.id}>
-                    <td>
-                      <span className="table-course c3" style={{ fontSize: 11 }}>{i + 1}</span>
-                    </td>
-                    <td><b>{lesson.title}</b></td>
-                    <td>{lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : '—'}</td>
-                    <td>
-                      {lesson.video_id ? (
-                        <TagBadge variant="purple"><Video size={10} style={{ verticalAlign: 'middle', marginLeft: 4 }} />مرفوع</TagBadge>
-                      ) : (
-                        <span className="cell-sub">لم يُرفع بعد</span>
-                      )}
-                    </td>
-                    <td><StatusBadge variant={lesson.is_free_preview ? 'success' : 'neutral'}>{lesson.is_free_preview ? 'مجاني' : 'عادي'}</StatusBadge></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="row-action" onClick={() => toggleFreePreview(lesson)} title={lesson.is_free_preview ? 'إلغاء المجاني' : 'جعله مجانيًا'}>
-                          {lesson.is_free_preview ? <Eye size={12} /> : <EyeOff size={12} />}
-                        </button>
-                        <button className="row-action" onClick={() => openEdit(lesson)}><Edit size={12} /></button>
-                        <button className="row-action" onClick={() => openFiles(lesson)} title="ملفات الدرس"><FileText size={12} /></button>
-                        <button className="row-action" onClick={() => deleteLesson(lesson.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
+        <div className="lesson-manage-grid">
+          {currentLessons.map((lesson, i) => (
+            <article className="lesson-manage-card" key={lesson.id}>
+              <div className="lm-cover">
+                {lesson.thumbnail_url
+                  ? <img src={lesson.thumbnail_url} alt="" />
+                  : <span className="lm-cover-empty"><Video size={26} /></span>}
+                <b className="lm-num">{i + 1}</b>
+                {lesson.is_free_preview && <b className="lm-free">مجاني</b>}
+                <div className="lm-overlay">
+                  <span className={`lm-pill${lesson.video_id ? ' ok' : ' warn'}`}>
+                    <Video size={11} />{lesson.video_id ? 'فيديو مرفوع' : 'لا يوجد فيديو'}
+                  </span>
+                  {lesson.duration_minutes ? <span className="lm-pill">{lesson.duration_minutes} دقيقة</span> : null}
+                </div>
+              </div>
+
+              <div className="lm-body">
+                <h3>{lesson.title}</h3>
+                <div className="lm-actions">
+                  <button className="lm-action" onClick={() => openEdit(lesson)}><Edit size={13} />تعديل</button>
+                  <button className="lm-action" onClick={() => openFiles(lesson)}><FileText size={13} />الملفات</button>
+                  <button
+                    className={`lm-action${lesson.is_free_preview ? ' is-on' : ''}`}
+                    onClick={() => toggleFreePreview(lesson)}
+                    title={lesson.is_free_preview ? 'إلغاء الإتاحة المجانية' : 'إتاحته مجانًا للزوار'}
+                  >
+                    {lesson.is_free_preview ? <Eye size={13} /> : <EyeOff size={13} />}
+                    {lesson.is_free_preview ? 'مجاني' : 'مغلق'}
+                  </button>
+                  <button className="lm-action danger" onClick={() => deleteLesson(lesson.id)} title="حذف الدرس"><Trash2 size={13} /></button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
 
       {showChapterModal && (
