@@ -82,9 +82,9 @@ const testimonials: Testimonial[] = [
   { kind: 'voice', warm: false, name: 'عبد الله', audio: '/reviews/review-abdullah.mp3', time: '0:37' },
   { kind: 'whatsapp', name: 'نواف', image: '/reviews/chat-nawaf.webp' },
   { kind: 'voice', warm: true, name: 'فيصل', audio: '/reviews/review-faisal.mp3', time: '0:17' },
-  { kind: 'whatsapp', name: 'خالد', image: '/reviews/chat-khalid.webp' },
-  { kind: 'voice', warm: false, name: 'ريم', audio: '/reviews/review-reem.mp3', time: '0:17' },
-  { kind: 'voice', warm: true, name: 'فهد', audio: '/reviews/review-fahd.mp3', time: '0:21' },
+  { kind: 'whatsapp', name: 'شهد', image: '/reviews/chat-khalid.webp' },
+  { kind: 'voice', warm: false, name: 'لولو', audio: '/reviews/review-reem.mp3', time: '0:17' },
+  { kind: 'voice', warm: true, name: 'نايف', audio: '/reviews/review-fahd.mp3', time: '0:21' },
 ]
 
 // شريط الإحصائيات — كاونتر تصاعدي عند الظهور + دخول متدرج
