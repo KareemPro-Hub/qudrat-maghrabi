@@ -188,7 +188,12 @@
 .lesson-hub-page .chapters-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
 .lesson-hub-page .chapter-gallery-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid #e1d8ea;border-radius:22px;background:#fff;box-shadow:0 12px 38px rgba(48,23,79,.035);transition:transform .22s ease,box-shadow .22s ease}
 .lesson-hub-page .chapter-gallery-card:hover{transform:translateY(-4px);box-shadow:0 22px 48px rgba(60,27,94,.12)}
-.lesson-hub-page .chapter-gallery-cover{width:100%;aspect-ratio:16/9;display:grid;place-items:center;background:linear-gradient(145deg,#7131d7,#b03fd1);color:#fff;overflow:hidden}
+.lesson-hub-page .chapter-gallery-cover{position:relative;width:100%;aspect-ratio:16/9;display:grid;place-items:center;background:linear-gradient(145deg,#7131d7,#b03fd1);color:#fff;overflow:hidden}
+.lesson-hub-page .lesson-card-index{position:absolute;top:10px;right:10px;min-width:26px;height:26px;display:grid;place-items:center;padding:0 7px;border-radius:9px;background:rgba(18,7,44,.62);color:#fff;font-size:13px;font-weight:900;backdrop-filter:blur(4px)}
+.lesson-hub-page .lesson-card-done{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:9px;background:rgba(31,143,99,.92);color:#fff;font-size:12px;font-weight:800}
+.lesson-hub-page .chapter-gallery-card.is-locked{cursor:not-allowed;opacity:.62}
+.lesson-hub-page .chapter-gallery-card.is-locked:hover{transform:none;box-shadow:0 12px 38px rgba(48,23,79,.035)}
+.lesson-hub-page .chapter-gallery-card.is-locked em{color:#988ea3}
 .lesson-hub-page .chapter-gallery-cover img{width:100%;height:100%;object-fit:contain;background:#000}
 .lesson-hub-page .chapter-gallery-card>div{padding:16px 18px 18px}
 .lesson-hub-page .chapter-gallery-card h3{margin:0 0 6px;font-size:18px;font-weight:900}

@@ -70,7 +70,7 @@ function fmtCount(n: number, one: string, many: string) {
 }
 
 export default function Learn() {
-  const { courseId, chapterId } = useParams<{ courseId: string; chapterId?: string }>()
+  const { courseId, chapterId, lessonId } = useParams<{ courseId: string; chapterId?: string; lessonId?: string }>()
   const { user, profile, loading: authLoading } = useAuth()
   const [sessionToken, setSessionToken] = useState<string>('')
   const [course, setCourse] = useState<any>(null)
@@ -97,7 +97,7 @@ export default function Learn() {
         setSessionToken(session?.access_token || '')
       })
     }
-  }, [user, authLoading, courseId, chapterId])
+  }, [user, authLoading, courseId, chapterId, lessonId])
 
   async function fetchData() {
     let lessonsQuery = supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index')
@@ -129,8 +129,11 @@ export default function Learn() {
     setPassedQuizIds(passed)
 
     if (l && l.length > 0) {
-      const firstIncomplete = l.find((lesson: any) => !progressMap[lesson.id]) || l[0]
-      setCurrentLesson(firstIncomplete)
+      // الدرس المختار من شبكة دروس الباب له الأولوية، وإلا نفتح أول درس غير مكتمل
+      const picked = (lessonId && l.find((lesson: any) => lesson.id === lessonId))
+        || l.find((lesson: any) => !progressMap[lesson.id])
+        || l[0]
+      setCurrentLesson(picked)
     }
     setLoading(false)
   }
@@ -263,7 +266,7 @@ export default function Learn() {
         <div className="hub-user-actions">
           <div className="hub-profile"><span>{initial}</span><p><b>{profile?.full_name}</b><small>طالب</small></p></div>
           {chapterId ? (
-            <Link className="back-dashboard" to={`/learn/${courseId}/chapters`}><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>رجوع للأبواب</Link>
+            <Link className="back-dashboard" to={`/learn/${courseId}/${chapterId}`}><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>رجوع للدروس</Link>
           ) : (
             <Link className="back-dashboard" to="/dashboard"><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>العودة للوحة</Link>
           )}
