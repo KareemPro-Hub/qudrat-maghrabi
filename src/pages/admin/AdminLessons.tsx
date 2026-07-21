@@ -41,6 +41,7 @@ export default function AdminLessons() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [fetchingBunny, setFetchingBunny] = useState(false)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
   useEffect(() => { if (courseId) fetchData() }, [courseId])
 
@@ -88,6 +89,20 @@ export default function AdminLessons() {
     if (json.secure_url) { setChapterForm((f) => ({ ...f, cover_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
     else toast.error('فشل رفع الصورة')
     setUploadingChapterCover(false)
+  }
+
+  async function handleLessonThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingThumbnail(true)
+    const data = new FormData()
+    data.append('file', file)
+    data.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+    const json = await res.json()
+    if (json.secure_url) { setForm((f) => ({ ...f, thumbnail_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
+    else toast.error('فشل رفع الصورة')
+    setUploadingThumbnail(false)
   }
 
   async function handleSaveChapter(e: React.FormEvent) {
@@ -413,8 +428,18 @@ export default function AdminLessons() {
               </div>
             </label>
             <label>
-              رابط صورة الغلاف (Thumbnail URL)
-              <input value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })} placeholder="اضغط «جلب من Bunny» فوق أو الصقه يدويًا" dir="ltr" />
+              غلاف الدرس
+              {form.thumbnail_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: '16 / 9', background: '#000' }}>
+                  <img src={form.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="" />
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, thumbnail_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop">
+                  {uploadingThumbnail ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع غلاف الدرس</span></>)}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLessonThumbnailUpload} disabled={uploadingThumbnail} />
+                </label>
+              )}
             </label>
             <div className="form-grid">
               <label>المدة (دقيقة)<input type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: e.target.value })} placeholder="15" /></label>
