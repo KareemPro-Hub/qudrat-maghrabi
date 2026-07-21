@@ -156,12 +156,13 @@
 .auth-shell[data-mode="signup"] .auth-notch{top:calc(29% + 50px);}
 
 .auth-tabs{position:absolute;z-index:15;top:29%;right:0;width:168px;display:flex;flex-direction:column;gap:10px;}
-.auth-tab{
+.auth-shell .auth-tab{
   position:relative;height:64px;padding:0 22px;border:0;border-radius:42px;background:transparent;
   color:rgba(255,255,255,.96);font-size:15px;font-weight:400;text-shadow:0 2px 12px rgba(28,8,57,.48);
   cursor:pointer;transition:color .3s, font-weight .3s;display:flex;align-items:center;justify-content:center;line-height:1;text-decoration:none;
 }
-.auth-tab.active{border-radius:42px 0 0 42px;color:#32174f;font-weight:700;text-shadow:none;}
+.auth-shell .auth-tab:hover{color:#fff;}
+.auth-shell .auth-tab.active{border-radius:42px 0 0 42px;color:#32174f;font-weight:700;text-shadow:none;}
 
 /* Mobile tab switcher (hidden on desktop) */
 .auth-mobile-tabs{display:none;}
