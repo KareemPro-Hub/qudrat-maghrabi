@@ -49,7 +49,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     const duration_minutes = video.length ? Math.round(video.length / 60) : null
 
-    return res.status(200).json({ duration_minutes })
+    return res.status(200).json({ duration_minutes, status: video.status, encodeProgress: video.encodeProgress, availableResolutions: video.availableResolutions })
   } catch (err: any) {
     console.error('Bunny video info error:', err)
     return res.status(500).json({ error: 'فشل جلب بيانات الفيديو من Bunny' })
