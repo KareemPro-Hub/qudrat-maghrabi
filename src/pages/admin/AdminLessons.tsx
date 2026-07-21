@@ -242,18 +242,31 @@ export default function AdminLessons() {
   const [fileForm, setFileForm] = useState(emptyFileForm)
   const [savingFile, setSavingFile] = useState(false)
 
+  // إعادة تحميل قائمة الملفات فقط (بعد حفظ أو حذف) — من غير ما يفتح أي نافذة
+  async function refreshFiles(lesson: any) {
+    const { data } = await supabase.from('lesson_files').select('*').eq('lesson_id', lesson.id).order('order_index')
+    setLessonFiles(data || [])
+    return data || []
+  }
+
   async function openFiles(lesson: any) {
     setFilesLesson(lesson)
     setFilesLoading(true)
-    const { data } = await supabase.from('lesson_files').select('*').eq('lesson_id', lesson.id).order('order_index')
-    setLessonFiles(data || [])
+    const data = await refreshFiles(lesson)
     setFilesLoading(false)
     // مفيش ملفات لسه؟ يدخل على شاشة رفع الملف على طول من غير ما يعدي على شاشة فاضية
-    if (!data || data.length === 0) {
+    if (data.length === 0) {
       setEditingFile(null)
       setFileForm({ ...emptyFileForm, order_index: 1 })
       setShowFileModal(true)
     }
+  }
+
+  // قفل نافذة رفع/تعديل الملف: لو مفيش ملفات خالص يخرج من شاشة الملفات كلها
+  // بدل ما يرجّع المستخدم لنافذة فاضية مكتوب فيها "لا توجد ملفات لهذا الدرس بعد"
+  function closeFileModal() {
+    setShowFileModal(false)
+    if (lessonFiles.length === 0) setFilesLesson(null)
   }
 
   function openAddFile() {
@@ -289,11 +302,12 @@ export default function AdminLessons() {
     if (editingFile) {
       const { error } = await supabase.from('lesson_files').update(payload).eq('id', editingFile.id)
       if (error) toast.error('حدث خطأ')
-      else { toast.success('تم التعديل ✅'); openFiles(filesLesson); setShowFileModal(false) }
+      // ننتظر تحديث القائمة قبل قفل النافذة، وإلا تظهر شاشة "لا توجد ملفات" للحظة بالبيانات القديمة
+      else { await refreshFiles(filesLesson); toast.success('تم التعديل ✅'); setShowFileModal(false) }
     } else {
       const { error } = await supabase.from('lesson_files').insert(payload)
       if (error) toast.error('حدث خطأ')
-      else { toast.success('تمت الإضافة ✅'); openFiles(filesLesson); setShowFileModal(false) }
+      else { await refreshFiles(filesLesson); toast.success('تمت الإضافة ✅'); setShowFileModal(false) }
     }
     setSavingFile(false)
   }
@@ -302,7 +316,9 @@ export default function AdminLessons() {
     if (!confirm('حذف الملف ؟')) return
     await supabase.from('lesson_files').delete().eq('id', id)
     toast.success('تم الحذف')
-    openFiles(filesLesson)
+    // حذفنا آخر ملف؟ نقفل شاشة الملفات بدل ما نسيب نافذة فاضية مفتوحة
+    const remaining = await refreshFiles(filesLesson)
+    if (remaining.length === 0) setFilesLesson(null)
   }
 
   const showingChapters = !activeChapter
@@ -487,7 +503,7 @@ export default function AdminLessons() {
         </Modal>
       )}
 
-      {filesLesson && !showFileModal && (
+      {filesLesson && !showFileModal && (filesLoading || lessonFiles.length > 0) && (
         <Modal title={`ملفات درس: ${filesLesson.title}`} onClose={() => setFilesLesson(null)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -495,8 +511,6 @@ export default function AdminLessons() {
             </div>
             {filesLoading ? (
               <Spinner />
-            ) : lessonFiles.length === 0 ? (
-              <EmptyState text="لا توجد ملفات لهذا الدرس بعد" />
             ) : (
               <div className="table-wrap">
                 <table>
@@ -533,7 +547,7 @@ export default function AdminLessons() {
       )}
 
       {showFileModal && (
-        <Modal title={editingFile ? 'تعديل الملف' : 'إضافة ملف جديد'} onClose={() => setShowFileModal(false)}>
+        <Modal title={editingFile ? 'تعديل الملف' : 'إضافة ملف جديد'} onClose={closeFileModal}>
           <form onSubmit={handleSaveFile} className="admin-form">
             <label>عنوان الملف *<input value={fileForm.title} onChange={e => setFileForm({ ...fileForm, title: e.target.value })} placeholder="مثال: ورقة تدريبات الباب الأول" /></label>
             <label>
@@ -564,7 +578,7 @@ export default function AdminLessons() {
             <label>الترتيب<input type="number" value={fileForm.order_index} onChange={e => setFileForm({ ...fileForm, order_index: Number(e.target.value) })} min={1} /></label>
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={savingFile || uploadingFile}>{savingFile ? 'جاري الحفظ...' : editingFile ? 'حفظ التعديلات' : 'إضافة الملف'}</button>
-              <button type="button" className="ghost-button" onClick={() => setShowFileModal(false)}>إلغاء</button>
+              <button type="button" className="ghost-button" onClick={closeFileModal}>إلغاء</button>
             </div>
           </form>
         </Modal>
