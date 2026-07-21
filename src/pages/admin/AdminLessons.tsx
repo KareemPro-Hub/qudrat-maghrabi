@@ -42,6 +42,7 @@ export default function AdminLessons() {
   const [saving, setSaving] = useState(false)
   const [fetchingBunny, setFetchingBunny] = useState(false)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
 
   useEffect(() => { if (courseId) fetchData() }, [courseId])
 
@@ -103,6 +104,25 @@ export default function AdminLessons() {
     if (json.secure_url) { setForm((f) => ({ ...f, thumbnail_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
     else toast.error('فشل رفع الصورة')
     setUploadingThumbnail(false)
+  }
+
+  async function handleLessonFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingFile(true)
+    const data = new FormData()
+    data.append('file', file)
+    data.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, { method: 'POST', body: data })
+    const json = await res.json()
+    if (json.secure_url) {
+      const sizeLabel = json.bytes ? `${(json.bytes / (1024 * 1024)).toFixed(1)} MB` : ''
+      setFileForm((f) => ({ ...f, file_url: json.secure_url, size_label: f.size_label || sizeLabel }))
+      toast.success('تم رفع الملف ✅')
+    } else {
+      toast.error(json.error?.message || 'فشل رفع الملف')
+    }
+    setUploadingFile(false)
   }
 
   async function handleSaveChapter(e: React.FormEvent) {
@@ -250,7 +270,7 @@ export default function AdminLessons() {
 
   async function handleSaveFile(e: React.FormEvent) {
     e.preventDefault()
-    if (!fileForm.title || !fileForm.file_url) return toast.error('العنوان ورابط الملف مطلوبان')
+    if (!fileForm.title || !fileForm.file_url) return toast.error('العنوان والملف مطلوبان')
     setSavingFile(true)
     const payload = {
       title: fileForm.title,
@@ -511,8 +531,19 @@ export default function AdminLessons() {
           <form onSubmit={handleSaveFile} className="admin-form">
             <label>عنوان الملف *<input value={fileForm.title} onChange={e => setFileForm({ ...fileForm, title: e.target.value })} placeholder="مثال: ورقة تدريبات الباب الأول" /></label>
             <label>
-              رابط الملف *
-              <input value={fileForm.file_url} onChange={e => setFileForm({ ...fileForm, file_url: e.target.value })} placeholder="https://..." dir="ltr" />
+              الملف *
+              {fileForm.file_url ? (
+                <div className="adm-file-picked">
+                  <span className="adm-file-icon"><FileText size={18} /></span>
+                  <span className="adm-file-name" dir="ltr">{fileForm.file_url.split('/').pop()}</span>
+                  <button type="button" onClick={() => setFileForm(f => ({ ...f, file_url: '' }))}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop" style={{ height: 90 }}>
+                  {uploadingFile ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع الملف من جهازك</span></>)}
+                  <input type="file" className="hidden" onChange={handleLessonFileUpload} disabled={uploadingFile} />
+                </label>
+              )}
             </label>
             <div className="form-grid">
               <label>
@@ -526,7 +557,7 @@ export default function AdminLessons() {
             </div>
             <label>الترتيب<input type="number" value={fileForm.order_index} onChange={e => setFileForm({ ...fileForm, order_index: Number(e.target.value) })} min={1} /></label>
             <div className="form-row">
-              <button type="submit" className="primary-admin" disabled={savingFile}>{savingFile ? 'جاري الحفظ...' : editingFile ? 'حفظ التعديلات' : 'إضافة الملف'}</button>
+              <button type="submit" className="primary-admin" disabled={savingFile || uploadingFile}>{savingFile ? 'جاري الحفظ...' : editingFile ? 'حفظ التعديلات' : 'إضافة الملف'}</button>
               <button type="button" className="ghost-button" onClick={() => setShowFileModal(false)}>إلغاء</button>
             </div>
           </form>
