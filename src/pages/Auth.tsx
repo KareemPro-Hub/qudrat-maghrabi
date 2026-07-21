@@ -60,6 +60,9 @@ export default function Auth() {
   // these controls start working automatically once credentials are enabled.
   const [enabledSocialProviders, setEnabledSocialProviders] = useState<Record<SocialProvider, boolean> | null>(null)
   const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null)
+  const enabledSocialProviderCount = enabledSocialProviders
+    ? Object.values(enabledSocialProviders).filter(Boolean).length
+    : 0
 
   useEffect(() => {
     // reset transient state visually when switching tabs (not required functionally, keeps UX clean)
@@ -295,17 +298,19 @@ export default function Auth() {
                 </button>
               </form>
 
-              <div>
-                <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
-                <div className="auth-socials">
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
-                    <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
-                    Apple
-                  </button>
+              {enabledSocialProviderCount > 0 && enabledSocialProviders && (
+                <div>
+                  <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
+                  <div className="auth-socials" style={{ gridTemplateColumns: `repeat(${enabledSocialProviderCount}, minmax(0, 1fr))` }}>
+                    {enabledSocialProviders.google && <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>}
+                    {enabledSocialProviders.facebook && <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>}
+                    {enabledSocialProviders.apple && <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
+                      <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
+                      Apple
+                    </button>}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -360,17 +365,19 @@ export default function Auth() {
                 </div>
               </form>
 
-              <div>
-                <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
-                <div className="auth-socials">
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
-                    <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
-                    Apple
-                  </button>
+              {enabledSocialProviderCount > 0 && enabledSocialProviders && (
+                <div>
+                  <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
+                  <div className="auth-socials" style={{ gridTemplateColumns: `repeat(${enabledSocialProviderCount}, minmax(0, 1fr))` }}>
+                    {enabledSocialProviders.google && <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>}
+                    {enabledSocialProviders.facebook && <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>}
+                    {enabledSocialProviders.apple && <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
+                      <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
+                      Apple
+                    </button>}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="auth-switch">
                 ليس لديك حساب؟ <Link to="/register">إنشاء حساب</Link>
