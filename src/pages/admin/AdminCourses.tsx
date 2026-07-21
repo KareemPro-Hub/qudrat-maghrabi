@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { Course } from '../../types'
 import toast from 'react-hot-toast'
 import { SectionToolbar, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
+import CurrencySymbol from '../../components/CurrencySymbol'
 
 const CLOUDINARY_CLOUD = 'dzgfvs0gi'
 const CLOUDINARY_PRESET = 'qudrat_thumbnails'
@@ -207,7 +208,7 @@ export default function AdminCourses() {
                         <p>{isBundle ? 'اضغط لعرض الكورسات الفرعية' : `${s.lessons} درسًا · ${s.students} طالب`}</p>
                         {!isBundle && <i><u style={{ width: `${s.completion}%` }} /></i>}
                         <footer>
-                          <span>{isBundle ? '' : c.price > 0 ? `${c.price} ج.م` : 'مجاني'}</span>
+                          <span>{isBundle ? '' : c.price > 0 ? <>{c.price} <CurrencySymbol /></> : 'مجاني'}</span>
                           <b className={`status ${c.is_published ? 'success' : 'neutral'}`}>{c.is_published ? 'منشور' : 'مسودة'}</b>
                         </footer>
                         <div className="card-actions" onClick={(e) => e.stopPropagation()}>

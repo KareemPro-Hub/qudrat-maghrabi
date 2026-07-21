@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { avatarClass, initials } from '../../components/admin/lightKit'
+import CurrencySymbol from '../../components/CurrencySymbol'
 
 type MonthPoint = { label: string; short: string; value: number }
 type CourseProgressRow = { title: string; students: number; pct: number; colorClass: string }
@@ -221,7 +222,7 @@ export default function AdminOverview() {
         </article>
         <article className="metric-card gold">
           <span className="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7" /><path d="M16 6h3v3" /></svg></span>
-          <div><small>إيرادات هذا الشهر</small><strong>{loading ? '…' : fmtMoney(stats.revenueMonth)} <b>ج.م</b></strong><em>{stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي</em></div>
+          <div><small>إيرادات هذا الشهر</small><strong>{loading ? '…' : fmtMoney(stats.revenueMonth)} <b><CurrencySymbol /></b></strong><em>{stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي</em></div>
         </article>
       </div>
 
@@ -231,7 +232,7 @@ export default function AdminOverview() {
             <div><h3>أداء الإيرادات</h3><p>تطوّر الإيرادات خلال آخر 6 أشهر</p></div>
           </header>
           <div className="revenue-overview">
-            <div className="revenue-total"><span>إجمالي الإيرادات (6 أشهر)</span><strong>{fmtMoney(totalRevenue6mo)} <small>ج.م</small></strong></div>
+            <div className="revenue-total"><span>إجمالي الإيرادات (6 أشهر)</span><strong>{fmtMoney(totalRevenue6mo)} <small><CurrencySymbol /></small></strong></div>
             <div className="revenue-growth"><b>{stats.revenueMonthGrowth >= 0 ? '↗' : '↘'} {Math.abs(stats.revenueMonthGrowth)}%</b><span>نمو عن الفترة السابقة</span></div>
             <div className="revenue-status"><i />{stats.revenueMonthGrowth >= 0 ? <span>أداء يتجاوز الشهر السابق</span> : <span>أداء أقل من الشهر السابق</span>}</div>
           </div>
@@ -277,7 +278,7 @@ export default function AdminOverview() {
                         {active && (
                           <g className="bar-tooltip" transform={`translate(${b.cx} ${b.y - 16})`}>
                             <rect x="-40" y="-28" width="80" height="26" rx="8" />
-                            <text y="-9">{fmtMoney(months[i].value)} ج.م</text>
+                            <text y="-9">{fmtMoney(months[i].value)} ر.س</text>
                           </g>
                         )}
                       </g>
