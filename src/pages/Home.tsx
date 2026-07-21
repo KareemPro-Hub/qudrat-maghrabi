@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 import CurrencySymbol from '../components/CurrencySymbol'
 
 const trustStats = [
@@ -212,6 +213,7 @@ function ValueIcon({ path }: { path: string }) {
 
 export default function Home() {
   const location = useLocation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!location.hash) return
@@ -226,7 +228,7 @@ export default function Home() {
     <div className="qm-home">
       {/* ===== Hero ===== */}
       <section className="qm-hero">
-        <nav className="qm-nav qm-wrap">
+        <nav className="qm-nav qm-home-nav qm-wrap">
           <Link className="qm-brand qm-brand-full" to="/">
             <img src="/home/brand/logo.png" alt="قدرات المغربي" />
           </Link>
@@ -237,8 +239,30 @@ export default function Home() {
             <a href="#qm-reviews"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/thumbs-up-trust-v2.png" alt="" /></span>آراء الطلاب</a>
             <Link to="/contact"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/headset.png" alt="" /></span>تواصل معنا</Link>
           </div>
-          <Link className="qm-nav-cta" to="/login">ابدأ الآن</Link>
+          <div className="qm-home-nav-actions">
+            <Link className="qm-nav-cta" to="/login">ابدأ الآن</Link>
+            <button
+              className="qm-home-nav-toggle qm-topbar-icon-btn"
+              type="button"
+              aria-label="القائمة"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((open) => !open)}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </nav>
+
+        {mobileMenuOpen && (
+          <div className="qm-home-mobile-menu qm-wrap">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>الرئيسية</Link>
+            <Link to="/courses" onClick={() => setMobileMenuOpen(false)}>الكورسات</Link>
+            <a href="#qm-prices" onClick={() => setMobileMenuOpen(false)}>الأسعار</a>
+            <a href="#qm-reviews" onClick={() => setMobileMenuOpen(false)}>آراء الطلاب</a>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>تواصل معنا</Link>
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>تسجيل الدخول</Link>
+          </div>
+        )}
 
         <div className="qm-hero-grid qm-wrap">
           <div className="qm-hero-copy">
