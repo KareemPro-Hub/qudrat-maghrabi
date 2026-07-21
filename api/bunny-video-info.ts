@@ -11,8 +11,6 @@ type ApiResponse = {
   json(body: unknown): ApiResponse
 }
 
-const CLOUDINARY_CLOUD = 'dzgfvs0gi'
-const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 const ALLOWED_ROLES = ['admin', 'teacher', 'content_manager']
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -42,7 +40,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!LIBRARY_ID || !API_KEY) return res.status(500).json({ error: 'مفتاح Bunny API مش متضبط في إعدادات السيرفر' })
 
   try {
-    // جلب بيانات الفيديو من Bunny Stream (المدة + رابط الغلاف اللي Bunny مولّده تلقائيًا)
+    // جلب مدة الفيديو من Bunny Stream فقط — الغلاف بقى بيترفع مباشرة من لوحة الإدارة
     const bunnyRes = await fetch(`https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${videoId}`, {
       headers: { AccessKey: API_KEY, accept: 'application/json' },
     })
@@ -51,22 +49,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     const duration_minutes = video.length ? Math.round(video.length / 60) : null
 
-    // تنزيل صورة الغلاف من Bunny ورفعها على Cloudinary عشان يبقى رابط ثابت دائم زي باقي أغلفة المنصة
-    let thumbnail_url: string | null = null
-    if (video.thumbnailUrl) {
-      const imgRes = await fetch(video.thumbnailUrl)
-      if (imgRes.ok) {
-        const buffer = Buffer.from(await imgRes.arrayBuffer())
-        const form = new FormData()
-        form.append('file', new Blob([buffer]), 'thumbnail.jpg')
-        form.append('upload_preset', CLOUDINARY_PRESET)
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: form })
-        const uploadJson: any = await uploadRes.json()
-        if (uploadJson.secure_url) thumbnail_url = uploadJson.secure_url
-      }
-    }
-
-    return res.status(200).json({ duration_minutes, thumbnail_url })
+    return res.status(200).json({ duration_minutes })
   } catch (err: any) {
     console.error('Bunny video info error:', err)
     return res.status(500).json({ error: 'فشل جلب بيانات الفيديو من Bunny' })

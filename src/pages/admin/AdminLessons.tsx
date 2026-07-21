@@ -191,10 +191,9 @@ export default function AdminLessons() {
       if (!res.ok) { toast.error(json.error || 'فشل جلب بيانات الفيديو'); return }
       setForm((f) => ({
         ...f,
-        thumbnail_url: json.thumbnail_url || f.thumbnail_url,
         duration_minutes: json.duration_minutes != null ? String(json.duration_minutes) : f.duration_minutes,
       }))
-      toast.success('تم جلب الغلاف والمدة من Bunny ✅')
+      toast.success('تم جلب المدة من Bunny ✅')
     } catch {
       toast.error('فشل الاتصال بـ Bunny')
     } finally {
@@ -292,7 +291,7 @@ export default function AdminLessons() {
         action={
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="ghost-button" onClick={() => (showingChapters ? navigate('/admin/courses') : setActiveChapter(null))}>
-              <ArrowRight size={14} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> {showingChapters ? 'رجوع للكورسات' : 'رجوع للأبواب'}
+              <ArrowRight size={14} /> {showingChapters ? 'رجوع للكورسات' : 'رجوع للأبواب'}
             </button>
             {showingChapters ? (
               <button className="primary-admin" onClick={openAddChapter}><Plus size={16} /> إضافة باب</button>
@@ -423,7 +422,7 @@ export default function AdminLessons() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" style={{ flex: 1 }} />
                 <button type="button" className="ghost-button" onClick={fetchFromBunny} disabled={fetchingBunny} style={{ whiteSpace: 'nowrap' }}>
-                  {fetchingBunny ? 'جاري الجلب...' : 'جلب الغلاف والمدة من Bunny'}
+                  {fetchingBunny ? 'جاري الجلب...' : 'جلب المدة من Bunny'}
                 </button>
               </div>
             </label>
