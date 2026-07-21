@@ -1,22 +1,41 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText } from 'lucide-react'
+import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText, Upload, Layers } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
-const emptyForm = {
-  title: '', chapter: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
-}
+const CLOUDINARY_CLOUD = 'dzgfvs0gi'
+const CLOUDINARY_PRESET = 'qudrat_thumbnails'
+const coverClass = ['c1', 'c2', 'c3', 'c4']
 
+const emptyChapterForm = { title: '', cover_url: '', order_index: 0 }
+const emptyForm = {
+  title: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
+}
 const emptyFileForm = { title: '', file_url: '', size_label: '', file_type: 'pdf', order_index: 0 }
+
+const UNASSIGNED = { id: null as string | null, title: 'دروس بدون باب' }
 
 export default function AdminLessons() {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const [course, setCourse] = useState<any>(null)
-  const [lessons, setLessons] = useState<any[]>([])
+  const [chapters, setChapters] = useState<any[]>([])
+  const [allLessons, setAllLessons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  // إدارة الأبواب
+  const [showChapterModal, setShowChapterModal] = useState(false)
+  const [editingChapter, setEditingChapter] = useState<any>(null)
+  const [chapterForm, setChapterForm] = useState(emptyChapterForm)
+  const [savingChapter, setSavingChapter] = useState(false)
+  const [uploadingChapterCover, setUploadingChapterCover] = useState(false)
+
+  // الباب المفتوح حاليًا لإدارة دروسه (null = شاشة الأبواب)
+  const [activeChapter, setActiveChapter] = useState<{ id: string | null; title: string } | null>(null)
+
+  // إدارة الدروس داخل الباب
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState(emptyForm)
@@ -25,18 +44,79 @@ export default function AdminLessons() {
   useEffect(() => { if (courseId) fetchData() }, [courseId])
 
   async function fetchData() {
-    const [{ data: c }, { data: l }] = await Promise.all([
+    setLoading(true)
+    const [{ data: c }, { data: ch }, { data: l }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
-      supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index')
+      supabase.from('chapters').select('*').eq('course_id', courseId).order('order_index'),
+      supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index'),
     ])
     setCourse(c)
-    setLessons(l || [])
+    setChapters(ch || [])
+    setAllLessons(l || [])
     setLoading(false)
   }
 
+  const lessonsOf = (chapterId: string | null) => allLessons.filter((l) => (l.chapter_id || null) === chapterId)
+  const unassignedCount = lessonsOf(null).length
+  const currentLessons = activeChapter ? lessonsOf(activeChapter.id) : []
+
+  function fmtCount(n: number) { return `${n} ${n === 1 ? 'درس' : 'دروس'}` }
+
+  // ===== الأبواب: CRUD =====
+  function openAddChapter() {
+    setEditingChapter(null)
+    setChapterForm({ ...emptyChapterForm, order_index: chapters.length + 1 })
+    setShowChapterModal(true)
+  }
+
+  function openEditChapter(ch: any) {
+    setEditingChapter(ch)
+    setChapterForm({ title: ch.title, cover_url: ch.cover_url || '', order_index: ch.order_index || 0 })
+    setShowChapterModal(true)
+  }
+
+  async function handleChapterCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingChapterCover(true)
+    const data = new FormData()
+    data.append('file', file)
+    data.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+    const json = await res.json()
+    if (json.secure_url) { setChapterForm((f) => ({ ...f, cover_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
+    else toast.error('فشل رفع الصورة')
+    setUploadingChapterCover(false)
+  }
+
+  async function handleSaveChapter(e: React.FormEvent) {
+    e.preventDefault()
+    if (!chapterForm.title) return toast.error('عنوان الباب مطلوب')
+    setSavingChapter(true)
+    const payload = { title: chapterForm.title, cover_url: chapterForm.cover_url || null, order_index: Number(chapterForm.order_index), course_id: courseId }
+    if (editingChapter) {
+      const { error } = await supabase.from('chapters').update(payload).eq('id', editingChapter.id)
+      if (error) toast.error('حدث خطأ')
+      else { toast.success('تم التعديل ✅'); fetchData(); setShowChapterModal(false) }
+    } else {
+      const { error } = await supabase.from('chapters').insert(payload)
+      if (error) toast.error('حدث خطأ')
+      else { toast.success('تمت الإضافة ✅'); fetchData(); setShowChapterModal(false) }
+    }
+    setSavingChapter(false)
+  }
+
+  async function deleteChapter(id: string) {
+    if (!confirm('حذف الباب ؟ الدروس اللي جواه هتفضل موجودة وتترحل لـ"دروس بدون باب".')) return
+    await supabase.from('chapters').delete().eq('id', id)
+    toast.success('تم الحذف')
+    fetchData()
+  }
+
+  // ===== الدروس: CRUD =====
   function openAdd() {
     setEditing(null)
-    setForm({ ...emptyForm, order_index: lessons.length + 1 })
+    setForm({ ...emptyForm, order_index: currentLessons.length + 1 })
     setShowModal(true)
   }
 
@@ -44,7 +124,6 @@ export default function AdminLessons() {
     setEditing(lesson)
     setForm({
       title: lesson.title,
-      chapter: lesson.chapter || '',
       description: lesson.description || '',
       video_id: lesson.video_id || '',
       thumbnail_url: lesson.thumbnail_url || '',
@@ -61,7 +140,6 @@ export default function AdminLessons() {
     setSaving(true)
     const payload = {
       title: form.title,
-      chapter: form.chapter || null,
       description: form.description,
       video_id: form.video_id,
       thumbnail_url: form.thumbnail_url || null,
@@ -69,6 +147,7 @@ export default function AdminLessons() {
       order_index: Number(form.order_index),
       is_free_preview: form.is_free_preview,
       course_id: courseId,
+      chapter_id: activeChapter ? activeChapter.id : null,
     }
     if (editing) {
       const { error } = await supabase.from('lessons').update(payload).eq('id', editing.id)
@@ -160,25 +239,64 @@ export default function AdminLessons() {
     openFiles(filesLesson)
   }
 
+  const showingChapters = !activeChapter
+
   return (
     <>
       <SectionToolbar
-        title={course?.title || 'دروس الكورس'}
-        subtitle={`${lessons.length} ${lessons.length === 1 ? 'درس' : 'دروس'} · إدارة دروس الكورس ومحتواه`}
+        title={showingChapters ? (course?.title || 'دروس الكورس') : `${course?.title || ''} — ${activeChapter!.title}`}
+        subtitle={showingChapters
+          ? `${chapters.length} ${chapters.length === 1 ? 'باب' : 'أبواب'} · ${allLessons.length} ${allLessons.length === 1 ? 'درس' : 'دروس'} إجمالي`
+          : `${fmtCount(currentLessons.length)} · إدارة دروس الباب`}
         action={
           <div style={{ display: 'flex', gap: 10 }}>
-            <button className="ghost-button" onClick={() => navigate('/admin/courses')}>
-              <ArrowRight size={14} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> رجوع للكورسات
+            <button className="ghost-button" onClick={() => (showingChapters ? navigate('/admin/courses') : setActiveChapter(null))}>
+              <ArrowRight size={14} style={{ verticalAlign: 'middle', marginLeft: 4 }} /> {showingChapters ? 'رجوع للكورسات' : 'رجوع للأبواب'}
             </button>
-            <button className="primary-admin" onClick={openAdd}><Plus size={16} /> إضافة درس</button>
+            {showingChapters ? (
+              <button className="primary-admin" onClick={openAddChapter}><Plus size={16} /> إضافة باب</button>
+            ) : (
+              <button className="primary-admin" onClick={openAdd}><Plus size={16} /> إضافة درس</button>
+            )}
           </div>
         }
       />
 
       {loading ? (
         <Spinner />
-      ) : lessons.length === 0 ? (
-        <EmptyState text="لا توجد دروس بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول درس</button>} />
+      ) : showingChapters ? (
+        chapters.length === 0 && unassignedCount === 0 ? (
+          <EmptyState text="لا توجد أبواب أو دروس بعد" action={<button className="primary-admin" onClick={openAddChapter}>أضف أول باب</button>} />
+        ) : (
+          <div className="course-card-grid">
+            {chapters.map((ch, i) => (
+              <article className="course-manage-card" key={ch.id} onClick={() => setActiveChapter(ch)}>
+                <span className={`course-cover ${coverClass[i % coverClass.length]}`}>
+                  {ch.cover_url ? <img src={ch.cover_url} alt="" /> : ch.title.charAt(0)}
+                </span>
+                <div>
+                  <h3>{ch.title}</h3>
+                  <p>{fmtCount(lessonsOf(ch.id).length)}</p>
+                  <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                    <button className="row-action" onClick={() => openEditChapter(ch)}><Edit size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تعديل</button>
+                    <button className="row-action" onClick={() => deleteChapter(ch.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                  </div>
+                </div>
+              </article>
+            ))}
+            {unassignedCount > 0 && (
+              <article className="course-manage-card" onClick={() => setActiveChapter(UNASSIGNED)}>
+                <span className="course-cover c3"><Layers size={29} /></span>
+                <div>
+                  <h3>دروس بدون باب</h3>
+                  <p>{fmtCount(unassignedCount)}</p>
+                </div>
+              </article>
+            )}
+          </div>
+        )
+      ) : currentLessons.length === 0 ? (
+        <EmptyState text="لا توجد دروس في هذا الباب بعد" action={<button className="primary-admin" onClick={openAdd}>أضف أول درس</button>} />
       ) : (
         <article className="admin-card data-card">
           <div className="table-wrap">
@@ -194,15 +312,12 @@ export default function AdminLessons() {
                 </tr>
               </thead>
               <tbody>
-                {lessons.map((lesson, i) => (
+                {currentLessons.map((lesson, i) => (
                   <tr key={lesson.id}>
                     <td>
                       <span className="table-course c3" style={{ fontSize: 11 }}>{i + 1}</span>
                     </td>
-                    <td>
-                      <b>{lesson.title}</b>
-                      {lesson.chapter && <span className="cell-sub">{lesson.chapter}</span>}
-                    </td>
+                    <td><b>{lesson.title}</b></td>
                     <td>{lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : '—'}</td>
                     <td>
                       {lesson.video_id ? (
@@ -230,14 +345,37 @@ export default function AdminLessons() {
         </article>
       )}
 
+      {showChapterModal && (
+        <Modal title={editingChapter ? 'تعديل الباب' : 'إضافة باب جديد'} onClose={() => setShowChapterModal(false)}>
+          <form onSubmit={handleSaveChapter} className="admin-form">
+            <label>
+              غلاف الباب
+              {chapterForm.cover_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: '16 / 9', background: '#000' }}>
+                  <img src={chapterForm.cover_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="" />
+                  <button type="button" onClick={() => setChapterForm((f) => ({ ...f, cover_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop">
+                  {uploadingChapterCover ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع غلاف الباب</span></>)}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleChapterCoverUpload} disabled={uploadingChapterCover} />
+                </label>
+              )}
+            </label>
+            <label>عنوان الباب *<input value={chapterForm.title} onChange={(e) => setChapterForm({ ...chapterForm, title: e.target.value })} placeholder="مثال: الباب الأول — النسب والتناسب" /></label>
+            <label>الترتيب<input type="number" value={chapterForm.order_index} onChange={(e) => setChapterForm({ ...chapterForm, order_index: Number(e.target.value) })} min={1} /></label>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={savingChapter || uploadingChapterCover}>{savingChapter ? 'جاري الحفظ...' : editingChapter ? 'حفظ التعديلات' : 'إضافة الباب'}</button>
+              <button type="button" className="ghost-button" onClick={() => setShowChapterModal(false)}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {showModal && (
         <Modal title={editing ? 'تعديل الدرس' : 'إضافة درس جديد'} onClose={() => setShowModal(false)}>
           <form onSubmit={handleSave} className="admin-form">
             <label>عنوان الدرس *<input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: مقدمة في النسب والتناسب" /></label>
-            <label>
-              الباب
-              <input value={form.chapter} onChange={e => setForm({ ...form, chapter: e.target.value })} placeholder="مثال: الباب الأول — النسب والتناسب" />
-            </label>
             <label>الوصف<textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للدرس..." /></label>
             <label>
               رقم الفيديو (Bunny Video ID)

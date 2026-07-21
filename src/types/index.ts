@@ -24,9 +24,19 @@ export interface Course {
   parent_course_id?: string | null
 }
 
+export interface Chapter {
+  id: string
+  course_id: string
+  title: string
+  cover_url?: string | null
+  order_index: number
+  created_at: string
+}
+
 export interface Lesson {
   id: string
   course_id: string
+  chapter_id?: string | null
   title: string
   description?: string
   video_id: string // Bunny Stream video ID

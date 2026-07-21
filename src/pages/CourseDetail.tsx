@@ -16,6 +16,7 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true)
   const [lessons, setLessons] = useState<any[]>([])
   const [subCourses, setSubCourses] = useState<Course[]>([])
+  const [hasChapters, setHasChapters] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -45,6 +46,12 @@ export default function CourseDetail() {
         .eq('is_published', true)
         .order('order_index')
       setSubCourses(subData || [])
+
+      const { count: chaptersCount } = await supabase
+        .from('chapters')
+        .select('id', { count: 'exact', head: true })
+        .eq('course_id', id)
+      setHasChapters(!!chaptersCount)
     }
 
     if (user && data) {
@@ -140,7 +147,7 @@ export default function CourseDetail() {
                   <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
 
                   {enrolled ? (
-                    <Link to={`/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
+                    <Link to={hasChapters ? `/learn/${course.id}/chapters` : `/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
                       ادرس الآن ←
                     </Link>
                   ) : (
@@ -155,7 +162,7 @@ export default function CourseDetail() {
                 <>
                   <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 text-lg font-black px-5 py-2 rounded-full mb-2">مجاني</div>
                   <p className="text-gray-400 text-sm mb-6">كل الدروس متاحة بدون أي رسوم</p>
-                  <Link to={`/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
+                  <Link to={hasChapters ? `/learn/${course.id}/chapters` : `/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
                     ابدأ الآن مجانًا
                   </Link>
                 </>

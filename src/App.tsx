@@ -17,6 +17,7 @@ import ParentLink from './pages/ParentLink'
 import Quiz from './pages/Quiz'
 import QuizResult from './pages/QuizResult'
 import Learn from './pages/Learn'
+import LearnChapters from './pages/LearnChapters'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -98,6 +99,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/learn/:courseId" element={<Learn />} />
+        <Route path="/learn/:courseId/chapters" element={<LearnChapters />} />
+        <Route path="/learn/:courseId/:chapterId" element={<Learn />} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />

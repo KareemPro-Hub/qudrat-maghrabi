@@ -71,10 +71,11 @@ function fmtCount(n: number, one: string, many: string) {
 }
 
 export default function Learn() {
-  const { courseId } = useParams<{ courseId: string }>()
+  const { courseId, chapterId } = useParams<{ courseId: string; chapterId?: string }>()
   const { user, profile, loading: authLoading } = useAuth()
   const [sessionToken, setSessionToken] = useState<string>('')
   const [course, setCourse] = useState<any>(null)
+  const [chapter, setChapter] = useState<any>(null)
   const [lessons, setLessons] = useState<any[]>([])
   const [progress, setProgress] = useState<Record<string, boolean>>({})
   const [currentLesson, setCurrentLesson] = useState<any>(null)
@@ -97,18 +98,22 @@ export default function Learn() {
         setSessionToken(session?.access_token || '')
       })
     }
-  }, [user, authLoading, courseId])
+  }, [user, authLoading, courseId, chapterId])
 
   async function fetchData() {
-    const [{ data: c }, { data: l }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
+    let lessonsQuery = supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index')
+    lessonsQuery = chapterId ? lessonsQuery.eq('chapter_id', chapterId) : lessonsQuery
+    const [{ data: c }, { data: ch }, { data: l }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
-      supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index'),
+      chapterId ? supabase.from('chapters').select('*').eq('id', chapterId).single() : Promise.resolve({ data: null }),
+      lessonsQuery,
       supabase.from('enrollments').select('id').eq('student_id', user!.id).eq('course_id', courseId!).eq('payment_status', 'paid').single(),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
       supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
       supabase.from('quiz_results').select('quiz_id').eq('student_id', user!.id).eq('passed', true),
     ])
     setCourse(c)
+    setChapter(ch)
     setLessons(l || [])
     // الكورس المجاني بالكامل (سعر 0) يعامل معاملة المشترك
     setEnrolled(!!e || Number(c?.price) === 0)
@@ -217,10 +222,15 @@ export default function Learn() {
     </div>
   )
   if (!currentLesson) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
         <BookOpen size={64} className="mx-auto text-gray-200 mb-4" />
-        <p className="text-gray-400 font-bold">لا توجد دروس في هذا الكورس بعد</p>
+        <p className="text-gray-400 font-bold mb-4">{chapterId ? 'لا توجد دروس في هذا الباب بعد' : 'لا توجد دروس في هذا الكورس بعد'}</p>
+        {chapterId && (
+          <Link to={`/learn/${courseId}/chapters`} className="btn-primary inline-block py-3 px-8">
+            رجوع للأبواب
+          </Link>
+        )}
       </div>
     </div>
   )
@@ -248,12 +258,16 @@ export default function Learn() {
         </Link>
 
         <nav className="hub-breadcrumb" aria-label="مسار الدرس">
-          <span>{course?.title}</span><i>/</i><strong>{currentLesson.title}</strong>
+          <span>{course?.title}</span><i>/</i>{chapter && <><span>{chapter.title}</span><i>/</i></>}<strong>{currentLesson.title}</strong>
         </nav>
 
         <div className="hub-user-actions">
           <div className="hub-profile"><span>{initial}</span><p><b>{profile?.full_name}</b><small>طالب</small></p></div>
-          <Link className="back-dashboard" to="/dashboard"><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>العودة للوحة</Link>
+          {chapterId ? (
+            <Link className="back-dashboard" to={`/learn/${courseId}/chapters`}><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>رجوع للأبواب</Link>
+          ) : (
+            <Link className="back-dashboard" to="/dashboard"><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5"></path></svg>العودة للوحة</Link>
+          )}
         </div>
       </header>
 
@@ -411,7 +425,7 @@ export default function Learn() {
 
       <aside className={`course-drawer${drawerOpen ? ' open' : ''}`} aria-label="محتوى الكورس">
         <header>
-          <div><h2>محتوى الكورس</h2><p>{course?.title}</p></div>
+          <div><h2>{chapter ? 'محتوى الباب' : 'محتوى الكورس'}</h2><p>{chapter ? chapter.title : course?.title}</p></div>
           <button type="button" aria-label="إغلاق" onClick={() => setDrawerOpen(false)}>
             <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></svg>
           </button>
