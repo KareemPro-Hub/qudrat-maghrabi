@@ -17,6 +17,7 @@ export default function CourseDetail() {
   const [lessons, setLessons] = useState<any[]>([])
   const [subCourses, setSubCourses] = useState<Course[]>([])
   const [hasChapters, setHasChapters] = useState(false)
+  const [chapters, setChapters] = useState<any[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -34,7 +35,7 @@ export default function CourseDetail() {
     if (data) {
       const { data: lessonsData } = await supabase
         .from('lessons')
-        .select('id, title, chapter, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
+        .select('id, title, chapter, chapter_id, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
         .eq('course_id', id)
         .order('order_index')
       setLessons(lessonsData || [])
@@ -47,11 +48,13 @@ export default function CourseDetail() {
         .order('order_index')
       setSubCourses(subData || [])
 
-      const { count: chaptersCount } = await supabase
+      const { data: chaptersData } = await supabase
         .from('chapters')
-        .select('id', { count: 'exact', head: true })
+        .select('id, title, order_index')
         .eq('course_id', id)
-      setHasChapters(!!chaptersCount)
+        .order('order_index')
+      setChapters(chaptersData || [])
+      setHasChapters(!!chaptersData?.length)
     }
 
     if (user && data) {
@@ -219,23 +222,33 @@ export default function CourseDetail() {
             <h2 className="text-2xl font-black text-brand-navy mb-8 text-right">محتوى الكورس</h2>
             <div className="space-y-4">
               {(() => {
-                // Group lessons by chapter
-                const chapters: { name: string; lessons: any[] }[] = []
-                lessons.forEach(lesson => {
-                  const chapterName = lesson.chapter || ''
-                  const existing = chapters.find(c => c.name === chapterName)
-                  if (existing) existing.lessons.push(lesson)
-                  else chapters.push({ name: chapterName, lessons: [lesson] })
-                })
+                // Group lessons: use the real chapters (أبواب) table when the course has any,
+                // otherwise fall back to the legacy free-text `chapter` field for old courses.
+                const groups: { key: string; name: string; lessons: any[] }[] = []
+                if (hasChapters) {
+                  chapters.forEach(ch => {
+                    const chLessons = lessons.filter(l => l.chapter_id === ch.id)
+                    if (chLessons.length) groups.push({ key: ch.id, name: ch.title, lessons: chLessons })
+                  })
+                  const unassigned = lessons.filter(l => !l.chapter_id)
+                  if (unassigned.length) groups.push({ key: 'unassigned', name: 'دروس بدون باب', lessons: unassigned })
+                } else {
+                  lessons.forEach(lesson => {
+                    const chapterName = lesson.chapter || ''
+                    const existing = groups.find(g => g.name === chapterName)
+                    if (existing) existing.lessons.push(lesson)
+                    else groups.push({ key: chapterName || 'none', name: chapterName, lessons: [lesson] })
+                  })
+                }
                 let globalIndex = 0
-                return chapters.map(chapter => (
-                  <div key={chapter.name} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    {chapter.name && (
+                return groups.map(group => (
+                  <div key={group.key} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    {group.name && (
                       <div className="px-5 py-3 bg-gradient-to-l from-purple-50 to-pink-50 border-b border-purple-100">
-                        <h3 className="font-black text-brand-navy text-sm">{chapter.name}</h3>
+                        <h3 className="font-black text-brand-navy text-sm">{group.name}</h3>
                       </div>
                     )}
-                    {chapter.lessons.map(lesson => {
+                    {group.lessons.map(lesson => {
                       const i = globalIndex++
                       const canWatch = enrolled || lesson.is_free_preview || (course.price === 0 && subCourses.length === 0)
                       const thumbnail = lesson.thumbnail_url || null
