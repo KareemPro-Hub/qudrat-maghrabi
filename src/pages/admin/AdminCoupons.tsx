@@ -161,7 +161,7 @@ export default function AdminCoupons() {
             <label>ملاحظة (اختياري)<input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="مثال: عرض بداية الفصل الدراسي" /></label>
             <div className="form-grid">
               <label>حد الاستخدام (اختياري)<input type="number" min={1} value={form.max_uses} onChange={(e) => setForm({ ...form, max_uses: e.target.value })} placeholder="بدون حد = غير محدود" /></label>
-              <label>تاريخ الانتهاء (اختياري)<input type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} /></label>
+              <label>تاريخ الانتهاء (اختياري)<input type="date" lang="en" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} /></label>
             </div>
             <p className="adm-hint">أي طالب يستخدم هذا الكود عند الدفع هيحصل على الكورس مجانًا بالكامل — بدون أي رسوم.</p>
             <div className="form-row">
