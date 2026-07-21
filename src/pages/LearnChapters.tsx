@@ -81,7 +81,7 @@ export default function LearnChapters() {
           <img src="/admin/logo.png" alt="قدرات المغربي" />
         </Link>
         <nav className="hub-breadcrumb" aria-label="مسار الكورس">
-          <span>{course?.title}</span><i>/</i><strong>اختر البابك</strong>
+          <span>{course?.title}</span><i>/</i><strong>اختر بابك</strong>
         </nav>
         <div className="hub-user-actions">
           <div className="hub-profile"><span>{initial}</span><p><b>{profile?.full_name}</b><small>طالب</small></p></div>
