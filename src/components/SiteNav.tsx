@@ -60,7 +60,7 @@ export default function SiteNav() {
               </button>
             </>
           ) : (
-            <Link className="qm-nav-cta" to="/register">ابدأ الآن</Link>
+            <Link className="qm-nav-cta" to="/login">ابدأ الآن</Link>
           )}
           <button className="qm-topbar-toggle qm-topbar-icon-btn" type="button" onClick={() => setOpen((o) => !o)} aria-label="القائمة" aria-expanded={open}>
             {open ? <X size={20} /> : <Menu size={20} />}
@@ -81,7 +81,7 @@ export default function SiteNav() {
           ) : (
             <>
               <Link to="/login" onClick={() => setOpen(false)}>تسجيل الدخول</Link>
-              <Link to="/register" onClick={() => setOpen(false)}>ابدأ الآن</Link>
+              <Link to="/login" onClick={() => setOpen(false)}>ابدأ الآن</Link>
             </>
           )}
         </div>

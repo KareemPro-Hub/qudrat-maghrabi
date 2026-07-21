@@ -544,7 +544,7 @@ export default function AdminLessons() {
         <Modal title={editing ? 'تعديل الدرس' : 'إضافة درس جديد'} onClose={() => setShowModal(false)}>
           <form onSubmit={handleSave} className="admin-form">
             <label>عنوان الدرس *<input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: مقدمة في النسب والتناسب" /></label>
-            <label>الوصف<textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للدرس..." /></label>
+            <label>ملخص الدرس<textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="اكتب نقاط الملخص، كل نقطة في سطر مستقل..." /></label>
             <label>
               رقم الفيديو (Bunny Video ID)
               <div style={{ display: 'flex', gap: 8 }}>

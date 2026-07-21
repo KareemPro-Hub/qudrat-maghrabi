@@ -237,7 +237,7 @@ export default function Home() {
             <a href="#qm-reviews"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/thumbs-up-trust-v2.png" alt="" /></span>آراء الطلاب</a>
             <Link to="/contact"><span className="qm-nav-icon" aria-hidden="true"><img src="/home/nav-icons/headset.png" alt="" /></span>تواصل معنا</Link>
           </div>
-          <Link className="qm-nav-cta" to="/register">ابدأ الآن</Link>
+          <Link className="qm-nav-cta" to="/login">ابدأ الآن</Link>
         </nav>
 
         <div className="qm-hero-grid qm-wrap">
@@ -338,7 +338,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/register">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
+                  <Link to="/login">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
                 </div>
               </article>
             ))}

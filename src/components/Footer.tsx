@@ -11,7 +11,7 @@ export default function Footer() {
           <h2>جاهز ترفع درجتك في القدرات ؟</h2>
           <p>ابدأ بخطة واضحة وتدريبات ذكية توصلك لهدفك بثقة.</p>
         </div>
-        <Link to="/register">ابدأ رحلتك الآن <b>←</b></Link>
+        <Link to="/login">ابدأ رحلتك الآن <b>←</b></Link>
       </div>
 
       <div className="qm-footer-main qm-wrap">
