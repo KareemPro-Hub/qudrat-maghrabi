@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Mail, Pencil, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { Spinner, EmptyState, initials, Modal } from '../../components/admin/lightKit'
@@ -28,6 +28,8 @@ const MANAGEABLE_ROLES = ADDABLE_ROLES
 type Member = { id: string; full_name: string; email: string; role: string; avatar_url?: string; courses: number; students: number; questions: number }
 type InviteResult = { success?: boolean; existing?: boolean; invite_link?: string | null }
 type ManageResult = { success?: boolean }
+type EmailResult = { success?: boolean; error?: string; code?: string }
+type InviteAttempt = { success: boolean; memberReady: boolean; existing?: boolean; message?: string }
 
 async function functionErrorMessage(error: unknown, fallback: string) {
   try {
@@ -36,6 +38,65 @@ async function functionErrorMessage(error: unknown, fallback: string) {
   } catch {
     return fallback
   }
+}
+
+async function createAndSendInvitation(
+  member: Pick<Member, 'full_name' | 'email' | 'role'>,
+  accessToken: string,
+): Promise<InviteAttempt> {
+  const { data: result, error } = await supabase.functions.invoke<InviteResult>('invite-team-member', {
+    body: {
+      email: member.email.trim(),
+      full_name: member.full_name.trim(),
+      role: member.role,
+    },
+  })
+
+  if (error) {
+    return {
+      success: false,
+      memberReady: false,
+      message: await functionErrorMessage(error, 'حدث خطأ أثناء تجهيز دعوة العضو'),
+    }
+  }
+
+  const link = result?.invite_link?.trim()
+  if (!result?.success || !link) {
+    return {
+      success: false,
+      memberReady: true,
+      message: 'تم تجهيز حساب العضو لكن تعذّر إنشاء رابط الدعوة. حاول إعادة الإرسال.',
+    }
+  }
+
+  const emailResponse = await fetch('/api/send-email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      to: member.email.trim().toLowerCase(),
+      type: 'team_invite',
+      data: {
+        memberName: member.full_name.trim(),
+        inviteLink: link,
+        roleLabel: ROLE_LABEL[member.role] || member.role,
+      },
+    }),
+  })
+  const emailResult = await emailResponse.json().catch(() => null) as EmailResult | null
+
+  if (!emailResponse.ok) {
+    return {
+      success: false,
+      memberReady: true,
+      existing: result.existing,
+      message: emailResult?.error || 'تم إنشاء العضو، لكن تعذّر إرسال الإيميل. يمكنك إعادة إرسال الدعوة من بطاقته.',
+    }
+  }
+
+  return { success: true, memberReady: true, existing: result.existing }
 }
 
 export default function AdminTeam() {
@@ -50,6 +111,7 @@ export default function AdminTeam() {
   const [deletingMember, setDeletingMember] = useState<Member | null>(null)
   const [editRole, setEditRole] = useState('quiz_manager')
   const [managing, setManaging] = useState(false)
+  const [invitingMemberId, setInvitingMemberId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -150,6 +212,29 @@ export default function AdminTeam() {
     }
   }
 
+  async function resendInvitation(member: Member) {
+    setInvitingMemberId(member.id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        toast.error('انتهت الجلسة، سجّل الدخول من جديد')
+        return
+      }
+
+      const attempt = await createAndSendInvitation(member, session.access_token)
+      if (!attempt.success) {
+        toast.error(attempt.message || 'تعذّر إرسال الدعوة')
+        return
+      }
+
+      toast.success('تم إرسال دعوة جديدة إلى بريد العضو ✅')
+    } catch {
+      toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
+    } finally {
+      setInvitingMemberId(null)
+    }
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.full_name.trim() || !form.email.trim()) return toast.error('يرجى تعبئة الاسم والبريد الإلكتروني')
@@ -161,47 +246,26 @@ export default function AdminTeam() {
         return
       }
 
-      const { data: result, error } = await supabase.functions.invoke<InviteResult>('invite-team-member', {
-        body: { email: form.email.trim(), full_name: form.full_name.trim(), role: form.role },
-      })
-      if (error) {
-        toast.error(await functionErrorMessage(error, 'حدث خطأ أثناء الإضافة'))
-      } else {
-        const link = result?.invite_link?.trim()
-        if (!result?.success || !link) {
-          toast.error('تم إنشاء العضو لكن تعذّر تجهيز رسالة الدعوة. حاول مرة أخرى.')
-          return
-        }
+      const attempt = await createAndSendInvitation({
+        full_name: form.full_name,
+        email: form.email,
+        role: form.role,
+      }, session.access_token)
 
-        const emailResponse = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            to: form.email.trim().toLowerCase(),
-            type: 'team_invite',
-            data: {
-              memberName: form.full_name.trim(),
-              inviteLink: link,
-              roleLabel: ROLE_LABEL[form.role] || form.role,
-            },
-          }),
-        })
-
-        if (!emailResponse.ok) {
+      if (!attempt.success) {
+        if (attempt.memberReady) {
+          setShowAdd(false)
           await load()
-          toast.error('تم إنشاء العضو، لكن تعذّر إرسال الإيميل. اضغط إرسال الدعوة مرة أخرى للمحاولة.')
-          return
         }
-
-        toast.success(result.existing
-          ? 'تم تحديث العضو وإرسال دعوة جديدة إلى بريده ✅'
-          : 'تمت إضافة العضو وإرسال الدعوة إلى بريده ✅')
-        setShowAdd(false)
-        await load()
+        toast.error(attempt.message || 'تعذّر إضافة العضو وإرسال الدعوة')
+        return
       }
+
+      toast.success(attempt.existing
+        ? 'تم تحديث العضو وإرسال دعوة جديدة إلى بريده ✅'
+        : 'تمت إضافة العضو وإرسال الدعوة إلى بريده ✅')
+      setShowAdd(false)
+      await load()
     } catch {
       toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
     } finally {
@@ -242,6 +306,15 @@ export default function AdminTeam() {
               </div>
               {isAdmin && m.role !== 'admin' && (
                 <div className="member-actions">
+                  <button
+                    type="button"
+                    className="member-action"
+                    onClick={() => resendInvitation(m)}
+                    disabled={invitingMemberId === m.id}
+                    aria-label={`إعادة إرسال الدعوة إلى ${m.full_name}`}
+                  >
+                    <Mail size={15} /> {invitingMemberId === m.id ? 'جاري...' : 'الدعوة'}
+                  </button>
                   <button
                     type="button"
                     className="member-action"

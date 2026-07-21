@@ -174,3 +174,4 @@
 @media(max-width:540px){.admin-topbar{min-height:82px}.topbar-copy{width:auto;max-width:66%}.topbar-copy h1{font-size:22.5px}.topbar-copy p{font-size:15.5px}.quick-button{min-height:44px}}
 @media(max-width:540px){.adm-modal-overlay{align-items:flex-end;padding:10px}.adm-modal{max-height:92vh;border-radius:20px}.adm-modal-head{padding:16px 17px}.adm-modal-head h3{font-size:18px}.adm-modal-body{padding:17px}.coupon-code-row,.coupon-fields-grid{grid-template-columns:1fr}.coupon-regenerate-button{width:100%}.coupon-form-actions{display:grid;grid-template-columns:1fr 1fr}.coupon-form-actions .primary-admin,.coupon-cancel-button{width:100%;min-width:0}}
 @media(prefers-reduced-motion:reduce){.admin-app *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+.member-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}

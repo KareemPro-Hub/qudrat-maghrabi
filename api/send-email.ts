@@ -28,6 +28,12 @@ type ApiResponse = {
   json(body: unknown): ApiResponse
 }
 
+type ResendError = {
+  message?: string
+  name?: string
+  statusCode?: number
+}
+
 const PLATFORM_URL = 'https://www.qudratmaghrabi.com'
 
 function escapeHtml(value: string) {
@@ -198,6 +204,38 @@ export function buildTeamInviteEmail(memberName: string, roleLabel: string, invi
     </table>
   </body>
 </html>`
+}
+
+function providerErrorResponse(result: ResendError | null) {
+  const message = result?.message?.toLowerCase() || ''
+
+  if (message.includes('domain') && (message.includes('not verified') || message.includes('associated domain'))) {
+    return {
+      status: 503,
+      body: {
+        code: 'EMAIL_DOMAIN_NOT_VERIFIED',
+        error: 'تعذّر إرسال الدعوة لأن نطاق البريد لم يكتمل توثيقه بعد. حاول مرة أخرى بعد قليل.',
+      },
+    }
+  }
+
+  if (message.includes('api key') || message.includes('unauthorized')) {
+    return {
+      status: 503,
+      body: {
+        code: 'EMAIL_PROVIDER_AUTH_FAILED',
+        error: 'خدمة البريد غير متاحة مؤقتًا بسبب مشكلة في إعدادات الإرسال.',
+      },
+    }
+  }
+
+  return {
+    status: 502,
+    body: {
+      code: 'EMAIL_PROVIDER_REJECTED',
+      error: 'تعذّر إرسال الإيميل من مزوّد البريد. حاول مرة أخرى بعد قليل.',
+    },
+  }
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -377,11 +415,24 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }),
     })
 
-    const result = await response.json()
-    if (!response.ok) throw new Error(JSON.stringify(result))
+    const result = await response.json().catch(() => null) as ({ id?: string } & ResendError) | null
+    if (!response.ok) {
+      console.error('Resend rejected email', {
+        status: response.status,
+        name: result?.name,
+        message: result?.message,
+        type,
+      })
+      const failure = providerErrorResponse(result)
+      return res.status(failure.status).json(failure.body)
+    }
+
     return res.status(200).json({ success: true, id: result.id })
-  } catch (error: any) {
-    console.error('Email error:', error)
-    return res.status(500).json({ error: 'Failed to send email' })
+  } catch (error) {
+    console.error('Email request failed', { error, type })
+    return res.status(502).json({
+      code: 'EMAIL_PROVIDER_UNREACHABLE',
+      error: 'تعذّر الاتصال بخدمة البريد. حاول مرة أخرى بعد قليل.',
+    })
   }
 }
