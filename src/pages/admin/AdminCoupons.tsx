@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Copy, Trash2, Eye, EyeOff, Ticket } from 'lucide-react'
+import { Plus, Copy, Trash2, Eye, EyeOff, Ticket, Info, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
@@ -24,6 +24,16 @@ function generateCode() {
 
 const emptyForm = { code: generateCode(), note: '', max_uses: '', expires_at: '' }
 
+function todayDateInputValue() {
+  const now = new Date()
+  const offset = now.getTimezoneOffset()
+  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10)
+}
+
+function expiryAtEndOfDay(date: string) {
+  return new Date(`${date}T23:59:59.999`).toISOString()
+}
+
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +45,8 @@ export default function AdminCoupons() {
 
   async function fetchAll() {
     setLoading(true)
-    const { data } = await supabase.from('discount_codes').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase.from('discount_codes').select('*').order('created_at', { ascending: false })
+    if (error) toast.error('تعذر تحميل أكواد الخصم، حاول مرة أخرى')
     setCoupons(data || [])
     setLoading(false)
   }
@@ -47,42 +58,71 @@ export default function AdminCoupons() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.code.trim()) return toast.error('كود الخصم مطلوب')
-    setSaving(true)
-    const { data: userData } = await supabase.auth.getUser()
-    const { error } = await supabase.from('discount_codes').insert({
-      code: form.code.trim().toUpperCase(),
-      note: form.note || null,
-      max_uses: form.max_uses ? Number(form.max_uses) : null,
-      expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
-      created_by: userData.user?.id || null,
-    })
-    if (error) {
-      toast.error(error.code === '23505' ? 'هذا الكود مستخدم بالفعل، جرّب كود آخر' : 'حدث خطأ أثناء إنشاء الكود')
-    } else {
-      toast.success('تم إنشاء كود الخصم ✅ — التسجيل به مجاني بالكامل')
-      setShowModal(false)
-      fetchAll()
+    const normalizedCode = form.code.trim().toUpperCase()
+    if (!/^[A-Z0-9-]{4,32}$/.test(normalizedCode)) {
+      return toast.error('اكتب كودًا من 4 إلى 32 حرفًا إنجليزيًا أو رقمًا')
     }
-    setSaving(false)
+
+    const maxUses = form.max_uses ? Number(form.max_uses) : null
+    if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) {
+      return toast.error('حد الاستخدام يجب أن يكون رقمًا صحيحًا أكبر من صفر')
+    }
+
+    if (form.expires_at && form.expires_at < todayDateInputValue()) {
+      return toast.error('تاريخ الانتهاء لا يمكن أن يكون في الماضي')
+    }
+
+    setSaving(true)
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError || !userData.user) {
+        toast.error('انتهت جلسة الدخول، سجّل الدخول مرة أخرى')
+        return
+      }
+
+      const { error } = await supabase.from('discount_codes').insert({
+        code: normalizedCode,
+        note: form.note.trim() || null,
+        max_uses: maxUses,
+        expires_at: form.expires_at ? expiryAtEndOfDay(form.expires_at) : null,
+        created_by: userData.user.id,
+      })
+      if (error) {
+        toast.error(error.code === '23505' ? 'هذا الكود مستخدم بالفعل، جرّب كودًا آخر' : 'تعذر إنشاء الكود، حاول مرة أخرى')
+      } else {
+        toast.success('تم إنشاء كود الخصم وأصبح جاهزًا للاستخدام')
+        setShowModal(false)
+        await fetchAll()
+      }
+    } catch {
+      toast.error('تعذر الاتصال بالخادم، حاول مرة أخرى')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function toggleActive(c: Coupon) {
-    await supabase.from('discount_codes').update({ is_active: !c.is_active }).eq('id', c.id)
+    const { error } = await supabase.from('discount_codes').update({ is_active: !c.is_active }).eq('id', c.id)
+    if (error) return toast.error('تعذر تحديث حالة الكود')
     toast.success(c.is_active ? 'تم إيقاف الكود' : 'تم تفعيل الكود ✅')
-    fetchAll()
+    await fetchAll()
   }
 
   async function deleteCoupon(id: string) {
-    if (!confirm('حذف كود الخصم نهائيًا ؟')) return
-    await supabase.from('discount_codes').delete().eq('id', id)
+    if (!confirm('هل تريد حذف كود الخصم نهائيًا؟')) return
+    const { error } = await supabase.from('discount_codes').delete().eq('id', id)
+    if (error) return toast.error('تعذر حذف الكود')
     toast.success('تم الحذف')
-    fetchAll()
+    await fetchAll()
   }
 
-  function copyCode(code: string) {
-    navigator.clipboard.writeText(code)
-    toast.success('تم نسخ الكود 📋')
+  async function copyCode(code: string) {
+    try {
+      await navigator.clipboard.writeText(code)
+      toast.success('تم نسخ الكود')
+    } catch {
+      toast.error('تعذر نسخ الكود')
+    }
   }
 
   const activeCount = coupons.filter((c) => c.is_active).length
@@ -92,8 +132,8 @@ export default function AdminCoupons() {
     <>
       <SectionToolbar
         title="أكواد الخصم"
-        subtitle="ولّد أكواد اشتراك مجانية بالكامل لأي مناسبة — الطالب اللي يستخدمها ما يدفعش أي مبلغ."
-        action={<button className="primary-admin" onClick={openCreate}><Plus size={16} /> توليد كود جديد</button>}
+        subtitle="أنشئ أكوادًا تمنح الطلاب اشتراكًا مجانيًا بالكامل لمناسباتك المختلفة."
+        action={<button className="primary-admin" onClick={openCreate}><Plus size={16} /> إنشاء كود جديد</button>}
       />
 
       <div className="mini-metrics">
@@ -103,7 +143,7 @@ export default function AdminCoupons() {
       </div>
 
       {loading ? <Spinner /> : coupons.length === 0 ? (
-        <EmptyState text="لا توجد أكواد خصم بعد" action={<button className="primary-admin" onClick={openCreate}>ولّد أول كود</button>} />
+        <EmptyState text="لا توجد أكواد خصم بعد" action={<button className="primary-admin" onClick={openCreate}>إنشاء أول كود</button>} />
       ) : (
         <article className="admin-card data-card" data-searchable>
           <header className="card-head"><div><h3>قائمة الأكواد</h3><p>كل الأكواد تمنح اشتراكًا مجانيًا 100% عند الاستخدام</p></div></header>
@@ -125,7 +165,7 @@ export default function AdminCoupons() {
                       </td>
                       <td>{c.note || '—'}</td>
                       <td>{c.used_count}{c.max_uses != null ? ` / ${c.max_uses}` : ' (غير محدود)'}</td>
-                      <td>{c.expires_at ? new Date(c.expires_at).toLocaleDateString('ar-SA') : 'بدون انتهاء'}</td>
+                      <td>{c.expires_at ? new Date(c.expires_at).toLocaleDateString('ar-EG') : 'بدون انتهاء'}</td>
                       <td>
                         {!c.is_active ? <StatusBadge variant="neutral">موقوف</StatusBadge>
                           : expired ? <StatusBadge variant="danger">منتهي</StatusBadge>
@@ -150,28 +190,75 @@ export default function AdminCoupons() {
       )}
 
       {showModal && (
-        <Modal title="توليد كود خصم جديد" onClose={() => setShowModal(false)}>
-          <form className="admin-form" onSubmit={handleSave}>
-            <label>الكود
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} dir="ltr" style={{ fontFamily: 'monospace' }} />
-                <button type="button" className="ghost-button" onClick={() => setForm({ ...form, code: generateCode() })}>توليد آخر</button>
+        <Modal title="إنشاء كود خصم" onClose={() => setShowModal(false)}>
+          <form className="admin-form coupon-form" onSubmit={handleSave} noValidate>
+            <label htmlFor="coupon-code"><span className="field-label">كود الخصم</span>
+              <div className="coupon-code-row">
+                <input
+                  id="coupon-code"
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') })}
+                  dir="ltr"
+                  maxLength={32}
+                  autoComplete="off"
+                  spellCheck={false}
+                  autoFocus
+                  required
+                />
+                <button
+                  type="button"
+                  className="ghost-button coupon-regenerate-button"
+                  onClick={() => setForm({ ...form, code: generateCode() })}
+                >
+                  <RefreshCw size={15} aria-hidden="true" />
+                  كود جديد
+                </button>
               </div>
             </label>
-            <label>ملاحظة (اختياري)<input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="مثال: عرض بداية الفصل الدراسي" /></label>
-            <div className="form-grid">
-              <label>حد الاستخدام (اختياري)<input type="number" min={1} value={form.max_uses} onChange={(e) => setForm({ ...form, max_uses: e.target.value })} placeholder="بدون حد = غير محدود" /></label>
-              <label>تاريخ الانتهاء (اختياري)
+            <label htmlFor="coupon-note"><span className="field-label">ملاحظة <span className="optional-label">اختياري</span></span>
+              <input
+                id="coupon-note"
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+                placeholder="مثال: عرض بداية الفصل الدراسي"
+                maxLength={120}
+              />
+            </label>
+            <div className="form-grid coupon-fields-grid">
+              <label htmlFor="coupon-max-uses"><span className="field-label">حد الاستخدام <span className="optional-label">اختياري</span></span>
+                <input
+                  id="coupon-max-uses"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={form.max_uses}
+                  onChange={(e) => setForm({ ...form, max_uses: e.target.value })}
+                  placeholder="غير محدود"
+                />
+              </label>
+              <label htmlFor="coupon-expiry"><span className="field-label">تاريخ الانتهاء <span className="optional-label">اختياري</span></span>
                 <div className="date-field-wrap">
-                  <input type="date" className={form.expires_at ? '' : 'is-empty'} value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} />
+                  <input
+                    id="coupon-expiry"
+                    type="date"
+                    dir="ltr"
+                    className={form.expires_at ? '' : 'is-empty'}
+                    min={todayDateInputValue()}
+                    value={form.expires_at}
+                    onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                  />
                   {!form.expires_at && <span className="date-field-placeholder">يوم / شهر / سنة</span>}
                 </div>
               </label>
             </div>
-            <p className="adm-hint">أي طالب يستخدم هذا الكود عند الدفع هيحصل على الكورس مجانًا بالكامل — بدون أي رسوم.</p>
-            <div className="form-row">
+            <p className="coupon-benefit-note">
+              <Info size={18} aria-hidden="true" />
+              <span>يمنح هذا الكود الطالب اشتراكًا مجانيًا بالكامل عند إتمام الطلب.</span>
+            </p>
+            <div className="form-row coupon-form-actions">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إنشاء الكود'}</button>
-              <button type="button" className="ghost-button" onClick={() => setShowModal(false)}>إلغاء</button>
+              <button type="button" className="ghost-button coupon-cancel-button" onClick={() => setShowModal(false)} disabled={saving}>إلغاء</button>
             </div>
           </form>
         </Modal>

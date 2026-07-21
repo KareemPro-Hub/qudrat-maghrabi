@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useId } from 'react'
+import { X } from 'lucide-react'
 
 export function SectionToolbar({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
@@ -31,12 +32,37 @@ export function EmptyState({ text, action }: { text: string; action?: ReactNode 
 }
 
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  const titleId = useId()
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [onClose])
+
   return (
-    <div className="adm-modal-overlay" onClick={onClose}>
-      <div className={`adm-modal${wide ? ' wide' : ''}`} onClick={(e) => e.stopPropagation()}>
+    <div className="adm-modal-overlay" onClick={onClose} role="presentation">
+      <div
+        className={`adm-modal${wide ? ' wide' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         <div className="adm-modal-head">
-          <h3>{title}</h3>
-          <button type="button" className="adm-modal-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <h3 id={titleId}>{title}</h3>
+          <button type="button" className="adm-modal-close" onClick={onClose} aria-label="إغلاق النافذة">
+            <X size={18} aria-hidden="true" />
+          </button>
         </div>
         <div className="adm-modal-body">{children}</div>
       </div>

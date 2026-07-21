@@ -24,7 +24,7 @@ const PANEL_META: Record<string, { title: string; subtitle: string; action?: { l
   '/admin/enrollments': { title: 'الاشتراكات والإيرادات', subtitle: 'إدارة الباقات والمدفوعات وتجديدات الطلاب' },
   '/admin/notifications': { title: 'الإشعارات', subtitle: 'إرسال التنبيهات ومراجعة سجل التواصل' },
   '/admin/team': { title: 'فريق العمل', subtitle: 'إدارة أعضاء الفريق والأدوار والصلاحيات' },
-  '/admin/coupons': { title: 'أكواد الخصم', subtitle: 'ولّد أكواد اشتراك مجانية بالكامل لأي مناسبة' },
+  '/admin/coupons': { title: 'أكواد الخصم', subtitle: 'أنشئ وأدر أكواد الاشتراك المجاني بسهولة' },
   '/admin/settings': { title: 'الإعدادات', subtitle: 'تخصيص المنصة وإعدادات الحساب والأمان' },
 }
 
