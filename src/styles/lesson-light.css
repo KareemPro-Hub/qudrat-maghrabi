@@ -58,7 +58,7 @@
 .lesson-hub-page .start-training-button svg{width:28px;height:28px;stroke-width:1.9}
 .lesson-hub-page .hub-video-player{min-width:0;overflow:hidden;align-self:start;border-radius:23px;background:#160b48;box-shadow:0 18px 40px rgba(38,14,86,.16),0 0 27px rgba(198,58,179,.08);direction:ltr}
 .lesson-hub-page .hub-video-stage{position:relative;aspect-ratio:16/8.15;overflow:hidden;background:radial-gradient(circle at 92% 78%,rgba(213,52,166,.3),transparent 28%),radial-gradient(circle at 53% 18%,rgba(102,53,199,.32),transparent 37%),linear-gradient(140deg,#10083a,#281060 55%,#361257);color:#fff}
-.lesson-hub-page .hub-video-stage::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(90deg,transparent,#000 60%,transparent)}
+.lesson-hub-page .hub-video-stage::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:38px 38px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 60%,transparent);mask-image:linear-gradient(90deg,transparent,#000 60%,transparent)}
 .lesson-hub-page .video-grid{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 0 25%,rgba(144,75,223,.08) 26% 26.5%,transparent 27% 42%,rgba(144,75,223,.07) 43% 43.5%,transparent 44%)}
 .lesson-hub-page .video-content{position:absolute;inset:0;z-index:2}
 .lesson-hub-page .formula{position:absolute;margin:0;color:rgba(255,255,255,.8);font-family:Georgia,serif;font-style:italic}

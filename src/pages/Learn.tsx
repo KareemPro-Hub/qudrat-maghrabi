@@ -56,9 +56,8 @@ function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, cou
       {src && !error && (
         <iframe
           src={src}
-          loading="lazy"
           style={{ border: 0, position: 'absolute', top: 0, left: 0, height: '100%', width: '100%' }}
-          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;"
           allowFullScreen
         />
       )}
