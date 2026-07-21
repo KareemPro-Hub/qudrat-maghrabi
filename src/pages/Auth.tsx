@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, User, Phone, GraduationCap, Users } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Phone, GraduationCap, Users, LogIn, UserPlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -52,9 +52,6 @@ export default function Auth() {
   useEffect(() => {
     // reset transient state visually when switching tabs (not required functionally, keeps UX clean)
   }, [mode])
-
-  function showLogin() { navigate('/login') }
-  function showSignup() { navigate('/register') }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -137,8 +134,14 @@ export default function Auth() {
     <div className="auth-shell" dir="rtl" data-mode={mode}>
       <div className="auth-mobile-tabs-wrap">
         <div className="auth-mobile-tabs">
-          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={showLogin}>تسجيل دخول</button>
-          <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={showSignup}>إنشاء حساب</button>
+          <Link to="/login" className={mode === 'login' ? 'active' : ''} aria-current={mode === 'login' ? 'page' : undefined}>
+            <LogIn size={18} />
+            <span>تسجيل الدخول</span>
+          </Link>
+          <Link to="/register" className={mode === 'signup' ? 'active' : ''} aria-current={mode === 'signup' ? 'page' : undefined}>
+            <UserPlus size={18} />
+            <span>إنشاء حساب</span>
+          </Link>
         </div>
       </div>
 
@@ -292,7 +295,7 @@ export default function Auth() {
               </div>
 
               <div className="auth-switch">
-                ليس لديك حساب؟ <a onClick={showSignup}>إنشاء حساب</a>
+                ليس لديك حساب؟ <Link to="/register">إنشاء حساب</Link>
               </div>
             </div>
           </div>
@@ -304,8 +307,8 @@ export default function Auth() {
           <div className="auth-visual-tint" />
           <div className="auth-notch" />
           <div className="auth-tabs">
-            <button type="button" className={`auth-tab${mode === 'login' ? ' active' : ''}`} onClick={showLogin}>تسجيل دخول</button>
-            <button type="button" className={`auth-tab${mode === 'signup' ? ' active' : ''}`} onClick={showSignup}>إنشاء حساب</button>
+            <Link to="/login" className={`auth-tab${mode === 'login' ? ' active' : ''}`} aria-current={mode === 'login' ? 'page' : undefined}>تسجيل دخول</Link>
+            <Link to="/register" className={`auth-tab${mode === 'signup' ? ' active' : ''}`} aria-current={mode === 'signup' ? 'page' : undefined}>إنشاء حساب</Link>
           </div>
         </div>
       </div>

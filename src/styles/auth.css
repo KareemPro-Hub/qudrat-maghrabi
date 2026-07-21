@@ -159,7 +159,7 @@
 .auth-tab{
   position:relative;height:64px;padding:0 22px;border:0;border-radius:42px;background:transparent;
   color:rgba(255,255,255,.96);font-size:15px;font-weight:400;text-shadow:0 2px 12px rgba(28,8,57,.48);
-  cursor:pointer;transition:color .3s, font-weight .3s;display:flex;align-items:center;justify-content:center;line-height:1;
+  cursor:pointer;transition:color .3s, font-weight .3s;display:flex;align-items:center;justify-content:center;line-height:1;text-decoration:none;
 }
 .auth-tab.active{border-radius:42px 0 0 42px;color:#32174f;font-weight:700;text-shadow:none;}
 
@@ -168,21 +168,24 @@
 
 /* Responsive fallback — the split card only makes sense on wide screens */
 @media (max-width:900px){
-  .auth-shell{padding:0;}
+  .auth-shell{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100dvh;overflow-y:auto;padding:0;}
   .auth-card{
     width:100%;max-width:460px;height:auto;min-height:0;border-radius:0;border:none;
     box-shadow:none;
   }
   .auth-visual{display:none;}
   .auth-mobile-tabs{
-    display:flex;gap:8px;padding:20px 20px 0;background:linear-gradient(135deg,#46186f,#a42d74);
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;padding:6px;border:1px solid rgba(255,255,255,.22);border-radius:19px;
+    background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 30px rgba(35,8,64,.22);backdrop-filter:blur(14px);
   }
-  .auth-mobile-tabs button{
-    flex:1;height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.14);
-    color:rgba(255,255,255,.85);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;
+  .auth-mobile-tabs a{
+    min-width:0;height:52px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:14px;
+    background:transparent;color:rgba(255,255,255,.88);font-size:14px;font-weight:800;line-height:1;white-space:nowrap;text-decoration:none;cursor:pointer;transition:transform .2s,background .2s,color .2s,box-shadow .2s;
   }
-  .auth-mobile-tabs button.active{background:#fff;color:#32174f;}
-  .auth-mobile-tabs-wrap{background:linear-gradient(135deg,#46186f,#a42d74);padding-bottom:20px;}
+  .auth-mobile-tabs a:hover{color:#fff;}
+  .auth-mobile-tabs a.active{border-color:rgba(255,255,255,.72);background:linear-gradient(135deg,#ffdc67 0%,#ffc337 58%,#ffb91e 100%);color:#3a2147;box-shadow:0 9px 22px rgba(67,32,12,.2),inset 0 1px 0 rgba(255,255,255,.82);}
+  .auth-mobile-tabs a.active svg{filter:drop-shadow(0 2px 4px rgba(73,37,9,.16));}
+  .auth-mobile-tabs-wrap{width:100%;max-width:460px;padding:14px 16px 13px;background:linear-gradient(135deg,#46186f,#721f74 52%,#a42d74);}
   .auth-forms{position:relative;inset:auto;}
   .auth-panel{
     position:relative;top:auto;bottom:auto;right:auto;width:100%;
@@ -195,6 +198,8 @@
   .auth-fields{grid-template-columns:1fr;}
 }
 @media (max-width:420px){
+  .auth-mobile-tabs-wrap{padding-inline:12px;}
+  .auth-mobile-tabs a{height:50px;gap:6px;font-size:13px;}
   .auth-panel-login .auth-head h1{font-size:28px;}
   .auth-socials{grid-template-columns:1fr;}
 }

@@ -295,15 +295,17 @@ export default function Home() {
       {/* ===== Programs ===== */}
       <section id="qm-courses" className="qm-wrap qm-section">
         <div className="qm-program-heading"><div><h2>كل ما تحتاجه لتحسم الدرجة 🎯</h2></div></div>
-        <div className="qm-program-rail">
-          {programs.map((p) => (
-            <article key={p.title} className={p.featured ? 'qm-featured' : ''}>
-              <span><ProgramIcon type={p.icon} /></span>
-              <h3>{p.title}</h3>
-              <p>{p.desc}</p>
-              {p.featured && <a href="#qm-prices">اعرف المزيد ←</a>}
-            </article>
-          ))}
+        <div className="qm-program-scroll" aria-label="مرّر أفقيًا لاستعراض جميع مميزات المنصة">
+          <div className="qm-program-rail">
+            {programs.map((p) => (
+              <article key={p.title} className={p.featured ? 'qm-featured' : ''}>
+                <span><ProgramIcon type={p.icon} /></span>
+                <h3>{p.title}</h3>
+                <p>{p.desc}</p>
+                {p.featured && <a href="#qm-prices">اعرف المزيد ←</a>}
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
