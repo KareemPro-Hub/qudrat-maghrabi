@@ -5,6 +5,13 @@ import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
 type Mode = 'login' | 'signup'
+type SocialProvider = 'google' | 'facebook' | 'apple'
+
+const SOCIAL_PROVIDER_LABELS: Record<SocialProvider, string> = {
+  google: 'Google',
+  facebook: 'Facebook',
+  apple: 'Apple',
+}
 
 type LoginError = {
   code?: string
@@ -49,9 +56,42 @@ export default function Auth() {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [signupLoading, setSignupLoading] = useState(false)
 
+  // Social auth state — provider availability is read live from Supabase so
+  // these controls start working automatically once credentials are enabled.
+  const [enabledSocialProviders, setEnabledSocialProviders] = useState<Record<SocialProvider, boolean> | null>(null)
+  const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null)
+
   useEffect(() => {
     // reset transient state visually when switching tabs (not required functionally, keeps UX clean)
   }, [mode])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProviderAvailability() {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, {
+          headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY },
+        })
+        if (!response.ok) throw new Error(`Auth settings request failed: ${response.status}`)
+
+        const settings = await response.json()
+        if (!cancelled) {
+          setEnabledSocialProviders({
+            google: settings.external?.google === true,
+            facebook: settings.external?.facebook === true,
+            apple: settings.external?.apple === true,
+          })
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) console.error('Could not load social auth settings', error)
+        if (!cancelled) setEnabledSocialProviders({ google: false, facebook: false, apple: false })
+      }
+    }
+
+    loadProviderAvailability()
+    return () => { cancelled = true }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -128,6 +168,44 @@ export default function Auth() {
       navigate('/login')
     }
     setSignupLoading(false)
+  }
+
+  async function handleSocialLogin(provider: SocialProvider) {
+    const label = SOCIAL_PROVIDER_LABELS[provider]
+
+    if (!enabledSocialProviders) {
+      toast('جارٍ تجهيز خيارات تسجيل الدخول، حاول بعد لحظة', { icon: '⏳' })
+      return
+    }
+
+    if (!enabledSocialProviders[provider]) {
+      toast.error(`تسجيل الدخول عبر ${label} غير متاح حاليًا. استخدم البريد الإلكتروني وكلمة المرور`)
+      return
+    }
+
+    setSocialLoading(provider)
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      })
+
+      if (error) {
+        if (import.meta.env.DEV) console.error('Social login failed', { provider, message: error.message })
+        toast.error(`تعذّر تسجيل الدخول عبر ${label}. حاول مجددًا`)
+        return
+      }
+
+      if (!data.url) {
+        toast.error(`تعذّر بدء تسجيل الدخول عبر ${label}. حاول مجددًا`)
+      }
+    } catch {
+      toast.error('تعذّر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وحاول مجددًا')
+    } finally {
+      setSocialLoading(null)
+    }
   }
 
   return (
@@ -220,9 +298,9 @@ export default function Auth() {
               <div>
                 <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
                 <div className="auth-socials">
-                  <button type="button" className="auth-social"><span className="auth-social-g">G</span>Google</button>
-                  <button type="button" className="auth-social"><span className="auth-social-f">f</span>Facebook</button>
-                  <button type="button" className="auth-social">
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
                     <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
                     Apple
                   </button>
@@ -285,9 +363,9 @@ export default function Auth() {
               <div>
                 <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
                 <div className="auth-socials">
-                  <button type="button" className="auth-social"><span className="auth-social-g">G</span>Google</button>
-                  <button type="button" className="auth-social"><span className="auth-social-f">f</span>Facebook</button>
-                  <button type="button" className="auth-social">
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>
+                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
                     <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
                     Apple
                   </button>

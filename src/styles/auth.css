@@ -121,6 +121,7 @@
 .auth-socials{display:grid;grid-template-columns:repeat(3,1fr);direction:ltr;}
 .auth-social{display:flex;align-items:center;justify-content:center;border:1px solid #d8cfe1;border-radius:13px;background:#fff;color:#2d2136;cursor:pointer;transition:.2s;}
 .auth-social:hover{border-color:#b894e5;background:#faf7ff;}
+.auth-social:disabled{cursor:wait;opacity:.72;}
 .auth-panel-signup .auth-socials{gap:10px;margin-top:10px;}
 .auth-panel-signup .auth-social{height:48px;font-size:13.5px;gap:9px;border-radius:13px;}
 .auth-panel-login .auth-socials{gap:12px;margin-top:14px;}
