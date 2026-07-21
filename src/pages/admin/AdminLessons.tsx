@@ -248,6 +248,12 @@ export default function AdminLessons() {
     const { data } = await supabase.from('lesson_files').select('*').eq('lesson_id', lesson.id).order('order_index')
     setLessonFiles(data || [])
     setFilesLoading(false)
+    // مفيش ملفات لسه؟ يدخل على شاشة رفع الملف على طول من غير ما يعدي على شاشة فاضية
+    if (!data || data.length === 0) {
+      setEditingFile(null)
+      setFileForm({ ...emptyFileForm, order_index: 1 })
+      setShowFileModal(true)
+    }
   }
 
   function openAddFile() {
