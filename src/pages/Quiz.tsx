@@ -39,7 +39,7 @@ export default function Quiz() {
   async function fetchQuiz() {
     const [{ data: q }, { data: qs }] = await Promise.all([
       supabase.from('quizzes').select('*, courses(title)').eq('id', quizId).single(),
-      supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index')
+      supabase.rpc('get_quiz_questions_for_student', { p_quiz_id: quizId })
     ])
     if (!q || !q.is_published) { navigate('/dashboard'); return }
     setQuiz(q)
@@ -55,23 +55,13 @@ export default function Quiz() {
     }
     setSubmitting(true)
 
-    // Calculate score
-    let score = 0
-    questions.forEach(q => {
-      if (answers[q.id] === q.correct_answer) score += q.marks
+    const { data: resultRows, error } = await supabase.rpc('submit_quiz_attempt', {
+      p_quiz_id: quizId,
+      p_answers: answers
     })
-    const passed = score >= quiz.pass_marks
+    const result = Array.isArray(resultRows) ? resultRows[0] : resultRows
 
-    const { data: result, error } = await supabase.from('quiz_results').insert({
-      student_id: user!.id,
-      quiz_id: quizId,
-      score,
-      total_marks: quiz.total_marks,
-      passed,
-      answers
-    }).select('id').single()
-
-    if (error) {
+    if (error || !result?.id) {
       toast.error('حدث خطأ في حفظ النتيجة')
       setSubmitting(false)
       return

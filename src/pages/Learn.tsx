@@ -148,8 +148,8 @@ export default function Learn() {
   useEffect(() => {
     const quiz = currentLesson ? quizByLesson[currentLesson.id] : null
     if (!quiz) { setQuestionCount(0); return }
-    supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('quiz_id', quiz.id)
-      .then(({ count }) => setQuestionCount(count || 0))
+    supabase.rpc('get_quiz_questions_for_student', { p_quiz_id: quiz.id })
+      .then(({ data }) => setQuestionCount(data?.length || 0))
   }, [currentLesson?.id, quizByLesson])
 
   function isBlockedByQuiz(index: number): boolean {

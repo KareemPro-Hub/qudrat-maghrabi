@@ -1,0 +1,4 @@
+// Public client configuration. This file must never contain a service-role key.
+SUPABASE_URL = https:/$()/zjmxvunmokqjzexvqrla.supabase.co
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_eRn_rpYFcu4ZnjTglVa8rw_7Gwrz5ti
+API_BASE_URL = https:/$()/www.qudratmaghrabi.com

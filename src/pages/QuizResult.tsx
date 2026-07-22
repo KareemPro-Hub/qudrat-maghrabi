@@ -71,7 +71,7 @@ export default function QuizResult() {
     const [{ data: r }, { data: q }, { data: qs }] = await Promise.all([
       supabase.from('quiz_results').select('*').eq('id', resultId).single(),
       supabase.from('quizzes').select('*, courses(title, id)').eq('id', quizId).single(),
-      supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index')
+      supabase.rpc('get_quiz_review', { p_quiz_id: quizId, p_result_id: resultId })
     ])
     setResult(r)
     setQuiz(q)
