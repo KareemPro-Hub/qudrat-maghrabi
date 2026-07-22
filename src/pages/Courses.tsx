@@ -17,7 +17,7 @@ export default function Courses() {
         .select('*')
         .eq('is_published', true)
         .order('order_index', { ascending: true }),
-      supabase.rpc('get_course_stats'),
+      supabase.from('course_public_stats').select('course_id, lessons_count, enrolled_count'),
     ]).then(([coursesRes, statsRes]) => {
       const statsByCourse: Record<string, { lessons_count: number; enrolled_count: number }> = {}
       ;(statsRes.data || []).forEach((s: any) => {
