@@ -139,39 +139,41 @@ private struct BottomNavigation: View {
     let onChange: () -> Void
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(AppTab.allCases) { tab in
-                Button {
-                    withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
-                        selectedTab = tab
-                        onChange()
-                    }
-                } label: {
-                    VStack(spacing: 5) {
-                        Image(systemName: tab.symbol)
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(width: 40, height: 27)
+        QMGlassGroup(spacing: 8) {
+            HStack(spacing: 4) {
+                ForEach(AppTab.allCases) { tab in
+                    Button {
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
+                            selectedTab = tab
+                            onChange()
+                        }
+                    } label: {
+                        VStack(spacing: 5) {
+                            Image(systemName: tab.symbol)
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(width: 40, height: 27)
 
-                        Text(tab.title)
-                            .font(QMTheme.font(.bold, size: 10))
-                    }
-                    .foregroundStyle(selectedTab == tab ? QMTheme.violet : QMTheme.muted)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-                    .background {
-                        if selectedTab == tab {
-                            Capsule()
-                                .fill(QMTheme.violet.opacity(0.09))
-                                .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
+                            Text(tab.title)
+                                .font(QMTheme.font(.bold, size: 10))
+                        }
+                        .foregroundStyle(selectedTab == tab ? QMTheme.violet : QMTheme.muted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background {
+                            if selectedTab == tab {
+                                Capsule()
+                                    .fill(QMTheme.violet.opacity(0.09))
+                                    .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(tab.title)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(tab.title)
             }
+            .padding(6)
+            .qmGlass(cornerRadius: 26, tint: .white.opacity(0.13), interactive: true)
         }
-        .padding(6)
-        .qmGlass(cornerRadius: 26, tint: .white.opacity(0.08))
     }
 
     @Namespace private var tabNamespace

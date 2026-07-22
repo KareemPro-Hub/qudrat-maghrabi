@@ -36,12 +36,12 @@ struct LessonCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .trailing, spacing: 17) {
+            VStack(alignment: .leading, spacing: 17) {
                 CircleProgress(progress: progress, symbol: symbol, tint: tint)
                     .frame(width: 73, height: 73)
                     .frame(maxWidth: .infinity, alignment: .center)
 
-                VStack(alignment: .trailing, spacing: 5) {
+                VStack(alignment: .leading, spacing: 5) {
                     Text(title)
                         .font(QMTheme.font(.bold, size: 16))
                         .foregroundStyle(QMTheme.ink)
@@ -51,7 +51,7 @@ struct LessonCard: View {
                         .font(QMTheme.font(.regular, size: 11))
                         .foregroundStyle(QMTheme.muted)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(18)
             .frame(maxWidth: .infinity, minHeight: 178)
@@ -84,7 +84,7 @@ struct CapsuleProgress: View {
 
     var body: some View {
         GeometryReader { proxy in
-            ZStack(alignment: .trailing) {
+            ZStack(alignment: .leading) {
                 Capsule().fill((tint ?? QMTheme.violet).opacity(0.16))
                 Capsule()
                     .fill(
@@ -137,7 +137,7 @@ struct SectionTitle: View {
     let subtitle: String
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 4) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(QMTheme.font(.black, size: 20))
                 .foregroundStyle(QMTheme.ink)
@@ -145,6 +145,6 @@ struct SectionTitle: View {
                 .font(QMTheme.font(.regular, size: 11))
                 .foregroundStyle(QMTheme.muted)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

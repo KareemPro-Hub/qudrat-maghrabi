@@ -9,6 +9,7 @@ struct QudratMaghrabiApp: App {
             RootView()
                 .environment(session)
                 .environment(\.layoutDirection, .rightToLeft)
+                .environment(\.locale, Locale(identifier: "ar_SA"))
                 .tint(QMTheme.violet)
                 .task {
                     if session.phase == .booting {

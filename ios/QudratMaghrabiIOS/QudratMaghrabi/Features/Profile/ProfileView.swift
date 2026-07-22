@@ -27,7 +27,7 @@ struct ProfileView: View {
                     profileHeader
                     stats
 
-                    VStack(alignment: .trailing, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 12) {
                         SectionTitle(title: "حسابك", subtitle: "بياناتك وإعدادات رحلتك")
                         ProfileActionRow(title: "تعديل البيانات", subtitle: "الاسم ورقم الجوال", symbol: "person.crop.circle.badge.pencil") {
                             sheet = .edit
@@ -37,7 +37,7 @@ struct ProfileView: View {
                         }
                     }
 
-                    VStack(alignment: .trailing, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 12) {
                         SectionTitle(title: "المساعدة والخصوصية", subtitle: "كل شيء واضح وتحت سيطرتك")
                         ProfileLinkRow(title: "الدعم والمساعدة", subtitle: "تواصل معنا مباشرة", symbol: "headphones", url: URL(string: "mailto:support@qudratmaghrabi.com")!)
                         ProfileLinkRow(title: "سياسة الخصوصية", subtitle: "كيف نحمي بياناتك", symbol: "hand.raised.fill", url: URL(string: "https://www.qudratmaghrabi.com/privacy")!)
@@ -117,10 +117,12 @@ struct ProfileView: View {
     }
 
     private var stats: some View {
-        HStack(spacing: 10) {
-            profileStat(value: "\(session.dashboard.courses.count)", label: "كورس", symbol: "books.vertical.fill")
-            profileStat(value: "\(completion)%", label: "الإنجاز", symbol: "target")
-            profileStat(value: "\(latestScore)%", label: "آخر نتيجة", symbol: "chart.line.uptrend.xyaxis")
+        QMGlassGroup(spacing: 10) {
+            HStack(spacing: 10) {
+                profileStat(value: "\(session.dashboard.courses.count)", label: "كورس", symbol: "books.vertical.fill")
+                profileStat(value: "\(completion)%", label: "الإنجاز", symbol: "target")
+                profileStat(value: "\(latestScore)%", label: "آخر نتيجة", symbol: "chart.line.uptrend.xyaxis")
+            }
         }
     }
 
@@ -180,7 +182,7 @@ private struct ProfileRowLabel: View {
         HStack(spacing: 13) {
             Image(systemName: "chevron.left").font(.system(size: 11, weight: .bold)).foregroundStyle(QMTheme.muted)
             Spacer()
-            VStack(alignment: .trailing, spacing: 3) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(QMTheme.font(.bold, size: 14)).foregroundStyle(QMTheme.ink)
                 Text(subtitle).font(QMTheme.font(.regular, size: 9)).foregroundStyle(QMTheme.muted)
             }
@@ -208,10 +210,10 @@ private struct ProfileEditView: View {
             ZStack {
                 AmbientBackdrop()
                 ScrollView {
-                    VStack(alignment: .trailing, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 18) {
                         Text("حدّث بياناتك لتظل تجربتك دقيقة وسلسة.")
                             .font(QMTheme.font(.regular, size: 13)).foregroundStyle(QMTheme.muted)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         editField(title: "الاسم الكامل", text: $fullName, symbol: "person.fill")
                         editField(title: "رقم الجوال", text: $phone, symbol: "phone.fill")
                             .keyboardType(.phonePad)
@@ -238,10 +240,10 @@ private struct ProfileEditView: View {
     }
 
     private func editField(title: String, text: Binding<String>, symbol: String) -> some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title).font(QMTheme.font(.bold, size: 12)).foregroundStyle(QMTheme.ink)
             HStack {
-                TextField(title, text: text).multilineTextAlignment(.trailing)
+                TextField(title, text: text).multilineTextAlignment(.leading)
                 Image(systemName: symbol).foregroundStyle(QMTheme.violet)
             }
             .padding(.horizontal, 16).frame(height: 54).qmGlass(cornerRadius: 18)

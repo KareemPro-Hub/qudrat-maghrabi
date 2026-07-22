@@ -22,6 +22,10 @@ struct HomeView: View {
     private var unreadCount: Int {
         session.dashboard.notifications.filter { $0.isRead == false }.count
     }
+    private var availableCourses: [Course] {
+        let enrolledCourseIDs = Set(session.dashboard.courses.map(\.course.id))
+        return session.catalogCourses.filter { !enrolledCourseIDs.contains($0.id) }
+    }
 
     var body: some View {
         ZStack {
@@ -42,6 +46,10 @@ struct HomeView: View {
                         latestResult
                     } else {
                         EmptyEnrollmentCard()
+                    }
+
+                    if !availableCourses.isEmpty {
+                        PublishedCourseCatalog(courses: availableCourses)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -88,7 +96,7 @@ struct HomeView: View {
     }
 
     private var greeting: some View {
-        VStack(alignment: .trailing, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("أهلًا \(session.profile?.firstName ?? "بك") 👋")
                 .font(QMTheme.font(.regular, size: 16))
                 .foregroundStyle(QMTheme.muted)
@@ -102,50 +110,54 @@ struct HomeView: View {
                     .foregroundStyle(QMTheme.brandGradient)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var progressSummary: some View {
-        HStack(spacing: 11) {
-            DashboardStat(value: "\(overallCompletion)%", label: "الإنجاز", symbol: "target", tint: QMTheme.violet)
-            DashboardStat(value: "\(averageScore)%", label: "متوسط الاختبارات", symbol: "chart.line.uptrend.xyaxis", tint: QMTheme.magenta)
-            DashboardStat(
-                value: "\(session.dashboard.courses.reduce(0) { $0 + $1.completedCount })",
-                label: "درس مكتمل",
-                symbol: "checkmark.seal.fill",
-                tint: QMTheme.success
-            )
+        QMGlassGroup(spacing: 11) {
+            HStack(spacing: 11) {
+                DashboardStat(value: "\(overallCompletion)%", label: "الإنجاز", symbol: "target", tint: QMTheme.violet)
+                DashboardStat(value: "\(averageScore)%", label: "متوسط الاختبارات", symbol: "chart.line.uptrend.xyaxis", tint: QMTheme.magenta)
+                DashboardStat(
+                    value: "\(session.dashboard.courses.reduce(0) { $0 + $1.completedCount })",
+                    label: "درس مكتمل",
+                    symbol: "checkmark.seal.fill",
+                    tint: QMTheme.success
+                )
+            }
         }
     }
 
     private var quickActions: some View {
-        VStack(alignment: .trailing, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             SectionTitle(title: "ابدأ بسرعة", subtitle: "كل ما تحتاجه في ضغطة واحدة")
 
-            HStack(spacing: 12) {
-                if let quiz = session.dashboard.quizzes.first {
-                    QuickHomeButton(
-                        title: "اختبار سريع",
-                        subtitle: "\(quiz.totalMarks) درجات",
-                        symbol: "timer",
-                        tint: QMTheme.violet
-                    ) { onOpenQuiz(quiz.id) }
-                }
+            QMGlassGroup(spacing: 12) {
+                HStack(spacing: 12) {
+                    if let quiz = session.dashboard.quizzes.first {
+                        QuickHomeButton(
+                            title: "اختبار سريع",
+                            subtitle: "\(quiz.totalMarks) درجات",
+                            symbol: "timer",
+                            tint: QMTheme.violet
+                        ) { onOpenQuiz(quiz.id) }
+                    }
 
-                if let course = primary {
-                    QuickHomeButton(
-                        title: "أكمل الدرس",
-                        subtitle: course.currentLesson?.title ?? "محتوى الكورس",
-                        symbol: "play.fill",
-                        tint: QMTheme.magenta
-                    ) { onOpenCourse(course.course.id) }
+                    if let course = primary {
+                        QuickHomeButton(
+                            title: "أكمل الدرس",
+                            subtitle: course.currentLesson?.title ?? "محتوى الكورس",
+                            symbol: "play.fill",
+                            tint: QMTheme.magenta
+                        ) { onOpenCourse(course.course.id) }
+                    }
                 }
             }
         }
     }
 
     private var enrolledCourses: some View {
-        VStack(alignment: .trailing, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             SectionTitle(title: "كورساتك", subtitle: "رحلتك مرتبة وواضحة")
             ForEach(session.dashboard.courses) { item in
                 Button { onOpenCourse(item.course.id) } label: {
@@ -160,14 +172,14 @@ struct HomeView: View {
     private var latestResult: some View {
         if let result = session.dashboard.results.first,
            let quiz = session.dashboard.quizzes.first(where: { $0.id == result.quizID }) {
-            VStack(alignment: .trailing, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 SectionTitle(title: "آخر نتيجة", subtitle: "كل محاولة تقرّبك أكثر")
                 HStack(spacing: 16) {
                     Text("\(Int((Double(result.score) / Double(max(result.totalMarks, 1)) * 100).rounded()))%")
                         .font(QMTheme.font(.black, size: 30))
                         .foregroundStyle(result.passed == true ? QMTheme.success : QMTheme.coral)
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 5) {
+                    VStack(alignment: .leading, spacing: 5) {
                         Text(quiz.title)
                             .font(QMTheme.font(.bold, size: 15))
                             .foregroundStyle(QMTheme.ink)
@@ -199,9 +211,9 @@ private struct ContinueCourseCard: View {
                         .offset(x: -52, y: -64)
                 }
 
-            VStack(alignment: .trailing, spacing: 16) {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 14) {
-                    VStack(alignment: .trailing, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("أكمل من حيث توقفت")
                             .font(QMTheme.font(.regular, size: 12))
                             .foregroundStyle(.white.opacity(0.76))
@@ -283,7 +295,7 @@ private struct QuickHomeButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .trailing, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: symbol)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(tint)
@@ -297,7 +309,7 @@ private struct QuickHomeButton: View {
                     .foregroundStyle(QMTheme.muted)
                     .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(15)
             .qmGlass(cornerRadius: 22, tint: tint.opacity(0.04), interactive: true)
         }
@@ -313,7 +325,7 @@ private struct CourseProgressRow: View {
             Image(systemName: "chevron.left")
                 .foregroundStyle(QMTheme.violet)
             Spacer()
-            VStack(alignment: .trailing, spacing: 7) {
+            VStack(alignment: .leading, spacing: 7) {
                 Text(item.course.title)
                     .font(QMTheme.font(.bold, size: 15))
                     .foregroundStyle(QMTheme.ink)
@@ -346,7 +358,7 @@ private struct EmptyEnrollmentCard: View {
             Text("رحلتك جاهزة للانطلاق")
                 .font(QMTheme.font(.black, size: 23))
                 .foregroundStyle(QMTheme.ink)
-            Text("لا توجد كورسات مرتبطة بحسابك حاليًا. اسحب للتحديث أو تواصل مع الدعم إذا كنت تتوقع ظهور كورس هنا.")
+            Text("لم تُفعّل كورسًا على حسابك بعد. يمكنك استعراض كل كورسات المنصة المتاحة بالأسفل والاشتراك في المناسب لك.")
                 .font(QMTheme.font(.regular, size: 13))
                 .foregroundStyle(QMTheme.muted)
                 .multilineTextAlignment(.center)
@@ -370,29 +382,39 @@ struct LessonLibraryView: View {
     @Environment(AppSession.self) private var session
     let onOpenCourse: (UUID) -> Void
 
+    private var availableCourses: [Course] {
+        let enrolledCourseIDs = Set(session.dashboard.courses.map(\.course.id))
+        return session.catalogCourses.filter { !enrolledCourseIDs.contains($0.id) }
+    }
+
     var body: some View {
         ZStack {
             AmbientBackdrop()
             ScrollView {
-                LazyVStack(alignment: .trailing, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     Text("مكتبة التعلّم")
                         .font(QMTheme.font(.black, size: 30))
                         .foregroundStyle(QMTheme.ink)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    Text("كورساتك ودروسك في مسار واحد مرتب.")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text("كورساتك الحالية وكل ما هو متاح على المنصة.")
                         .font(QMTheme.font(.regular, size: 13))
                         .foregroundStyle(QMTheme.muted)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                    if session.dashboard.courses.isEmpty {
-                        EmptyEnrollmentCard()
-                    } else {
+                    if !session.dashboard.courses.isEmpty {
+                        SectionTitle(title: "كورساتك", subtitle: "الكورسات المفعّلة على حسابك")
                         ForEach(session.dashboard.courses) { item in
                             Button { onOpenCourse(item.course.id) } label: {
                                 CourseLibraryCard(item: item)
                             }
                             .buttonStyle(.plain)
                         }
+                    } else {
+                        EmptyEnrollmentCard()
+                    }
+
+                    if !availableCourses.isEmpty {
+                        PublishedCourseCatalog(courses: availableCourses)
                     }
                 }
                 .padding(20)
@@ -404,16 +426,105 @@ struct LessonLibraryView: View {
     }
 }
 
+private struct PublishedCourseCatalog: View {
+    @Environment(AppSession.self) private var session
+    let courses: [Course]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            SectionTitle(title: "الكورسات المتاحة", subtitle: "استعرض كورسات المنصة واختر رحلتك القادمة")
+
+            ForEach(courses) { course in
+                Link(destination: session.courseURL(for: course.id)) {
+                    PublishedCourseCard(
+                        course: course,
+                        childCount: courses.filter { $0.parentCourseID == course.id }.count
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("استعراض كورس \(course.title)")
+            }
+        }
+    }
+}
+
+private struct PublishedCourseCard: View {
+    let course: Course
+    let childCount: Int
+
+    private var priceLabel: String {
+        if childCount > 0 { return "باقة · \(childCount) كورس" }
+        guard course.price > 0 else { return "مجاني" }
+        let amount = course.price.formatted(
+            .number
+                .precision(.fractionLength(course.price.rounded() == course.price ? 0 : 2))
+                .locale(Locale(identifier: "ar_EG"))
+        )
+        return "\(amount) \(course.currency ?? "جنيه")"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 14) {
+                AsyncImage(url: URL(string: course.thumbnailURL ?? "")) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    ZStack {
+                        QMTheme.brandGradient
+                        Image(systemName: "function")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 82, height: 82)
+                .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 7) {
+                    if course.parentCourseID != nil {
+                        Text("ضمن باقة")
+                            .font(QMTheme.font(.bold, size: 9))
+                            .foregroundStyle(QMTheme.magenta)
+                    }
+                    Text(course.title)
+                        .font(QMTheme.font(.black, size: 18))
+                        .foregroundStyle(QMTheme.ink)
+                        .multilineTextAlignment(.leading)
+                    if let description = course.description, !description.isEmpty {
+                        Text(description)
+                            .font(QMTheme.font(.regular, size: 10))
+                            .foregroundStyle(QMTheme.muted)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack {
+                Label("استعرض الكورس", systemImage: "arrow.up.left")
+                    .font(QMTheme.font(.bold, size: 12))
+                    .foregroundStyle(QMTheme.violet)
+                Spacer()
+                Text(priceLabel)
+                    .font(QMTheme.font(.black, size: 13))
+                    .foregroundStyle(childCount > 0 ? QMTheme.violet : (course.price > 0 ? QMTheme.ink : QMTheme.success))
+            }
+        }
+        .padding(17)
+        .qmGlass(cornerRadius: 25, tint: QMTheme.violet.opacity(0.05), interactive: true)
+    }
+}
+
 private struct CourseLibraryCard: View {
     let item: EnrolledCourse
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
                 Image(systemName: "chevron.left")
                     .foregroundStyle(QMTheme.violet)
                 Spacer()
-                VStack(alignment: .trailing, spacing: 5) {
+                VStack(alignment: .leading, spacing: 5) {
                     Text(item.course.title)
                         .font(QMTheme.font(.black, size: 19))
                         .foregroundStyle(QMTheme.ink)

@@ -14,10 +14,12 @@ final class AppSession {
 
     let client: SupabaseClient
     let service: PlatformService
+    let apiBaseURL: URL
 
     private(set) var phase: Phase = .booting
     private(set) var profile: Profile?
     var dashboard: StudentDashboardData = .empty
+    var catalogCourses: [Course] = []
     var isRefreshing = false
     var presentedMessage: String?
 
@@ -28,6 +30,7 @@ final class AppSession {
         )
         self.client = client
         self.service = PlatformService(client: client, configuration: configuration)
+        self.apiBaseURL = configuration.apiBaseURL
     }
 
     var userID: UUID? { profile?.id }
@@ -41,6 +44,7 @@ final class AppSession {
         } catch {
             profile = nil
             dashboard = .empty
+            catalogCourses = []
             phase = .signedOut
         }
     }
@@ -102,7 +106,7 @@ final class AppSession {
         do {
             self.profile = try await service.fetchProfile(userID: profile.id)
             if profile.role == .student {
-                dashboard = try await service.fetchStudentDashboard(studentID: profile.id)
+                try await loadStudentContent(userID: profile.id)
             }
         } catch is CancellationError {
             return
@@ -120,6 +124,7 @@ final class AppSession {
         try? await client.auth.signOut()
         profile = nil
         dashboard = .empty
+        catalogCourses = []
         phase = .signedOut
     }
 
@@ -128,6 +133,7 @@ final class AppSession {
         try? await client.auth.signOut()
         profile = nil
         dashboard = .empty
+        catalogCourses = []
         phase = .signedOut
     }
 
@@ -137,9 +143,23 @@ final class AppSession {
         phase = .authenticated
 
         if loadedProfile.role == .student {
-            dashboard = try await service.fetchStudentDashboard(studentID: userID)
+            try await loadStudentContent(userID: userID)
         } else {
             dashboard = .empty
+            catalogCourses = []
         }
+    }
+
+    func courseURL(for courseID: UUID) -> URL {
+        apiBaseURL
+            .appending(path: "courses")
+            .appending(path: courseID.uuidString)
+    }
+
+    private func loadStudentContent(userID: UUID) async throws {
+        async let dashboardRequest = service.fetchStudentDashboard(studentID: userID)
+        async let catalogRequest: [Course]? = try? await service.fetchPublishedCourses()
+        dashboard = try await dashboardRequest
+        catalogCourses = await catalogRequest ?? []
     }
 }

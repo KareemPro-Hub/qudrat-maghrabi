@@ -84,7 +84,7 @@ struct PracticeView: View {
     }
 
     private var progressBar: some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("\(answers.count) مجاب")
                 Spacer()
@@ -97,7 +97,7 @@ struct PracticeView: View {
     }
 
     private func questionCard(_ question: QuizQuestion) -> some View {
-        VStack(alignment: .trailing, spacing: 15) {
+        VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text("\(question.marks) درجة")
                     .font(QMTheme.font(.bold, size: 10))
@@ -115,7 +115,7 @@ struct PracticeView: View {
                 .font(QMTheme.font(.bold, size: 19))
                 .foregroundStyle(QMTheme.ink)
                 .lineSpacing(7)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
             if let imageURL = question.questionImageURL, let url = URL(string: imageURL) {
                 AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView() }
                     .frame(maxHeight: 230)
@@ -141,7 +141,7 @@ struct PracticeView: View {
                         Text(question.option(for: key))
                             .font(QMTheme.font(.bold, size: 14))
                             .foregroundStyle(isSelected ? .white : QMTheme.ink)
-                            .multilineTextAlignment(.trailing)
+                            .multilineTextAlignment(.leading)
                         Text(key.uppercased())
                             .font(.system(size: 12, weight: .black, design: .rounded))
                             .foregroundStyle(isSelected ? QMTheme.violet : .white)
@@ -247,15 +247,15 @@ struct QuizLibraryView: View {
         ZStack {
             AmbientBackdrop()
             ScrollView {
-                LazyVStack(alignment: .trailing, spacing: 15) {
+                LazyVStack(alignment: .leading, spacing: 15) {
                     Text("مركز التدريب")
                         .font(QMTheme.font(.black, size: 30))
                         .foregroundStyle(QMTheme.ink)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text("اختبر فهمك، اكتشف نقاطك، وارجع أقوى.")
                         .font(QMTheme.font(.regular, size: 13))
                         .foregroundStyle(QMTheme.muted)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     if session.dashboard.quizzes.isEmpty {
                         ContentUnavailableView("لا توجد اختبارات متاحة", systemImage: "target", description: Text("ستظهر اختبارات كورساتك هنا فور نشرها."))
@@ -286,7 +286,7 @@ private struct QuizLibraryCard: View {
         HStack(spacing: 14) {
             Image(systemName: "chevron.left").foregroundStyle(QMTheme.violet)
             Spacer()
-            VStack(alignment: .trailing, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(quiz.title).font(QMTheme.font(.black, size: 18)).foregroundStyle(QMTheme.ink)
                 Text("\(quiz.totalMarks) درجة • \(quiz.timeLimitMinutes.map { "\($0) دقيقة" } ?? "بدون توقيت")")
                     .font(QMTheme.font(.regular, size: 10)).foregroundStyle(QMTheme.muted)

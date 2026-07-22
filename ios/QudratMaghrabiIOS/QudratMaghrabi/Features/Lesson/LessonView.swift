@@ -107,7 +107,7 @@ struct LessonView: View {
     }
 
     private func courseProgress(_ item: EnrolledCourse) -> some View {
-        VStack(alignment: .trailing, spacing: 9) {
+        VStack(alignment: .leading, spacing: 9) {
             HStack {
                 Text("\(item.completionPercentage)%")
                     .font(QMTheme.font(.black, size: 15))
@@ -154,7 +154,7 @@ struct LessonView: View {
     }
 
     private func lessonHeader(_ lesson: Lesson) -> some View {
-        VStack(alignment: .trailing, spacing: 7) {
+        VStack(alignment: .leading, spacing: 7) {
             HStack(spacing: 8) {
                 if selectedProgress?.completed == true {
                     Label("مكتمل", systemImage: "checkmark.seal.fill")
@@ -169,7 +169,7 @@ struct LessonView: View {
             Text(lesson.title)
                 .font(QMTheme.font(.black, size: 28))
                 .foregroundStyle(QMTheme.ink)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
             if let minutes = lesson.durationMinutes, minutes > 0 {
                 Label("\(minutes) دقيقة", systemImage: "clock.fill")
                     .font(QMTheme.font(.regular, size: 11))
@@ -202,18 +202,18 @@ struct LessonView: View {
     private func sectionContent(lesson: Lesson, item: EnrolledCourse) -> some View {
         switch selectedSection {
         case .content:
-            VStack(alignment: .trailing, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 SectionTitle(title: "ملخص الدرس", subtitle: "الفكرة في كلمات واضحة ومباشرة")
                 Text((lesson.description?.isEmpty == false ? lesson.description : nil) ?? "لم يُضف ملخص لهذا الدرس بعد.")
                     .font(QMTheme.font(.regular, size: 14))
                     .foregroundStyle(QMTheme.muted)
                     .lineSpacing(7)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(19)
                     .qmGlass(cornerRadius: 24)
             }
         case .files:
-            VStack(alignment: .trailing, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 SectionTitle(title: "ملفات الدرس", subtitle: "المرفقات والمذكرات في مكان واحد")
                 if isLoadingFiles {
                     ProgressView().frame(maxWidth: .infinity).padding(30)
@@ -228,7 +228,7 @@ struct LessonView: View {
                 }
             }
         case .chapters:
-            VStack(alignment: .trailing, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 SectionTitle(title: "خريطة الكورس", subtitle: "اعرف موقعك والخطوة التالية")
                 ForEach(item.chapters) { chapter in
                     let count = item.lessons.filter { $0.chapterID == chapter.id }.count
@@ -303,7 +303,7 @@ private struct LessonFileRow: View {
                 .font(.system(size: 20))
                 .foregroundStyle(QMTheme.violet)
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(file.title).font(QMTheme.font(.bold, size: 13)).foregroundStyle(QMTheme.ink)
                 Text([file.fileType, file.sizeLabel].compactMap { $0 }.joined(separator: " • "))
                     .font(QMTheme.font(.regular, size: 9)).foregroundStyle(QMTheme.muted)

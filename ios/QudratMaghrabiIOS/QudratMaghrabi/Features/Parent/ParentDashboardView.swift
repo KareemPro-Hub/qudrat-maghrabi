@@ -52,10 +52,10 @@ struct ParentDashboardView: View {
                 parentHero(student)
                 stats(student)
 
-                VStack(alignment: .trailing, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12) {
                     SectionTitle(title: "الكورسات الحالية", subtitle: "تقدّم واضح بدون أرقام معقدة")
                     ForEach(student.courses) { item in
-                        VStack(alignment: .trailing, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Text("\(item.completionPercentage)%")
                                     .font(QMTheme.font(.black, size: 18))
@@ -103,7 +103,7 @@ struct ParentDashboardView: View {
     }
 
     private func parentHero(_ student: ParentStudentSummary) -> some View {
-        VStack(alignment: .trailing, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("أهلًا \(session.profile?.firstName ?? "") 👋")
                 .font(QMTheme.font(.regular, size: 13))
                 .foregroundStyle(.white.opacity(0.74))
@@ -115,7 +115,7 @@ struct ParentDashboardView: View {
                 .foregroundStyle(.white.opacity(0.78))
         }
         .padding(24)
-        .frame(maxWidth: .infinity, minHeight: 190, alignment: .trailing)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
         .background(QMTheme.brandGradient, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
         .shadow(color: QMTheme.violet.opacity(0.28), radius: 26, y: 15)
     }

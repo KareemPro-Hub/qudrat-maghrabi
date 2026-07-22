@@ -345,7 +345,7 @@ private struct AuthField: View {
     var keyboardType: UIKeyboardType = .default
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 7) {
+        VStack(alignment: .leading, spacing: 7) {
             Text(title)
                 .font(QMTheme.font(.bold, size: 12))
                 .foregroundStyle(QMTheme.ink)
@@ -361,7 +361,7 @@ private struct AuthField: View {
                     .keyboardType(keyboardType)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(.leading)
             }
             .padding(.horizontal, 15)
             .frame(height: 54)
@@ -381,7 +381,7 @@ private struct PasswordField: View {
     @Binding var revealsPassword: Bool
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 7) {
+        VStack(alignment: .leading, spacing: 7) {
             Text(title)
                 .font(QMTheme.font(.bold, size: 12))
                 .foregroundStyle(QMTheme.ink)
@@ -400,7 +400,7 @@ private struct PasswordField: View {
                 }
                 .font(QMTheme.font(.regular, size: 14))
                 .textContentType(.password)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(.leading)
 
                 Button {
                     revealsPassword.toggle()

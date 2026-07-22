@@ -84,13 +84,28 @@ private struct QMLiquidGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             content
+                .background(
+                    .white.opacity(0.06),
+                    in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                )
                 .glassEffect(
                     .regular
-                        .tint(tint)
+                        .tint(tint ?? .white.opacity(0.14))
                         .interactive(interactive),
                     in: .rect(cornerRadius: cornerRadius)
                 )
-                .shadow(color: QMTheme.shadow, radius: 20, y: 10)
+                .overlay {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.72), .white.opacity(0.16)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.8
+                        )
+                }
+                .shadow(color: QMTheme.shadow, radius: 24, y: 12)
         } else {
             content
                 .background(
@@ -117,25 +132,50 @@ private struct QMLiquidGlassModifier: ViewModifier {
     }
 }
 
+struct QMGlassGroup<Content: View>: View {
+    let spacing: CGFloat
+    let content: Content
+
+    init(spacing: CGFloat = 16, @ViewBuilder content: () -> Content) {
+        self.spacing = spacing
+        self.content = content()
+    }
+
+    @ViewBuilder
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: spacing) {
+                content
+            }
+        } else {
+            content
+        }
+    }
+}
+
 struct AmbientBackdrop: View {
     var body: some View {
         ZStack {
-            QMTheme.canvas
+            LinearGradient(
+                colors: [QMTheme.canvas, QMTheme.softViolet.opacity(0.72), Color.white],
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
+            )
 
             Circle()
-                .fill(QMTheme.violet.opacity(0.28))
+                .fill(QMTheme.violet.opacity(0.36))
                 .frame(width: 360, height: 360)
                 .blur(radius: 82)
                 .offset(x: 150, y: -340)
 
             Circle()
-                .fill(QMTheme.magenta.opacity(0.17))
+                .fill(QMTheme.magenta.opacity(0.25))
                 .frame(width: 300, height: 300)
                 .blur(radius: 82)
                 .offset(x: -170, y: -210)
 
             Circle()
-                .fill(QMTheme.gold.opacity(0.09))
+                .fill(QMTheme.gold.opacity(0.14))
                 .frame(width: 230, height: 230)
                 .blur(radius: 70)
                 .offset(x: -170, y: 390)

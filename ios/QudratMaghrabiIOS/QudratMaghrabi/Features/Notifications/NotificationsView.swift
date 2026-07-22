@@ -77,7 +77,7 @@ private struct NotificationCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 13) {
-            VStack(alignment: .trailing, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     if notification.isRead == false {
                         Circle().fill(tint).frame(width: 8, height: 8)
@@ -90,7 +90,7 @@ private struct NotificationCard: View {
                 Text(notification.body)
                     .font(QMTheme.font(.regular, size: 12))
                     .foregroundStyle(QMTheme.muted)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Image(systemName: notification.type == "success" ? "checkmark.seal.fill" : "bell.fill")
