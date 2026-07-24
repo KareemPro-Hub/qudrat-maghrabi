@@ -43,7 +43,7 @@ export default function Terms() {
         <div className="qm-info-orb qm-info-orb-two" />
         <span className="qm-info-kicker">قواعد الاستخدام</span>
         <h1>الشروط والأحكام</h1>
-        <p className="qm-info-updated">آخر تحديث: يونيو 2025</p>
+        <p className="qm-info-updated">آخر تحديث: يوليو 2026</p>
       </section>
 
       <div className="qm-info-body">

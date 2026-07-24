@@ -26,6 +26,7 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
+import AccountDeletion from './pages/AccountDeletion'
 import Refund from './pages/Refund'
 import NotFound from './pages/NotFound'
 
@@ -128,6 +129,7 @@ export default function App() {
         <Route path="/contact" element={<Layout><Contact /></Layout>} />
         <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
         <Route path="/terms" element={<Layout><Terms /></Layout>} />
+        <Route path="/account-deletion" element={<Layout><AccountDeletion /></Layout>} />
         <Route path="/refund" element={<Layout><Refund /></Layout>} />
 
         {/* 404 */}

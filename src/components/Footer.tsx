@@ -56,6 +56,7 @@ export default function Footer() {
           <Link to="/contact">تواصل معنا</Link>
           <Link to="/terms">الشروط والأحكام</Link>
           <Link to="/privacy">سياسة الخصوصية</Link>
+          <Link to="/account-deletion">حذف الحساب</Link>
         </div>
 
         <div className="qm-footer-news">

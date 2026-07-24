@@ -21,7 +21,7 @@ const sections = [
   },
   {
     title: 'حقوقك',
-    body: 'يحق لك في أي وقت طلب الاطلاع على بياناتك الشخصية أو تعديلها أو حذفها. يمكنك التواصل معنا عبر البريد الإلكتروني info@qudratmaghrabi.com لأي طلب يتعلق ببياناتك.'
+    body: 'يحق لك في أي وقت طلب الاطلاع على بياناتك الشخصية أو تعديلها أو حذف حسابك وبياناته المرتبطة من داخل التطبيق. إذا تعذّر عليك الدخول، استخدم صفحة حذف الحساب على الموقع أو تواصل عبر البريد Qudrat.Maghrabi.Pro@gmail.com.'
   },
   {
     title: 'تحديثات السياسة',
@@ -39,7 +39,7 @@ export default function Privacy() {
         <div className="qm-info-orb qm-info-orb-two" />
         <span className="qm-info-kicker">أمان بياناتك أولويتنا</span>
         <h1>سياسة الخصوصية</h1>
-        <p className="qm-info-updated">آخر تحديث: يونيو 2025</p>
+        <p className="qm-info-updated">آخر تحديث: يوليو 2026</p>
       </section>
 
       <div className="qm-info-body">
