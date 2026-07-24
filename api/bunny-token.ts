@@ -32,33 +32,43 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token)
   if (userError || !user) return res.status(401).json({ error: 'Invalid token' })
 
-  // التحقق من الاشتراك المدفوع
-  const { data: enrollment } = await supabase
-    .from('enrollments')
-    .select('id')
-    .eq('student_id', user.id)
-    .eq('course_id', courseId)
-    .eq('payment_status', 'paid')
-    .single()
-
-  // التحقق من صلاحية الدرس المجاني أو الاشتراك
+  // لا نوقّع أي فيديو قبل التأكد أنه تابع فعلًا للكورس المطلوب.
   const { data: lesson } = await supabase
     .from('lessons')
-    .select('is_free_preview')
+    .select('id, course_id, is_free_preview, is_published')
     .eq('video_id', videoId)
-    .single()
+    .eq('course_id', courseId)
+    .eq('is_published', true)
+    .maybeSingle()
 
-  // الكورس المجاني بالكامل (سعر 0 ومنشور): كل دروسه متاحة
   const { data: course } = await supabase
     .from('courses')
     .select('price, is_published')
     .eq('id', courseId)
-    .single()
+    .maybeSingle()
 
-  const isFreePreview = lesson?.is_free_preview === true
+  if (!lesson || !course?.is_published) {
+    return res.status(404).json({ error: 'Video is not available' })
+  }
+
+  // الاشتراك صالح فقط إذا كان مدفوعًا ولم تنتهِ مدته.
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id, expires_at')
+    .eq('student_id', user.id)
+    .eq('course_id', courseId)
+    .eq('payment_status', 'paid')
+    .maybeSingle()
+
+  const enrollmentExpiresAt = enrollment?.expires_at
+    ? new Date(enrollment.expires_at).getTime()
+    : null
+  const hasActiveEnrollment = !!enrollment
+    && (enrollmentExpiresAt === null || enrollmentExpiresAt > Date.now())
+  const isFreePreview = lesson.is_free_preview === true
   const isFreeCourse = course?.is_published === true && Number(course?.price) === 0
 
-  if (!enrollment && !isFreePreview && !isFreeCourse) {
+  if (!hasActiveEnrollment && !isFreePreview && !isFreeCourse) {
     return res.status(403).json({ error: 'Not enrolled in this course' })
   }
 
@@ -68,7 +78,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!LIBRARY_ID || !TOKEN_KEY) return res.status(500).json({ error: 'Bunny Stream not configured' })
 
   try {
-    const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 4 // صالح 4 ساعات
+    const expires = Math.floor(Date.now() / 1000) + 60 * 60 // صالح لبدء جلسة المشاهدة لمدة ساعة
     const hashSource = `${TOKEN_KEY}${videoId}${expires}`
     const signedToken = crypto.createHash('sha256').update(hashSource).digest('hex')
 
