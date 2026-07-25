@@ -1,0 +1,181 @@
+import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
+import 'package:qudrat_maghrabi_app/features/student_home/domain/student_course.dart';
+import 'package:qudrat_maghrabi_app/features/student_home/domain/student_home_snapshot.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class SupabaseStudentHomeRepository implements StudentHomeRepository {
+  SupabaseStudentHomeRepository(this._client);
+
+  final SupabaseClient _client;
+
+  @override
+  Future<StudentHomeSnapshot> load({required String studentId}) async {
+    final responses = await Future.wait([
+      _client
+          .from('courses')
+          .select(
+            'id, title, description, thumbnail_url, price, currency, '
+            'level, duration_hours, order_index, parent_course_id',
+          )
+          .eq('is_published', true)
+          .order('order_index', ascending: true)
+          .order('created_at', ascending: true),
+      _client
+          .from('course_public_stats')
+          .select('course_id, lessons_count, enrolled_count'),
+      _client
+          .from('enrollments')
+          .select('course_id, payment_status, expires_at, enrolled_at')
+          .eq('student_id', studentId)
+          .eq('payment_status', 'paid'),
+      _client
+          .from('lesson_progress')
+          .select('lesson_id, completed, watch_percentage, last_watched_at')
+          .eq('student_id', studentId),
+      _client
+          .from('notifications')
+          .select('id')
+          .eq('user_id', studentId)
+          .eq('is_read', false),
+      _client
+          .from('lessons')
+          .select('id, course_id, title, order_index, is_published')
+          .eq('is_published', true)
+          .order('order_index', ascending: true),
+    ]);
+
+    final courseRows = _rows(responses[0]);
+    final statsRows = _rows(responses[1]);
+    final enrollmentRows = _rows(responses[2]);
+    final progressRows = _rows(responses[3]);
+    final notificationRows = _rows(responses[4]);
+    final lessonRows = _rows(responses[5]);
+
+    final statsByCourse = <String, Map<String, dynamic>>{
+      for (final row in statsRows) row['course_id'] as String: row,
+    };
+    final activeCourseIds = enrollmentRows
+        .where(_isActiveEnrollment)
+        .map((row) => row['course_id'] as String)
+        .toSet();
+    final progressByLesson = <String, Map<String, dynamic>>{
+      for (final row in progressRows) row['lesson_id'] as String: row,
+    };
+    final childCountByParent = <String, int>{};
+    for (final row in courseRows) {
+      final parentId = row['parent_course_id'] as String?;
+      if (parentId != null) {
+        childCountByParent.update(
+          parentId,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+    }
+
+    final courses = courseRows.map((row) {
+      final id = row['id'] as String;
+      final stats = statsByCourse[id];
+      final lessonsCount = _asInt(stats?['lessons_count']);
+      final childCoursesCount = childCountByParent[id] ?? 0;
+      final price = _asDouble(row['price']);
+      final hasAccess =
+          activeCourseIds.contains(id) ||
+          (price <= 0 && childCoursesCount == 0);
+      final accessibleLessons = lessonRows
+          .where((lesson) => lesson['course_id'] == id)
+          .toList();
+      final completedLessons = accessibleLessons
+          .where(
+            (lesson) =>
+                progressByLesson[lesson['id']]?['completed'] as bool? ?? false,
+          )
+          .length;
+      final progressPercent = lessonsCount == 0
+          ? 0
+          : ((completedLessons / lessonsCount) * 100).round().clamp(0, 100);
+      Map<String, dynamic>? currentLesson;
+      for (final lesson in accessibleLessons) {
+        final completed =
+            progressByLesson[lesson['id']]?['completed'] as bool? ?? false;
+        if (!completed) {
+          currentLesson = lesson;
+          break;
+        }
+      }
+      currentLesson ??= accessibleLessons.isEmpty
+          ? null
+          : accessibleLessons.first;
+
+      return StudentCourse(
+        id: id,
+        title: (row['title'] as String?)?.trim() ?? '',
+        description: (row['description'] as String?)?.trim() ?? '',
+        thumbnailUrl: _cleanNullableText(row['thumbnail_url']),
+        price: price,
+        currency: (row['currency'] as String?) ?? 'EGP',
+        level: (row['level'] as String?) ?? 'beginner',
+        parentCourseId: row['parent_course_id'] as String?,
+        durationHours: row['duration_hours'] == null
+            ? null
+            : _asDouble(row['duration_hours']),
+        lessonsCount: lessonsCount,
+        enrolledCount: _asInt(stats?['enrolled_count']),
+        childCoursesCount: childCoursesCount,
+        hasAccess: hasAccess,
+        progressPercent: progressPercent,
+        completedLessons: completedLessons,
+        currentLessonTitle: currentLesson?['title'] as String?,
+      );
+    }).toList();
+
+    final bundles = courses
+        .where((course) => course.parentCourseId == null)
+        .toList();
+    final availableCourses = courses
+        .where((course) => course.parentCourseId != null)
+        .toList();
+    final myCourses =
+        availableCourses.where((course) => course.hasAccess).toList()
+          ..sort((a, b) {
+            final progressComparison = b.progressPercent.compareTo(
+              a.progressPercent,
+            );
+            if (progressComparison != 0) return progressComparison;
+            return a.title.compareTo(b.title);
+          });
+
+    return StudentHomeSnapshot(
+      bundles: bundles,
+      availableCourses: availableCourses,
+      myCourses: myCourses,
+      unreadNotifications: notificationRows.length,
+    );
+  }
+
+  List<Map<String, dynamic>> _rows(dynamic value) {
+    return (value as List).cast<Map<String, dynamic>>();
+  }
+
+  bool _isActiveEnrollment(Map<String, dynamic> row) {
+    final expiresAt = row['expires_at'] as String?;
+    if (expiresAt == null) return true;
+    final expiry = DateTime.tryParse(expiresAt);
+    return expiry == null || expiry.isAfter(DateTime.now());
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String? _cleanNullableText(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+}

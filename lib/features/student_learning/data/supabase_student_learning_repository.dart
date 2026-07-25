@@ -1,0 +1,242 @@
+import 'dart:convert';
+import 'dart:math' as math;
+
+import 'package:http/http.dart' as http;
+import 'package:qudrat_maghrabi_app/core/config/app_environment.dart';
+import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
+import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class SupabaseStudentLearningRepository implements StudentLearningRepository {
+  SupabaseStudentLearningRepository(this._client, {http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
+
+  final SupabaseClient _client;
+  final http.Client _httpClient;
+
+  @override
+  Future<CourseLearningContent> loadCourse({
+    required String courseId,
+    required String studentId,
+  }) async {
+    final Map<String, dynamic>? course = await _client
+        .from('courses')
+        .select('id, title, description, thumbnail_url, price, is_published')
+        .eq('id', courseId)
+        .eq('is_published', true)
+        .maybeSingle();
+    if (course == null) {
+      throw const LearningFailure('الكورس غير موجود أو غير منشور حاليًا');
+    }
+
+    final responses = await Future.wait([
+      _client
+          .from('chapters')
+          .select('id, title, cover_url, order_index')
+          .eq('course_id', courseId)
+          .order('order_index', ascending: true),
+      _client
+          .from('lessons')
+          .select(
+            'id, course_id, chapter_id, title, description, video_id, '
+            'thumbnail_url, duration_minutes, order_index, is_free_preview',
+          )
+          .eq('course_id', courseId)
+          .eq('is_published', true)
+          .order('order_index', ascending: true),
+      _client
+          .from('lesson_progress')
+          .select('lesson_id, watch_percentage, completed')
+          .eq('student_id', studentId),
+      _client
+          .from('enrollments')
+          .select('id, expires_at')
+          .eq('student_id', studentId)
+          .eq('course_id', courseId)
+          .eq('payment_status', 'paid')
+          .limit(1),
+    ]);
+
+    final chapterRows = _rows(responses[0]);
+    final lessonRows = _rows(responses[1]);
+    final progressRows = _rows(responses[2]);
+    final enrollmentRows = _rows(responses[3]);
+    final progressByLesson = <String, LessonProgress>{
+      for (final row in progressRows)
+        row['lesson_id'] as String: LessonProgress(
+          watchPercentage: _asInt(row['watch_percentage']).clamp(0, 100),
+          completed: row['completed'] as bool? ?? false,
+        ),
+    };
+
+    final lessons = lessonRows
+        .map(
+          (row) => CourseLesson(
+            id: row['id'] as String,
+            courseId: row['course_id'] as String,
+            chapterId: row['chapter_id'] as String?,
+            title: (row['title'] as String?)?.trim() ?? '',
+            description: (row['description'] as String?)?.trim() ?? '',
+            videoId: _cleanText(row['video_id']),
+            thumbnailUrl: _cleanText(row['thumbnail_url']),
+            durationMinutes: row['duration_minutes'] == null
+                ? null
+                : _asInt(row['duration_minutes']),
+            orderIndex: _asInt(row['order_index']),
+            isFreePreview: row['is_free_preview'] as bool? ?? false,
+            progress: progressByLesson[row['id']] ?? LessonProgress.empty,
+          ),
+        )
+        .toList();
+    final lessonsByChapter = <String, List<CourseLesson>>{};
+    for (final lesson in lessons) {
+      final chapterId = lesson.chapterId;
+      if (chapterId == null) continue;
+      lessonsByChapter.putIfAbsent(chapterId, () => []).add(lesson);
+    }
+    final chapters = chapterRows
+        .map(
+          (row) => CourseChapter(
+            id: row['id'] as String,
+            title: (row['title'] as String?)?.trim() ?? '',
+            coverUrl: _cleanText(row['cover_url']),
+            orderIndex: _asInt(row['order_index']),
+            lessons: lessonsByChapter[row['id']] ?? const [],
+          ),
+        )
+        .toList();
+    final ungroupedLessons = lessons
+        .where((lesson) => lesson.chapterId == null)
+        .toList();
+    final price = _asDouble(course['price']);
+    final hasActiveEnrollment =
+        enrollmentRows.isNotEmpty && _isActiveEnrollment(enrollmentRows.first);
+
+    return CourseLearningContent(
+      courseId: courseId,
+      title: (course['title'] as String?)?.trim() ?? '',
+      description: (course['description'] as String?)?.trim() ?? '',
+      thumbnailUrl: _cleanText(course['thumbnail_url']),
+      price: price,
+      hasAccess: price <= 0 || hasActiveEnrollment,
+      chapters: chapters,
+      ungroupedLessons: ungroupedLessons,
+    );
+  }
+
+  @override
+  Future<BunnyEmbedCredentials> requestVideo({
+    required String courseId,
+    required String videoId,
+  }) async {
+    final session = _client.auth.currentSession;
+    if (session == null) {
+      throw const LearningFailure('انتهت جلسة الدخول. سجّل دخولك مرة أخرى');
+    }
+
+    final response = await _httpClient.post(
+      Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
+      headers: {
+        'Authorization': 'Bearer ${session.accessToken}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
+    );
+    final body = _decodeObject(response.body);
+    if (response.statusCode != 200) {
+      throw LearningFailure(_videoErrorMessage(response.statusCode, body));
+    }
+    final libraryId = body['libraryId']?.toString();
+    final token = body['token']?.toString();
+    final expires = _asInt(body['expires']);
+    if (libraryId == null || token == null || expires == 0) {
+      throw const LearningFailure('تعذّر تجهيز الفيديو. حاول مرة أخرى');
+    }
+    return BunnyEmbedCredentials(
+      libraryId: libraryId,
+      token: token,
+      expires: expires,
+    );
+  }
+
+  @override
+  Future<LessonProgress> saveProgress({
+    required String studentId,
+    required String lessonId,
+    required LessonProgress current,
+    required int watchPercentage,
+    required bool completed,
+  }) async {
+    final nextPercentage = math.max(
+      current.watchPercentage,
+      watchPercentage.clamp(0, 100),
+    );
+    final nextCompleted = current.completed || completed;
+    final Map<String, dynamic> row = await _client
+        .from('lesson_progress')
+        .upsert({
+          'student_id': studentId,
+          'lesson_id': lessonId,
+          'watch_percentage': nextCompleted ? 100 : nextPercentage,
+          'completed': nextCompleted,
+          'last_watched_at': DateTime.now().toUtc().toIso8601String(),
+        }, onConflict: 'student_id,lesson_id')
+        .select('watch_percentage, completed')
+        .single();
+
+    return LessonProgress(
+      watchPercentage: _asInt(row['watch_percentage']).clamp(0, 100),
+      completed: row['completed'] as bool? ?? false,
+    );
+  }
+
+  List<Map<String, dynamic>> _rows(dynamic value) {
+    return (value as List).cast<Map<String, dynamic>>();
+  }
+
+  bool _isActiveEnrollment(Map<String, dynamic> row) {
+    final expiresAt = row['expires_at'] as String?;
+    if (expiresAt == null) return true;
+    final expiry = DateTime.tryParse(expiresAt);
+    return expiry == null || expiry.isAfter(DateTime.now());
+  }
+
+  Map<String, dynamic> _decodeObject(String value) {
+    try {
+      final decoded = jsonDecode(value);
+      return decoded is Map<String, dynamic> ? decoded : const {};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  String _videoErrorMessage(int statusCode, Map<String, dynamic> body) {
+    switch (statusCode) {
+      case 401:
+        return 'انتهت جلسة الدخول. سجّل دخولك مرة أخرى';
+      case 403:
+        return 'هذا الفيديو متاح للمشتركين في الكورس فقط';
+      case 404:
+        return 'الفيديو غير متاح حاليًا';
+      default:
+        return body['error'] == 'Bunny Stream not configured'
+            ? 'خدمة الفيديو غير مهيأة حاليًا'
+            : 'تعذّر تشغيل الفيديو. تحقق من الإنترنت وحاول مجددًا';
+    }
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String? _cleanText(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+}
