@@ -428,3 +428,47 @@
 @media (min-width: 901px) {
   .qm-section-head, .qm-title-line { display: flex; align-items: center; gap: 15px; }
 }
+
+/* ===== زر واتساب ثابت في الصفحة الرئيسية ===== */
+.qm-wa-float {
+  position: fixed; inset-block-end: 24px; inset-inline-start: 24px; z-index: 60;
+  display: inline-flex; align-items: center; gap: 0; max-width: 60px; overflow: hidden;
+  height: 60px; padding: 0; border-radius: 999px; text-decoration: none;
+  background: linear-gradient(140deg, #2ac36a, #128c4a);
+  box-shadow: 0 14px 30px rgba(18, 140, 74, .34), 0 3px 10px rgba(0, 0, 0, .16);
+  transition: max-width .38s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease, transform .3s ease;
+}
+.qm-wa-float:hover, .qm-wa-float:focus-visible {
+  max-width: 230px; transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(18, 140, 74, .42), 0 4px 12px rgba(0, 0, 0, .18);
+}
+.qm-wa-float:focus-visible { outline: 3px solid rgba(255,255,255,.85); outline-offset: 3px; }
+.qm-wa-float-mark { flex: 0 0 60px; display: grid; place-items: center; width: 60px; height: 60px; }
+.qm-wa-float-mark .qm-wa-icon { width: 31px; height: 31px; fill: #fff; stroke: none; }
+.qm-wa-float-text {
+  white-space: nowrap; color: #fff; font-weight: 800; font-size: 15px;
+  padding-inline-end: 22px; opacity: 0; transition: opacity .25s ease .08s;
+}
+.qm-wa-float:hover .qm-wa-float-text, .qm-wa-float:focus-visible .qm-wa-float-text { opacity: 1; }
+.qm-wa-float-pulse {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0; width: 60px; height: 60px;
+  border-radius: 50%; background: rgba(42, 195, 106, .55); z-index: -1;
+  animation: qmWaPulse 2.4s ease-out infinite;
+}
+@keyframes qmWaPulse {
+  0% { transform: scale(1); opacity: .6; }
+  70% { transform: scale(1.75); opacity: 0; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qm-wa-float-pulse { animation: none; }
+  .qm-wa-float { transition: none; }
+}
+@media (max-width: 900px) {
+  .qm-wa-float { inset-block-end: 18px; inset-inline-start: 16px; height: 54px; max-width: 54px; }
+  .qm-wa-float-mark { flex-basis: 54px; width: 54px; height: 54px; }
+  .qm-wa-float-mark .qm-wa-icon { width: 28px; height: 28px; }
+  .qm-wa-float-pulse { width: 54px; height: 54px; }
+  .qm-wa-float:hover, .qm-wa-float:focus-visible { max-width: 54px; transform: none; }
+  .qm-wa-float-text { display: none; }
+}

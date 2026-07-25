@@ -414,6 +414,19 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ===== زر واتساب ثابت ===== */}
+      <a
+        className="qm-wa-float"
+        href="https://wa.me/966548066321"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="تواصل معنا عبر واتساب"
+      >
+        <span className="qm-wa-float-pulse" aria-hidden="true" />
+        <span className="qm-wa-float-mark" aria-hidden="true"><WhatsAppIcon /></span>
+        <span className="qm-wa-float-text">تواصل معنا</span>
+      </a>
     </div>
   )
 }
