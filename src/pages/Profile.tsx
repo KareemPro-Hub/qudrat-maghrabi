@@ -1,17 +1,70 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import { User, Phone, Mail, Save, Lock } from 'lucide-react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { User, Phone, Mail, Save, Lock, Trash2, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 
+const DELETE_CONFIRM_PHRASE = 'حذف حسابي'
+// الحذف الذاتي متاح لحسابات المستخدمين النهائيين فقط ، أما حسابات الإدارة
+// وفريق العمل فتُدار عبر الدعم حتى لا يُترك محتوى المنصة بلا مالك.
+const SELF_DELETABLE_ROLES = ['student', 'parent']
+
+const PROVIDER_LABELS: Record<string, string> = {
+  google: 'Google',
+  facebook: 'Facebook',
+  apple: 'Apple',
+  azure: 'Microsoft',
+  twitter: 'X',
+}
+
+type LoginIdentitySource = {
+  identities?: { provider?: string }[] | null
+  app_metadata?: { provider?: string; providers?: string[] } | null
+}
+
+// استخراج مزوّدي تسجيل الدخول المرتبطين بالحساب من الجلسة الحالية.
+export function resolveLoginProviders(source: LoginIdentitySource | null | undefined): string[] {
+  const fromIdentities = (source?.identities ?? [])
+    .map(identity => identity?.provider)
+    .filter((provider): provider is string => !!provider)
+  if (fromIdentities.length) return fromIdentities
+
+  const metadataProviders = source?.app_metadata?.providers
+  if (Array.isArray(metadataProviders) && metadataProviders.length) {
+    return metadataProviders.filter(provider => !!provider)
+  }
+
+  const singleProvider = source?.app_metadata?.provider
+  return singleProvider ? [singleProvider] : []
+}
+
+// حسابات البريد وكلمة المرور تُؤكَّد بكلمة المرور ، وحسابات الدخول الاجتماعي
+// لا تملك كلمة مرور فتُؤكَّد بكتابة البريد المرتبط بالحساب.
+// عند تعذّر تحديد المزوّد نطلب كلمة المرور احتياطًا وهو الخيار الأكثر تحفظًا.
+export function requiresPasswordConfirmation(providers: string[]): boolean {
+  if (!providers.length) return true
+  return providers.includes('email')
+}
+
+export function describeSocialProviders(providers: string[]): string {
+  const labels = providers
+    .filter(provider => provider !== 'email')
+    .map(provider => PROVIDER_LABELS[provider] || provider)
+  return labels.length ? labels.join(' و') : 'مزوّد خارجي'
+}
+
 export default function Profile() {
   const { user, profile, loading } = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState({ full_name: '', phone: '' })
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' })
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingPass, setSavingPass] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteForm, setDeleteForm] = useState({ password: '', email: '', phrase: '' })
+  const [deleting, setDeleting] = useState(false)
 
   if (!initialized && profile) {
     setForm({ full_name: profile.full_name || '', phone: profile.phone || '' })
@@ -52,6 +105,59 @@ export default function Profile() {
     }
     setSavingPass(false)
   }
+
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault()
+    const email = user?.email || profile?.email
+    if (!email) return toast.error('تعذّر تحديد البريد المرتبط بالحساب')
+    if (deleteForm.phrase.trim() !== DELETE_CONFIRM_PHRASE) {
+      return toast.error(`اكتب «${DELETE_CONFIRM_PHRASE}» للتأكيد`)
+    }
+
+    if (needsPassword) {
+      if (!deleteForm.password) return toast.error('يرجى إدخال كلمة المرور للتأكيد')
+    } else if (deleteForm.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      return toast.error('البريد الإلكتروني غير مطابق للحساب')
+    }
+
+    setDeleting(true)
+
+    // إعادة التحقق من الهوية قبل تنفيذ عملية غير قابلة للتراجع.
+    // حسابات كلمة المرور تُتحقّق بها ، أما حسابات الدخول الاجتماعي فلا كلمة مرور
+    // لها ، لذلك نتحقّق من صلاحية الجلسة نفسها بعد مطابقة البريد.
+    if (needsPassword) {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: deleteForm.password,
+      })
+      if (authError) {
+        setDeleting(false)
+        return toast.error('كلمة المرور غير صحيحة')
+      }
+    } else {
+      const { data: freshUser, error: sessionError } = await supabase.auth.getUser()
+      if (sessionError || freshUser?.user?.id !== user!.id) {
+        setDeleting(false)
+        return toast.error('انتهت صلاحية الجلسة ، يرجى تسجيل الدخول مرة أخرى')
+      }
+    }
+
+    const { error } = await supabase.rpc('delete_my_account')
+    if (error) {
+      setDeleting(false)
+      return toast.error(error.message || 'تعذّر حذف الحساب ، يرجى التواصل مع الدعم')
+    }
+
+    await supabase.auth.signOut()
+    setDeleting(false)
+    toast.success('تم حذف حسابك وجميع بياناته نهائيًا')
+    navigate('/', { replace: true })
+  }
+
+  // بلا افتراض للدور: لا يظهر خيار الحذف قبل تحميل الملف الشخصي فعليًا.
+  const canSelfDelete = SELF_DELETABLE_ROLES.includes(profile?.role ?? '')
+  const loginProviders = resolveLoginProviders(user)
+  const needsPassword = requiresPasswordConfirmation(loginProviders)
 
   const roleLabel: Record<string, string> = {
     student: 'طالب', parent: 'ولي أمر', teacher: 'مدرس',
@@ -168,6 +274,101 @@ export default function Profile() {
             </button>
           </form>
         </div>
+
+        {/* Delete Account */}
+        {canSelfDelete && (
+        <div className="card mt-6 border border-red-200">
+          <h2 className="text-lg font-black text-red-600 mb-2 flex items-center gap-2">
+            <AlertTriangle size={18} />
+            حذف الحساب نهائيًا
+          </h2>
+          <p className="text-sm text-gray-500 leading-7 mb-4">
+            سيتم حذف حسابك وملفك الشخصي واشتراكاتك وتقدّمك في الدروس ونتائج الاختبارات
+            والإشعارات وروابط ولي الأمر بشكل نهائي ، ولا يمكن التراجع عن هذه الخطوة.
+          </p>
+
+          {!deleteOpen ? (
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="flex items-center gap-2 py-3 px-6 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition"
+            >
+              <Trash2 size={16} />
+              أريد حذف حسابي
+            </button>
+          ) : (
+            <form onSubmit={handleDeleteAccount} className="space-y-4">
+              {needsPassword ? (
+                <div>
+                  <label className="block text-sm font-bold text-brand-navy mb-2">كلمة المرور الحالية</label>
+                  <div className="relative">
+                    <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="password"
+                      value={deleteForm.password}
+                      onChange={e => setDeleteForm({ ...deleteForm, password: e.target.value })}
+                      className="input-field pr-10"
+                      placeholder="كلمة المرور"
+                      dir="ltr"
+                      autoComplete="current-password"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-bold text-brand-navy mb-2">
+                    اكتب بريد الحساب للتأكيد
+                  </label>
+                  <div className="relative">
+                    <Mail size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="email"
+                      value={deleteForm.email}
+                      onChange={e => setDeleteForm({ ...deleteForm, email: e.target.value })}
+                      className="input-field pr-10"
+                      placeholder={user?.email || profile?.email || ''}
+                      dir="ltr"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    حسابك مسجّل عبر {describeSocialProviders(loginProviders)} ولا يملك كلمة مرور ،
+                    لذلك نؤكد هويتك بمطابقة البريد.
+                  </p>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">
+                  اكتب «{DELETE_CONFIRM_PHRASE}» للتأكيد
+                </label>
+                <input
+                  value={deleteForm.phrase}
+                  onChange={e => setDeleteForm({ ...deleteForm, phrase: e.target.value })}
+                  className="input-field"
+                  placeholder={DELETE_CONFIRM_PHRASE}
+                />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={deleting}
+                  className="flex items-center gap-2 py-3 px-6 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-60"
+                >
+                  <Trash2 size={16} />
+                  {deleting ? 'جاري الحذف...' : 'تأكيد الحذف النهائي'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setDeleteOpen(false); setDeleteForm({ password: '', email: '', phrase: '' }) }}
+                  className="py-3 px-6 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+        )}
 
       </div>
     </div>
