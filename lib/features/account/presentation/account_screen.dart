@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
+import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
+import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
+import 'package:qudrat_maghrabi_app/features/parent_home/presentation/student_parent_link_code_screen.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,6 +13,7 @@ class AccountScreen extends StatefulWidget {
   const AccountScreen({
     required this.profile,
     required this.repository,
+    required this.familyRepository,
     required this.onProfileUpdated,
     required this.onSignOut,
     required this.onAccountDeleted,
@@ -18,6 +22,7 @@ class AccountScreen extends StatefulWidget {
 
   final AuthProfile profile;
   final AccountRepository repository;
+  final ParentHomeRepository familyRepository;
   final ValueChanged<AuthProfile> onProfileUpdated;
   final Future<void> Function() onSignOut;
   final Future<void> Function() onAccountDeleted;
@@ -83,6 +88,22 @@ class _AccountScreenState extends State<AccountScreen> {
                   subtitle: 'الاسم ورقم الجوال',
                   onTap: _editProfile,
                 ),
+                if (_profile.role == AccountRole.student) ...[
+                  const _TileDivider(),
+                  _SettingTile(
+                    key: const Key('parent-link-code-tile'),
+                    icon: Icons.family_restroom_rounded,
+                    title: 'رمز ربط ولي الأمر',
+                    subtitle: 'رمز مؤقت وآمن لمتابعة تقدّمك',
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => StudentParentLinkCodeScreen(
+                          repository: widget.familyRepository,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const _TileDivider(),
                 _SettingTile(
                   key: const Key('change-password-tile'),

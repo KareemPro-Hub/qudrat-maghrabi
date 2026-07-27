@@ -6,6 +6,8 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/login_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/signed_in_checkpoint_screen.dart';
+import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
+import 'package:qudrat_maghrabi_app/features/parent_home/presentation/parent_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/presentation/student_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
@@ -15,6 +17,7 @@ class AuthGate extends StatefulWidget {
   const AuthGate({
     required this.authRepository,
     required this.accountRepository,
+    required this.parentHomeRepository,
     required this.studentHomeRepository,
     required this.studentLearningRepository,
     required this.studentQuizRepository,
@@ -23,6 +26,7 @@ class AuthGate extends StatefulWidget {
 
   final AuthRepository authRepository;
   final AccountRepository accountRepository;
+  final ParentHomeRepository parentHomeRepository;
   final StudentHomeRepository studentHomeRepository;
   final StudentLearningRepository studentLearningRepository;
   final StudentQuizRepository studentQuizRepository;
@@ -78,6 +82,23 @@ class _AuthGateState extends State<AuthGate> {
         repository: widget.studentHomeRepository,
         learningRepository: widget.studentLearningRepository,
         quizRepository: widget.studentQuizRepository,
+        accountRepository: widget.accountRepository,
+        parentHomeRepository: widget.parentHomeRepository,
+        onProfileUpdated: (updatedProfile) {
+          setState(() => _profile = updatedProfile);
+        },
+        onAccountDeleted: () async {
+          if (!mounted) return;
+          setState(() => _profile = null);
+        },
+        onSignOut: _signOut,
+      );
+    }
+
+    if (profile.role == AccountRole.parent) {
+      return ParentHomeScreen(
+        profile: profile,
+        repository: widget.parentHomeRepository,
         accountRepository: widget.accountRepository,
         onProfileUpdated: (updatedProfile) {
           setState(() => _profile = updatedProfile);

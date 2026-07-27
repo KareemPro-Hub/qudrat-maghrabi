@@ -5,6 +5,7 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 
 import 'fakes/fake_auth_repository.dart';
 import 'fakes/fake_account_repository.dart';
+import 'fakes/fake_parent_home_repository.dart';
 import 'fakes/fake_student_home_repository.dart';
 import 'fakes/fake_student_learning_repository.dart';
 import 'fakes/fake_student_quiz_repository.dart';
@@ -15,10 +16,12 @@ QudratMaghrabiApp createTestApp([
   FakeStudentLearningRepository? learningRepository,
   FakeStudentQuizRepository? quizRepository,
   FakeAccountRepository? accountRepository,
+  FakeParentHomeRepository? parentHomeRepository,
 ]) {
   return QudratMaghrabiApp(
     authRepository: repository ?? FakeAuthRepository(),
     accountRepository: accountRepository ?? FakeAccountRepository(),
+    parentHomeRepository: parentHomeRepository ?? FakeParentHomeRepository(),
     studentHomeRepository: homeRepository ?? FakeStudentHomeRepository(),
     studentLearningRepository:
         learningRepository ?? FakeStudentLearningRepository(),
@@ -255,6 +258,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('إدارة الحساب'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('privacy-tile')), 250);
+    await tester.pumpAndSettle();
     expect(find.text('سياسة الخصوصية'), findsOneWidget);
     expect(find.text('الشروط والأحكام'), findsOneWidget);
     expect(find.text('الدعم والمساعدة'), findsOneWidget);
@@ -263,6 +268,28 @@ void main() {
       300,
     );
     expect(find.text('حذف الحساب نهائيًا'), findsOneWidget);
+  });
+
+  testWidgets('student creates a one-time parent link code', (tester) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    final parentRepository = FakeParentHomeRepository();
+    await tester.pumpWidget(
+      createTestApp(authRepository, null, null, null, null, parentRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('حسابي'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('parent-link-code-tile')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('create-parent-link-code-button')));
+    await tester.pumpAndSettle();
+
+    expect(parentRepository.createCodeCalls, 1);
+    expect(find.text('ABCD-EF12-3456-7890'), findsOneWidget);
+    expect(find.text('نسخ الرمز'), findsOneWidget);
   });
 
   testWidgets('student can update first and second name', (tester) async {
@@ -325,5 +352,73 @@ void main() {
 
     expect(accountRepository.deleteCalls, 1);
     expect(find.text('أهلًا بعودتك'), findsOneWidget);
+  });
+
+  testWidgets('parent without linked students sees a clear linking action', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.parentProfile,
+    );
+    await tester.pumpWidget(createTestApp(authRepository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('لم تربط أي طالب بعد'), findsOneWidget);
+    expect(find.byKey(const Key('open-link-student-button')), findsOneWidget);
+  });
+
+  testWidgets('parent links a student by one-time code and opens dashboard', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.parentProfile,
+    );
+    final parentRepository = FakeParentHomeRepository(
+      linkedSnapshot: FakeParentHomeRepository.sampleSnapshot,
+    );
+    await tester.pumpWidget(
+      createTestApp(authRepository, null, null, null, null, parentRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('open-link-student-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('parent-student-code-input')),
+      'ABCD-EF12-3456-7890',
+    );
+    await tester.tap(find.byKey(const Key('link-student-button')));
+    await tester.pumpAndSettle();
+
+    expect(parentRepository.linkCalls, 1);
+    expect(parentRepository.lastLinkedCode, 'ABCD-EF12-3456-7890');
+    expect(find.text('رحلة كريم'), findsOneWidget);
+    expect(find.text('60%'), findsWidgets);
+    expect(find.text('اختبار الأعداد العشرية'), findsOneWidget);
+  });
+
+  testWidgets('parent switches between progress and test reports', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.parentProfile,
+    );
+    final parentRepository = FakeParentHomeRepository(
+      snapshot: FakeParentHomeRepository.sampleSnapshot,
+    );
+    await tester.pumpWidget(
+      createTestApp(authRepository, null, null, null, null, parentRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('parent-nav-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('تقدّم الطالب'), findsOneWidget);
+    expect(find.text('3 من 5 درس مكتمل'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('parent-nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('نتائج الاختبارات'), findsOneWidget);
+    expect(find.text('اجتاز الاختبار'), findsOneWidget);
   });
 }

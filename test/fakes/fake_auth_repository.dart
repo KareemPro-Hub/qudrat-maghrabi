@@ -19,6 +19,15 @@ class FakeAuthRepository implements AuthRepository {
     isActive: true,
   );
 
+  static const parentProfile = AuthProfile(
+    id: 'parent-id',
+    fullName: 'ولي أمر تجريبي',
+    email: 'parent@example.com',
+    phone: '0500000000',
+    role: AccountRole.parent,
+    isActive: true,
+  );
+
   AuthProfile? restoredProfile;
   AuthProfile signInProfile;
   AuthFailure? signInFailure;

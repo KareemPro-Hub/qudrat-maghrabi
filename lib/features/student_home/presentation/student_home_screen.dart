@@ -6,6 +6,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/account/presentation/account_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
+import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/domain/student_course.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/domain/student_home_snapshot.dart';
@@ -21,6 +22,7 @@ class StudentHomeScreen extends StatefulWidget {
     required this.learningRepository,
     required this.quizRepository,
     required this.accountRepository,
+    required this.parentHomeRepository,
     required this.onProfileUpdated,
     required this.onAccountDeleted,
     required this.onSignOut,
@@ -32,6 +34,7 @@ class StudentHomeScreen extends StatefulWidget {
   final StudentLearningRepository learningRepository;
   final StudentQuizRepository quizRepository;
   final AccountRepository accountRepository;
+  final ParentHomeRepository parentHomeRepository;
   final ValueChanged<AuthProfile> onProfileUpdated;
   final Future<void> Function() onAccountDeleted;
   final Future<void> Function() onSignOut;
@@ -118,6 +121,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           builder: (_) => AccountScreen(
             profile: widget.profile,
             repository: widget.accountRepository,
+            familyRepository: widget.parentHomeRepository,
             onProfileUpdated: widget.onProfileUpdated,
             onSignOut: widget.onSignOut,
             onAccountDeleted: widget.onAccountDeleted,
