@@ -177,7 +177,27 @@ export default function Learn() {
         .insert({ student_id: user!.id, lesson_id: lessonId, completed: true, watch_percentage: 100 })
     }
     setProgress(prev => ({ ...prev, [lessonId]: true }))
-    showToast('أحسنت !', 'أكملت مشاهدة فيديو الدرس.')
+    showToast('قربت 🎓', 'لم يتبقَّ الكثير. تخيّل شعورك يوم النتيجة.')
+    void notifyCourseCompletion()
+  }
+
+  // تسجيل الإتمام نفسه يتم في قاعدة البيانات؛ هنا فقط نطلب إرسال إيميل الطالب وولي أمره
+  // إذا كان الكورس قد اكتمل فعلًا. أي فشل هنا لا يؤثر على تقدّم الطالب.
+  async function notifyCourseCompletion() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token || !courseId) return
+      await fetch('/api/notify-course-completion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ courseId }),
+      })
+    } catch {
+      // تجاهل: الإشعار داخل المنصة مسجّل بالفعل
+    }
   }
 
   function showToast(title: string, text: string) {
