@@ -135,6 +135,37 @@ export default function Dashboard() {
     setWeekActivity(week)
 
     setFetching(false)
+    void flushPendingCompletionEmails()
+  }
+
+  // لو أنهى الطالب كورسًا من التطبيق، يبقى إيميل الإتمام معلّقًا؛ هنا نرسله عند أول دخول للمنصة.
+  // كل شيء محسوم في السيرفر: لا يُرسل إلا لإتمام مسجّل، ومرة واحدة فقط.
+  async function flushPendingCompletionEmails() {
+    try {
+      const { data: pending } = await supabase
+        .from('course_completions')
+        .select('course_id')
+        .eq('student_id', user!.id)
+        .is('emails_sent_at', null)
+
+      if (!pending?.length) return
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      for (const row of pending) {
+        await fetch('/api/notify-course-completion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ courseId: row.course_id }),
+        })
+      }
+    } catch {
+      // لا يؤثر على لوحة الطالب إطلاقًا
+    }
   }
 
   async function dismissNotifications() {
