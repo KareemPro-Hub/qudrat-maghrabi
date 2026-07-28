@@ -16,7 +16,16 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { videoId, courseId } = req.body ?? {}
-  if (!videoId || !courseId) return res.status(400).json({ error: 'videoId and courseId required' })
+  if (
+    typeof videoId !== 'string'
+    || typeof courseId !== 'string'
+    || videoId.trim().length === 0
+    || courseId.trim().length === 0
+  ) {
+    return res.status(400).json({ error: 'videoId and courseId required' })
+  }
+  const safeVideoId = videoId.trim()
+  const safeCourseId = courseId.trim()
 
   // التحقق من الجلسة
   const authHeader = req.headers.authorization
@@ -32,19 +41,30 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token)
   if (userError || !user) return res.status(401).json({ error: 'Invalid token' })
 
+  // المشاهدة من حساب الطالب فقط؛ لا تكفي جلسة صحيحة لحساب إداري أو ولي أمر.
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profileError || profile?.role !== 'student' || profile.is_active === false) {
+    return res.status(403).json({ error: 'Student access required' })
+  }
+
   // لا نوقّع أي فيديو قبل التأكد أنه تابع فعلًا للكورس المطلوب.
   const { data: lesson } = await supabase
     .from('lessons')
     .select('id, course_id, is_free_preview, is_published')
-    .eq('video_id', videoId)
-    .eq('course_id', courseId)
+    .eq('video_id', safeVideoId)
+    .eq('course_id', safeCourseId)
     .eq('is_published', true)
     .maybeSingle()
 
   const { data: course } = await supabase
     .from('courses')
     .select('price, is_published')
-    .eq('id', courseId)
+    .eq('id', safeCourseId)
     .maybeSingle()
 
   if (!lesson || !course?.is_published) {
@@ -56,7 +76,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     .from('enrollments')
     .select('id, expires_at')
     .eq('student_id', user.id)
-    .eq('course_id', courseId)
+    .eq('course_id', safeCourseId)
     .eq('payment_status', 'paid')
     .maybeSingle()
 
@@ -79,7 +99,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   try {
     const expires = Math.floor(Date.now() / 1000) + 60 * 60 // صالح لبدء جلسة المشاهدة لمدة ساعة
-    const hashSource = `${TOKEN_KEY}${videoId}${expires}`
+    const hashSource = `${TOKEN_KEY}${safeVideoId}${expires}`
     const signedToken = crypto.createHash('sha256').update(hashSource).digest('hex')
 
     return res.status(200).json({
