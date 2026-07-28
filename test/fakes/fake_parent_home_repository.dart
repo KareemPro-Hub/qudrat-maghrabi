@@ -46,7 +46,7 @@ class FakeParentHomeRepository implements ParentHomeRepository {
   String? lastLinkedCode;
   ParentLinkCode createdLinkCode = ParentLinkCode(
     code: 'ABCD-EF12-3456-7890',
-    expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+    expiresAt: DateTime.now().add(const Duration(hours: 24)),
   );
 
   @override

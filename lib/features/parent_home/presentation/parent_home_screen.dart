@@ -1387,7 +1387,7 @@ class _PrivacyNote extends StatelessWidget {
         SizedBox(width: 8),
         Expanded(
           child: Text(
-            'الرمز صالح لمدة 15 دقيقة ويُستخدم مرة واحدة، ولا نعرض أي بيانات قبل إتمام الربط الآمن.',
+            'الرمز صالح لمدة 24 ساعة ويُستخدم مرة واحدة، ولا نعرض أي بيانات قبل إتمام الربط الآمن.',
             style: TextStyle(
               color: QmColors.textSecondary,
               fontSize: 12,

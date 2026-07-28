@@ -265,7 +265,7 @@ class _StudentParentLinkCodeScreenState
                   SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      'الرمز مشفّر، تنتهي صلاحيته بعد 15 دقيقة، ويُلغى فور استخدامه أو إنشاء رمز جديد.',
+                      'الرمز مشفّر، تنتهي صلاحيته بعد 24 ساعة، ويُلغى فور استخدامه أو إنشاء رمز جديد.',
                       style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 12,

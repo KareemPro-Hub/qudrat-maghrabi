@@ -12,7 +12,11 @@ class SupabaseParentHomeRepository implements ParentHomeRepository {
     try {
       final linksResponse = await _client
           .from('parent_student')
-          .select('student_id, profiles(id, full_name, email)')
+          .select(
+            'student_id, '
+            'student_profile:profiles!parent_student_student_id_fkey'
+            '(id, full_name, email)',
+          )
           .eq('parent_id', parentId)
           .order('created_at', ascending: true);
       final links = _rows(linksResponse);
@@ -71,7 +75,8 @@ class SupabaseParentHomeRepository implements ParentHomeRepository {
 
       final students = links
           .map((link) {
-            final profile = (link['profiles'] as Map).cast<String, dynamic>();
+            final profile = (link['student_profile'] as Map)
+                .cast<String, dynamic>();
             final studentId = link['student_id'] as String;
             final studentEnrollments = enrollmentRows
                 .where((row) => row['student_id'] == studentId)

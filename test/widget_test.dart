@@ -290,6 +290,10 @@ void main() {
     expect(parentRepository.createCodeCalls, 1);
     expect(find.text('ABCD-EF12-3456-7890'), findsOneWidget);
     expect(find.text('نسخ الرمز'), findsOneWidget);
+    expect(
+      find.textContaining('تنتهي صلاحيته بعد 24 ساعة', skipOffstage: false),
+      findsOneWidget,
+    );
   });
 
   testWidgets('student can update first and second name', (tester) async {
