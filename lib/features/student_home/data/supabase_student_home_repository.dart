@@ -1,6 +1,7 @@
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/domain/student_course.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/domain/student_home_snapshot.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseStudentHomeRepository implements StudentHomeRepository {
@@ -54,8 +55,10 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
     final statsByCourse = <String, Map<String, dynamic>>{
       for (final row in statsRows) row['course_id'] as String: row,
     };
-    final activeCourseIds = enrollmentRows
+    final activeEnrollmentRows = enrollmentRows
         .where(_isActiveEnrollment)
+        .toList();
+    final activeCourseIds = activeEnrollmentRows
         .map((row) => row['course_id'] as String)
         .toSet();
     final progressByLesson = <String, Map<String, dynamic>>{
@@ -73,14 +76,27 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       }
     }
 
+    final bundleIds = childCountByParent.keys.toSet();
+    final activeBundleEnrollmentRows =
+        activeEnrollmentRows
+            .where((row) => bundleIds.contains(row['course_id']))
+            .toList()
+          ..sort(_compareEnrollmentExpiry);
+    final activeBundleIds = activeBundleEnrollmentRows
+        .map((row) => row['course_id'] as String)
+        .toSet();
+
     final courses = courseRows.map((row) {
       final id = row['id'] as String;
       final stats = statsByCourse[id];
       final lessonsCount = _asInt(stats?['lessons_count']);
       final childCoursesCount = childCountByParent[id] ?? 0;
       final price = _asDouble(row['price']);
+      final parentCourseId = row['parent_course_id'] as String?;
       final hasAccess =
           activeCourseIds.contains(id) ||
+          (parentCourseId != null &&
+              activeBundleIds.contains(parentCourseId)) ||
           (price <= 0 && childCoursesCount == 0);
       final accessibleLessons = lessonRows
           .where((lesson) => lesson['course_id'] == id)
@@ -115,7 +131,7 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
         price: price,
         currency: (row['currency'] as String?) ?? 'EGP',
         level: (row['level'] as String?) ?? 'beginner',
-        parentCourseId: row['parent_course_id'] as String?,
+        parentCourseId: parentCourseId,
         durationHours: row['duration_hours'] == null
             ? null
             : _asDouble(row['duration_hours']),
@@ -150,7 +166,46 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       availableCourses: availableCourses,
       myCourses: myCourses,
       unreadNotifications: notificationRows.length,
+      subscription: activeBundleEnrollmentRows.isEmpty
+          ? null
+          : _subscriptionFrom(activeBundleEnrollmentRows.first),
     );
+  }
+
+  StudentSubscription _subscriptionFrom(Map<String, dynamic> row) {
+    final startedAt = DateTime.tryParse(row['enrolled_at']?.toString() ?? '');
+    final expiresAt = DateTime.tryParse(row['expires_at']?.toString() ?? '');
+    String planName = 'اشتراك المنصة';
+    if (startedAt != null && expiresAt != null) {
+      final days = expiresAt.difference(startedAt).inDays;
+      planName = days >= 150
+          ? 'الباقة الاحترافية'
+          : days >= 60
+          ? 'الباقة المميزة'
+          : 'الباقة الأساسية';
+    }
+    return StudentSubscription(
+      bundleId: row['course_id'] as String,
+      planName: planName,
+      startedAt: startedAt,
+      expiresAt: expiresAt,
+    );
+  }
+
+  int _compareEnrollmentExpiry(
+    Map<String, dynamic> first,
+    Map<String, dynamic> second,
+  ) {
+    final firstExpiry = DateTime.tryParse(
+      first['expires_at']?.toString() ?? '',
+    );
+    final secondExpiry = DateTime.tryParse(
+      second['expires_at']?.toString() ?? '',
+    );
+    if (firstExpiry == null && secondExpiry == null) return 0;
+    if (firstExpiry == null) return -1;
+    if (secondExpiry == null) return 1;
+    return secondExpiry.compareTo(firstExpiry);
   }
 
   List<Map<String, dynamic>> _rows(dynamic value) {

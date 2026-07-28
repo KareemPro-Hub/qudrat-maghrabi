@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qudrat_maghrabi_app/app/qudrat_maghrabi_app.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
+import 'package:qudrat_maghrabi_app/features/student_home/domain/student_course.dart';
+import 'package:qudrat_maghrabi_app/features/student_home/domain/student_home_snapshot.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 
 import 'fakes/fake_auth_repository.dart';
 import 'fakes/fake_account_repository.dart';
@@ -171,6 +174,109 @@ void main() {
     expect(find.text('الرئيسية'), findsOneWidget);
     expect(find.text('الكورسات'), findsOneWidget);
   });
+
+  testWidgets('student can review all three subscription plans', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    await tester.pumpWidget(createTestApp(repository));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('subscription-status-card')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('subscription-status-card')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('الاشتراك والباقات'), findsOneWidget);
+    expect(find.text('شهر واحد'), findsWidgets);
+    expect(find.text('3 أشهر'), findsWidgets);
+    expect(find.text('49'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('3 أشهر'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('3 أشهر'), findsWidgets);
+    expect(find.text('99'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('6 أشهر'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('6 أشهر'), findsWidgets);
+    expect(find.text('179'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining('كورس التأسيس يظل مجانيًا'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('كورس التأسيس يظل مجانيًا'), findsOneWidget);
+  });
+
+  testWidgets(
+    'active platform subscription is visible and unlocks paid course',
+    (tester) async {
+      const unlockedPaidCourse = StudentCourse(
+        id: 'question-bank-course',
+        title: 'بنوك الأسئلة والاختبارات',
+        description: '',
+        price: 249,
+        currency: 'EGP',
+        level: 'beginner',
+        lessonsCount: 0,
+        enrolledCount: 0,
+        childCoursesCount: 0,
+        hasAccess: true,
+        progressPercent: 0,
+        completedLessons: 0,
+      );
+      final homeRepository = FakeStudentHomeRepository(
+        snapshot: StudentHomeSnapshot(
+          bundles: const [FakeStudentHomeRepository.bundle],
+          availableCourses: const [
+            FakeStudentHomeRepository.freeCourse,
+            unlockedPaidCourse,
+          ],
+          myCourses: const [
+            FakeStudentHomeRepository.freeCourse,
+            unlockedPaidCourse,
+          ],
+          unreadNotifications: 0,
+          subscription: StudentSubscription(
+            bundleId: 'bundle',
+            planName: 'الباقة المميزة',
+            startedAt: DateTime(2026, 7, 1),
+            expiresAt: DateTime(2026, 10, 1),
+          ),
+        ),
+      );
+      final authRepository = FakeAuthRepository(
+        restoredProfile: FakeAuthRepository.studentProfile,
+      );
+      await tester.pumpWidget(createTestApp(authRepository, homeRepository));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('subscription-status-card')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('اشتراكك فعّال'), findsOneWidget);
+      expect(find.textContaining('الباقة المميزة'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('question-bank-course')),
+        250,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('مشترك'), findsOneWidget);
+      expect(find.text('ابدأ التعلّم'), findsWidgets);
+    },
+  );
 
   testWidgets('opening a free course shows its real chapters and lessons', (
     tester,

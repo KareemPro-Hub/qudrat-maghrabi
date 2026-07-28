@@ -21,7 +21,10 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
   }) async {
     final Map<String, dynamic>? course = await _client
         .from('courses')
-        .select('id, title, description, thumbnail_url, price, is_published')
+        .select(
+          'id, title, description, thumbnail_url, price, '
+          'parent_course_id, is_published',
+        )
         .eq('id', courseId)
         .eq('is_published', true)
         .maybeSingle();
@@ -51,13 +54,11 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
             'last_position_seconds, duration_seconds',
           )
           .eq('student_id', studentId),
-      _client
-          .from('enrollments')
-          .select('id, expires_at')
-          .eq('student_id', studentId)
-          .eq('course_id', courseId)
-          .eq('payment_status', 'paid')
-          .limit(1),
+      _activeEnrollmentQuery(
+        studentId: studentId,
+        courseId: courseId,
+        parentCourseId: course['parent_course_id'] as String?,
+      ),
     ]);
 
     final chapterRows = _rows(responses[0]);
@@ -114,8 +115,7 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
         .where((lesson) => lesson.chapterId == null)
         .toList();
     final price = _asDouble(course['price']);
-    final hasActiveEnrollment =
-        enrollmentRows.isNotEmpty && _isActiveEnrollment(enrollmentRows.first);
+    final hasActiveEnrollment = enrollmentRows.any(_isActiveEnrollment);
 
     return CourseLearningContent(
       courseId: courseId,
@@ -127,6 +127,21 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       chapters: chapters,
       ungroupedLessons: ungroupedLessons,
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _activeEnrollmentQuery({
+    required String studentId,
+    required String courseId,
+    required String? parentCourseId,
+  }) async {
+    final courseIds = <String>{courseId, ?parentCourseId};
+    final response = await _client
+        .from('enrollments')
+        .select('id, expires_at')
+        .eq('student_id', studentId)
+        .inFilter('course_id', courseIds.toList())
+        .eq('payment_status', 'paid');
+    return response.cast<Map<String, dynamic>>();
   }
 
   @override

@@ -14,6 +14,8 @@ import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learn
 import 'package:qudrat_maghrabi_app/features/student_learning/presentation/course_overview_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_list_screen.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/subscription_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({
@@ -251,11 +253,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         return _CourseCard(
                           key: ValueKey(course.id),
                           course: course,
-                          onTap: () => _showCourseDetails(course),
+                          onTap: () => course.hasAccess
+                              ? _showCourseDetails(course)
+                              : _showSubscriptions(snapshot.subscription),
                         );
                       },
                     ),
                   ),
+                const SizedBox(height: 24),
+                _SubscriptionStatusCard(
+                  subscription: snapshot.subscription,
+                  onTap: () => _showSubscriptions(snapshot.subscription),
+                ),
                 const SizedBox(height: 30),
                 _MotivationCard(
                   accessibleCourses: snapshot.myCourses.length,
@@ -276,6 +285,104 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           courseId: course.id,
           studentId: widget.profile.id,
           repository: widget.learningRepository,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSubscriptions(StudentSubscription? subscription) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => SubscriptionScreen(subscription: subscription),
+      ),
+    );
+    if (mounted) await _refresh();
+  }
+}
+
+class _SubscriptionStatusCard extends StatelessWidget {
+  const _SubscriptionStatusCard({
+    required this.subscription,
+    required this.onTap,
+  });
+
+  final StudentSubscription? subscription;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = subscription != null;
+    final expiry = subscription?.expiresAt;
+    final subtitle = active
+        ? expiry == null
+              ? '${subscription!.planName} • وصول مستمر'
+              : '${subscription!.planName} • متبقّي ${subscription!.remainingDays} يومًا'
+        : 'اختر شهرًا أو 3 أو 6 أشهر وافتح كل المحتوى';
+    return Material(
+      color: Colors.white.withValues(alpha: .88),
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        key: const Key('subscription-status-card'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(17),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: active
+                  ? QmColors.success.withValues(alpha: .28)
+                  : QmColors.border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: active ? null : QmGradients.brand,
+                  color: active ? const Color(0xFFE6FAF1) : null,
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Icon(
+                  active
+                      ? Icons.verified_rounded
+                      : Icons.workspace_premium_rounded,
+                  color: active ? QmColors.success : Colors.white,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      active ? 'اشتراكك فعّال' : 'افتح كل الكورسات',
+                      style: const TextStyle(
+                        color: QmColors.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: QmColors.textSecondary,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: QmColors.purple,
+                size: 18,
+              ),
+            ],
+          ),
         ),
       ),
     );

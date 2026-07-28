@@ -56,6 +56,7 @@ class FakeStudentHomeRepository implements StudentHomeRepository {
     availableCourses: [freeCourse, paidCourse],
     myCourses: [freeCourse],
     unreadNotifications: 0,
+    subscription: null,
   );
 
   StudentHomeSnapshot snapshot;
