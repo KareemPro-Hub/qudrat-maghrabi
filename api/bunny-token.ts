@@ -63,7 +63,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const { data: course } = await supabase
     .from('courses')
-    .select('price, is_published')
+    .select('is_published')
     .eq('id', safeCourseId)
     .maybeSingle()
 
@@ -71,24 +71,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(404).json({ error: 'Video is not available' })
   }
 
-  // الاشتراك صالح فقط إذا كان مدفوعًا ولم تنتهِ مدته.
-  const { data: enrollment } = await supabase
-    .from('enrollments')
-    .select('id, expires_at')
-    .eq('student_id', user.id)
-    .eq('course_id', safeCourseId)
-    .eq('payment_status', 'paid')
-    .maybeSingle()
+  // فحص موحّد: اشتراك مباشر، اشتراك حزمة رئيسية نشط، أو كورس مجاني كامل.
+  const { data: hasCourseAccess, error: accessError } = await supabase.rpc(
+    'has_active_course_access',
+    { p_student_id: user.id, p_course_id: safeCourseId },
+  )
+  if (accessError) {
+    console.error('Course access verification failed', accessError)
+    return res.status(500).json({ error: 'Failed to verify course access' })
+  }
 
-  const enrollmentExpiresAt = enrollment?.expires_at
-    ? new Date(enrollment.expires_at).getTime()
-    : null
-  const hasActiveEnrollment = !!enrollment
-    && (enrollmentExpiresAt === null || enrollmentExpiresAt > Date.now())
   const isFreePreview = lesson.is_free_preview === true
-  const isFreeCourse = course?.is_published === true && Number(course?.price) === 0
-
-  if (!hasActiveEnrollment && !isFreePreview && !isFreeCourse) {
+  if (hasCourseAccess !== true && !isFreePreview) {
     return res.status(403).json({ error: 'Not enrolled in this course' })
   }
 
