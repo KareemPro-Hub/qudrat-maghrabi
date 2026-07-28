@@ -36,6 +36,20 @@ class FakeParentHomeRepository implements ParentHomeRepository {
 
   static final sampleSnapshot = ParentHomeSnapshot(students: [linkedStudent]);
 
+  static final secondLinkedStudent = ParentStudentSummary(
+    id: 'second-student-id',
+    fullName: 'ريم أحمد',
+    email: 'second.student@example.com',
+    courses: const [],
+    quizResults: const [],
+    activeDaysThisWeek: 0,
+    studyMinutes: 0,
+  );
+
+  static final multiStudentSnapshot = ParentHomeSnapshot(
+    students: [linkedStudent, secondLinkedStudent],
+  );
+
   ParentHomeSnapshot snapshot;
   ParentHomeSnapshot? linkedSnapshot;
   Object? error;
@@ -44,6 +58,7 @@ class FakeParentHomeRepository implements ParentHomeRepository {
   int createCodeCalls = 0;
   int reminderCalls = 0;
   String? lastLinkedCode;
+  String linkedStudentId = 'student-id';
   ParentLinkCode createdLinkCode = ParentLinkCode(
     code: 'ABCD-EF12-3456-7890',
     expiresAt: DateTime.now().add(const Duration(hours: 24)),
@@ -66,12 +81,13 @@ class FakeParentHomeRepository implements ParentHomeRepository {
   }
 
   @override
-  Future<void> linkStudentByCode({required String code}) async {
+  Future<String> linkStudentByCode({required String code}) async {
     linkCalls += 1;
     lastLinkedCode = code;
     final value = error;
     if (value != null) throw value;
     snapshot = linkedSnapshot ?? sampleSnapshot;
+    return linkedStudentId;
   }
 
   @override

@@ -5,7 +5,7 @@ abstract interface class ParentHomeRepository {
 
   Future<ParentLinkCode> createParentLinkCode();
 
-  Future<void> linkStudentByCode({required String code});
+  Future<String> linkStudentByCode({required String code});
 
   Future<void> sendReminder({
     required String studentId,

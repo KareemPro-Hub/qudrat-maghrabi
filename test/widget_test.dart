@@ -425,4 +425,45 @@ void main() {
     expect(find.text('نتائج الاختبارات'), findsOneWidget);
     expect(find.text('اجتاز الاختبار'), findsOneWidget);
   });
+
+  testWidgets('parent adds a second student and opens their dashboard', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.parentProfile,
+    );
+    final parentRepository = FakeParentHomeRepository(
+      snapshot: FakeParentHomeRepository.sampleSnapshot,
+      linkedSnapshot: FakeParentHomeRepository.multiStudentSnapshot,
+    )..linkedStudentId = 'second-student-id';
+    await tester.pumpWidget(
+      createTestApp(authRepository, null, null, null, null, parentRepository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('رحلة كريم'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('add-another-student-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('parent-student-code-input')),
+      '1234-5678-90AB-CDEF',
+    );
+    await tester.tap(find.byKey(const Key('link-student-button')));
+    await tester.pumpAndSettle();
+
+    expect(parentRepository.linkCalls, 1);
+    expect(find.text('رحلة ريم'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('parent-student-student-id')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('parent-student-second-student-id')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('parent-student-student-id')));
+    await tester.pumpAndSettle();
+    expect(find.text('رحلة كريم'), findsOneWidget);
+  });
 }

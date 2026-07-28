@@ -243,13 +243,21 @@ class SupabaseParentHomeRepository implements ParentHomeRepository {
   }
 
   @override
-  Future<void> linkStudentByCode({required String code}) async {
+  Future<String> linkStudentByCode({required String code}) async {
     final normalizedCode = code.trim().toUpperCase();
     try {
-      await _client.rpc(
+      final response = await _client.rpc(
         'link_student_by_code',
         params: {'link_code': normalizedCode},
       );
+      final row = _firstRow(response);
+      final studentId = row['student_id']?.toString().trim() ?? '';
+      if (studentId.isEmpty) {
+        throw const ParentHomeFailure(
+          'تم الربط لكن تعذّر فتح بيانات الطالب. اسحب للتحديث',
+        );
+      }
+      return studentId;
     } on PostgrestException catch (error) {
       final message = error.message.toLowerCase();
       if (message.contains('link_code_invalid_or_expired')) {
@@ -268,6 +276,8 @@ class SupabaseParentHomeRepository implements ParentHomeRepository {
         );
       }
       throw const ParentHomeFailure('تعذّر ربط الطالب الآن. حاول مرة أخرى');
+    } on ParentHomeFailure {
+      rethrow;
     } catch (_) {
       throw const ParentHomeFailure(
         'تعذّر الاتصال بالمنصة. تحقق من الإنترنت وحاول مجددًا',

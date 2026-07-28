@@ -57,13 +57,13 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
   }
 
   Future<void> _openLinkStudent() async {
-    final linked = await Navigator.of(context).push<bool>(
+    final linkedStudentId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => ParentLinkStudentScreen(repository: widget.repository),
       ),
     );
-    if (linked == true && mounted) {
-      _activeStudentId = null;
+    if (linkedStudentId != null && mounted) {
+      _activeStudentId = linkedStudentId;
       await _refresh();
     }
   }
@@ -237,9 +237,11 @@ class _ParentLinkStudentScreenState extends State<ParentLinkStudentScreen> {
       _errorMessage = null;
     });
     try {
-      await widget.repository.linkStudentByCode(code: _codeController.text);
+      final studentId = await widget.repository.linkStudentByCode(
+        code: _codeController.text,
+      );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(studentId);
     } on ParentHomeFailure catch (error) {
       if (!mounted) return;
       setState(() => _errorMessage = error.message);
