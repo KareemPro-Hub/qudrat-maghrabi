@@ -665,6 +665,7 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
         'https://iframe.mediadelivery.net/embed/$libraryId/$videoId'
         '?token=${Uri.encodeQueryComponent(token)}&expires=$expires'
         '&autoplay=false&preload=true&responsive=true'
+        '&playsinline=true&disableIosPlayer=true'
         '&session=${DateTime.now().millisecondsSinceEpoch}';
     return '''
 <!doctype html>
