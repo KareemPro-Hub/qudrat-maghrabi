@@ -530,17 +530,27 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
   Future<void> _toggleMute() async {
     final controller = _controller;
     if (controller == null || !_audioReady || _changingAudio) return;
-    setState(() => _changingAudio = true);
+    final shouldMute = !_muted;
+    setState(() {
+      _changingAudio = true;
+      _muted = shouldMute;
+    });
     try {
       await controller.runJavaScript(
-        'if (window.togglePlayerMute) window.togglePlayerMute();',
+        'if (window.setPlayerMuted) '
+        'window.setPlayerMuted(${shouldMute ? 'true' : 'false'});',
       );
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       if (mounted && _changingAudio) {
         setState(() => _changingAudio = false);
       }
     } catch (_) {
-      if (mounted) setState(() => _changingAudio = false);
+      if (mounted) {
+        setState(() {
+          _muted = !shouldMute;
+          _changingAudio = false;
+        });
+      }
     }
   }
 
@@ -672,26 +682,22 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
     document.addEventListener('contextmenu', (event) => event.preventDefault());
     const bridge = (payload) => Playback.postMessage(JSON.stringify(payload));
     const player = new playerjs.Player(document.getElementById('player'));
-    const reportMuted = (type = 'muted') => {
-      player.getMuted((value) => bridge({type, value, muted:value}));
-    };
-    window.togglePlayerMute = () => {
-      player.getMuted((isMuted) => {
-        if (isMuted) {
-          player.unmute();
-          player.setVolume(100);
-        } else {
-          player.mute();
-        }
-        setTimeout(() => reportMuted('muted'), 120);
-      });
+    window.setPlayerMuted = (shouldMute) => {
+      if (shouldMute) {
+        player.mute();
+        player.setVolume(0);
+      } else {
+        player.unmute();
+        player.setVolume(100);
+      }
+      bridge({type:'muted', value:shouldMute});
     };
     player.on('ready', () => {
+      bridge({type:'ready', muted:false});
       player.on('timeupdate', (data) => bridge({type:'timeupdate', seconds:data.seconds, duration:data.duration}));
       player.on('pause', () => bridge({type:'pause'}));
       player.on('ended', () => bridge({type:'ended'}));
       player.on('error', () => bridge({type:'error'}));
-      reportMuted('ready');
       const exactResume = $resumeSeconds;
       const legacyPercentage = $resumePercentage;
       if (exactResume > 0 && legacyPercentage < 100) {
