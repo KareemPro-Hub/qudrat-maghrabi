@@ -64,6 +64,8 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
     required LessonProgress current,
     required int watchPercentage,
     required bool completed,
+    required int positionSeconds,
+    required int durationSeconds,
   }) async {
     saveCalls += 1;
     return LessonProgress(
@@ -71,6 +73,8 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
           ? 100
           : watchPercentage.clamp(current.watchPercentage, 100),
       completed: current.completed || completed,
+      positionSeconds: completed ? durationSeconds : positionSeconds,
+      durationSeconds: durationSeconds,
     );
   }
 }

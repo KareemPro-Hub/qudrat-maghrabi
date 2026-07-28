@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -26,19 +27,24 @@ class LessonPlayerScreen extends StatefulWidget {
   State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
 }
 
-class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
+class _LessonPlayerScreenState extends State<LessonPlayerScreen>
+    with WidgetsBindingObserver {
   late List<CourseLesson> _lessons;
   late int _selectedIndex;
   int _latestPercentage = 0;
   int _lastSavedMilestone = 0;
-  bool _saving = false;
-  bool _pendingSave = false;
+  double _latestSeconds = 0;
+  double _durationSeconds = 0;
+  Future<void> _saveChain = Future.value();
+  bool _closing = false;
+  bool _allowPop = false;
 
   CourseLesson get _lesson => _lessons[_selectedIndex];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _lessons = [...widget.content.allLessons];
     _selectedIndex = math.max(
       0,
@@ -50,11 +56,30 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
   void _resetTracking() {
     _latestPercentage = _lesson.progress.watchPercentage;
     _lastSavedMilestone = (_latestPercentage ~/ 5) * 5;
+    _latestSeconds = _lesson.progress.positionSeconds.toDouble();
+    _durationSeconds = _lesson.progress.durationSeconds.toDouble();
   }
 
-  void _selectLesson(CourseLesson lesson) {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_saveCurrentPosition());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _selectLesson(CourseLesson lesson) async {
     final index = _lessons.indexWhere((item) => item.id == lesson.id);
     if (index < 0 || index == _selectedIndex) return;
+    await _saveCurrentPosition();
+    if (!mounted) return;
     setState(() {
       _selectedIndex = index;
       _resetTracking();
@@ -63,219 +88,305 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
 
   void _onPlaybackProgress(double seconds, double duration) {
     if (duration <= 0) return;
+    _durationSeconds = math.max(_durationSeconds, duration);
+    _latestSeconds = seconds.clamp(0, duration);
     final percentage = ((seconds / duration) * 100).floor().clamp(0, 99);
     _latestPercentage = math.max(_latestPercentage, percentage);
     final milestone = (_latestPercentage ~/ 5) * 5;
     if (milestone >= _lastSavedMilestone + 5) {
       _lastSavedMilestone = milestone;
-      _saveProgress(milestone, completed: false);
+      _saveProgress(
+        milestone,
+        completed: false,
+        positionSeconds: _latestSeconds.round(),
+        durationSeconds: _durationSeconds.round(),
+      );
     }
   }
 
-  Future<void> _saveProgress(int percentage, {required bool completed}) async {
-    if (_saving) {
-      _pendingSave = true;
-      return;
-    }
-    _saving = true;
+  Future<void> _saveCurrentPosition() {
+    return _saveProgress(
+      _latestPercentage,
+      completed: false,
+      positionSeconds: _latestSeconds.round(),
+      durationSeconds: _durationSeconds.round(),
+    );
+  }
+
+  Future<void> _saveProgress(
+    int percentage, {
+    required bool completed,
+    required int positionSeconds,
+    required int durationSeconds,
+  }) {
     final lessonAtSave = _lesson;
-    try {
-      final progress = await widget.repository.saveProgress(
-        studentId: widget.studentId,
-        lessonId: lessonAtSave.id,
-        current: lessonAtSave.progress,
-        watchPercentage: percentage,
-        completed: completed,
-      );
-      if (!mounted) return;
-      final index = _lessons.indexWhere((item) => item.id == lessonAtSave.id);
-      if (index >= 0) {
-        setState(() {
-          _lessons[index] = _lessons[index].copyWith(progress: progress);
-        });
+    _saveChain = _saveChain.then((_) async {
+      try {
+        final progress = await widget.repository.saveProgress(
+          studentId: widget.studentId,
+          lessonId: lessonAtSave.id,
+          current: lessonAtSave.progress,
+          watchPercentage: percentage,
+          completed: completed,
+          positionSeconds: positionSeconds,
+          durationSeconds: durationSeconds,
+        );
+        if (!mounted) return;
+        final index = _lessons.indexWhere((item) => item.id == lessonAtSave.id);
+        if (index >= 0) {
+          setState(() {
+            _lessons[index] = _lessons[index].copyWith(progress: progress);
+          });
+        }
+      } catch (_) {
+        // لا نقطع المشاهدة عند ضعف الاتصال؛ المحاولة التالية تحفظ الموضع.
       }
-    } catch (_) {
-      // لا نقطع المشاهدة عند ضعف الاتصال؛ المحاولة التالية تحفظ أعلى نسبة.
-    } finally {
-      _saving = false;
-      if (_pendingSave && mounted) {
-        _pendingSave = false;
-        await _saveProgress(_latestPercentage, completed: false);
-      }
-    }
+    });
+    return _saveChain;
   }
 
   Future<void> _onCompleted() async {
     _latestPercentage = 100;
-    await _saveProgress(100, completed: true);
+    _latestSeconds = _durationSeconds;
+    await _saveProgress(
+      100,
+      completed: true,
+      positionSeconds: _latestSeconds.round(),
+      durationSeconds: _durationSeconds.round(),
+    );
     if (!mounted) return;
+    final nextIndex = _nextPlayableIndex;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'أحسنت! تم إكمال الدرس بنجاح 🎉',
             textAlign: TextAlign.center,
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: QmColors.success,
+          action: nextIndex == null
+              ? null
+              : SnackBarAction(
+                  label: 'الدرس التالي',
+                  textColor: Colors.white,
+                  onPressed: () => _selectLesson(_lessons[nextIndex]),
+                ),
         ),
       );
   }
 
+  int? get _previousPlayableIndex {
+    for (var index = _selectedIndex - 1; index >= 0; index--) {
+      if (_lessons[index].hasVideo) return index;
+    }
+    return null;
+  }
+
+  int? get _nextPlayableIndex {
+    for (var index = _selectedIndex + 1; index < _lessons.length; index++) {
+      if (_lessons[index].hasVideo) return index;
+    }
+    return null;
+  }
+
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    await _saveCurrentPosition();
+    if (!mounted) return;
+    setState(() => _allowPop = true);
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: QmColors.background,
-      appBar: AppBar(
-        title: Text(
-          widget.content.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        centerTitle: false,
+    return PopScope(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_close());
+      },
+      child: Scaffold(
         backgroundColor: QmColors.background,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_forward_rounded),
+        appBar: AppBar(
+          title: Text(
+            widget.content.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          centerTitle: false,
+          backgroundColor: QmColors.background,
+          leading: IconButton(
+            onPressed: _close,
+            icon: const Icon(Icons.arrow_forward_rounded),
+          ),
         ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 34),
-          children: [
-            _ProtectedVideoPlayer(
-              key: ValueKey(_lesson.id),
-              lesson: _lesson,
-              repository: widget.repository,
-              onProgress: _onPlaybackProgress,
-              onPaused: () =>
-                  _saveProgress(_latestPercentage, completed: false),
-              onCompleted: _onCompleted,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    gradient: QmGradients.brand,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _lesson.progress.completed
-                        ? Icons.check_rounded
-                        : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _lesson.title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          height: 1.3,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _lesson.durationMinutes == null
-                            ? 'درس فيديو'
-                            : '${_lesson.durationMinutes} دقيقة',
-                        style: const TextStyle(color: QmColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_lesson.progress.watchPercentage > 0)
-                  Text(
-                    '${_lesson.progress.watchPercentage}%',
-                    style: const TextStyle(
-                      color: QmColors.pink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(99),
-              child: LinearProgressIndicator(
-                minHeight: 8,
-                value: _lesson.progress.watchPercentage / 100,
-                color: _lesson.progress.completed
-                    ? QmColors.success
-                    : QmColors.pink,
-                backgroundColor: QmColors.lavender,
+        body: SafeArea(
+          top: false,
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 34),
+            children: [
+              _ProtectedVideoPlayer(
+                key: ValueKey(_lesson.id),
+                lesson: _lesson,
+                repository: widget.repository,
+                onProgress: _onPlaybackProgress,
+                onPaused: _saveCurrentPosition,
+                onCompleted: _onCompleted,
               ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'دروس الكورس',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: QmColors.border),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
+              const SizedBox(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (var index = 0; index < _lessons.length; index++) ...[
-                    _PlayerLessonTile(
-                      lesson: _lessons[index],
-                      number: index + 1,
-                      selected: index == _selectedIndex,
-                      onTap: () => _selectLesson(_lessons[index]),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      gradient: QmGradients.brand,
+                      shape: BoxShape.circle,
                     ),
-                    if (index != _lessons.length - 1)
-                      const Divider(indent: 70, endIndent: 16),
-                  ],
+                    child: Icon(
+                      _lesson.progress.completed
+                          ? Icons.check_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _lesson.title,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                height: 1.3,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _lesson.durationMinutes == null
+                              ? 'درس فيديو'
+                              : '${_lesson.durationMinutes} دقيقة',
+                          style: const TextStyle(color: QmColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_lesson.progress.watchPercentage > 0)
+                    Text(
+                      '${_lesson.progress.watchPercentage}%',
+                      style: const TextStyle(
+                        color: QmColors.pink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                 ],
               ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'ملخص الدرس',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: QmColors.border),
-              ),
-              child: Text(
-                _lesson.description.isEmpty
-                    ? 'لم يُضف ملخص لهذا الدرس بعد.'
-                    : _lesson.description,
-                style: const TextStyle(
-                  color: QmColors.textSecondary,
-                  height: 1.7,
+              const SizedBox(height: 18),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  minHeight: 8,
+                  value: _lesson.progress.watchPercentage / 100,
+                  color: _lesson.progress.completed
+                      ? QmColors.success
+                      : QmColors.pink,
+                  backgroundColor: QmColors.lavender,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _previousPlayableIndex == null
+                          ? null
+                          : () => _selectLesson(
+                              _lessons[_previousPlayableIndex!],
+                            ),
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('الدرس السابق'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _nextPlayableIndex == null
+                          ? null
+                          : () => _selectLesson(_lessons[_nextPlayableIndex!]),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      label: Text(
+                        _nextPlayableIndex == null ? 'آخر درس' : 'الدرس التالي',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'دروس الكورس',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: QmColors.border),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (var index = 0; index < _lessons.length; index++) ...[
+                      _PlayerLessonTile(
+                        lesson: _lessons[index],
+                        number: index + 1,
+                        selected: index == _selectedIndex,
+                        onTap: () => _selectLesson(_lessons[index]),
+                      ),
+                      if (index != _lessons.length - 1)
+                        const Divider(indent: 70, endIndent: 16),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'ملخص الدرس',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: QmColors.border),
+                ),
+                child: Text(
+                  _lesson.description.isEmpty
+                      ? 'لم يُضف ملخص لهذا الدرس بعد.'
+                      : _lesson.description,
+                  style: const TextStyle(
+                    color: QmColors.textSecondary,
+                    height: 1.7,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -332,6 +443,18 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
         )
         ..setNavigationDelegate(
           NavigationDelegate(
+            onNavigationRequest: (request) {
+              if (!request.isMainFrame) {
+                return NavigationDecision.navigate;
+              }
+              final uri = Uri.tryParse(request.url);
+              if (uri == null ||
+                  uri.scheme == 'about' ||
+                  uri.host == 'www.qudratmaghrabi.com') {
+                return NavigationDecision.navigate;
+              }
+              return NavigationDecision.prevent;
+            },
             onWebResourceError: (error) {
               if (error.isForMainFrame == false) return;
               if (mounted) {
@@ -346,6 +469,8 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
           videoId: videoId,
           token: credentials.token,
           expires: credentials.expires,
+          resumeSeconds: widget.lesson.progress.positionSeconds,
+          resumePercentage: widget.lesson.progress.watchPercentage,
         ),
         baseUrl: 'https://www.qudratmaghrabi.com',
       );
@@ -450,11 +575,14 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
     required String videoId,
     required String token,
     required int expires,
+    required int resumeSeconds,
+    required int resumePercentage,
   }) {
     final source =
         'https://iframe.mediadelivery.net/embed/$libraryId/$videoId'
         '?token=${Uri.encodeQueryComponent(token)}&expires=$expires'
-        '&autoplay=false&preload=true&responsive=true';
+        '&autoplay=false&preload=true&responsive=true'
+        '&session=${DateTime.now().millisecondsSinceEpoch}';
     return '''
 <!doctype html>
 <html>
@@ -468,6 +596,7 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
 <body>
   <iframe id="player" src="$source" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>
   <script>
+    document.addEventListener('contextmenu', (event) => event.preventDefault());
     const bridge = (payload) => Playback.postMessage(JSON.stringify(payload));
     const player = new playerjs.Player(document.getElementById('player'));
     player.on('ready', () => {
@@ -475,6 +604,17 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
       player.on('pause', () => bridge({type:'pause'}));
       player.on('ended', () => bridge({type:'ended'}));
       player.on('error', () => bridge({type:'error'}));
+      const exactResume = $resumeSeconds;
+      const legacyPercentage = $resumePercentage;
+      if (exactResume > 0 && legacyPercentage < 100) {
+        player.setCurrentTime(exactResume);
+      } else if (legacyPercentage > 0 && legacyPercentage < 100) {
+        player.getDuration((duration) => {
+          if (duration > 0) {
+            player.setCurrentTime(duration * legacyPercentage / 100);
+          }
+        });
+      }
     });
   </script>
 </body>

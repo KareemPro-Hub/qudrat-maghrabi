@@ -108,12 +108,16 @@ class LessonProgress {
   const LessonProgress({
     required this.watchPercentage,
     required this.completed,
+    this.positionSeconds = 0,
+    this.durationSeconds = 0,
   });
 
   static const empty = LessonProgress(watchPercentage: 0, completed: false);
 
   final int watchPercentage;
   final bool completed;
+  final int positionSeconds;
+  final int durationSeconds;
 }
 
 class BunnyEmbedCredentials {

@@ -17,6 +17,8 @@ abstract interface class StudentLearningRepository {
     required LessonProgress current,
     required int watchPercentage,
     required bool completed,
+    required int positionSeconds,
+    required int durationSeconds,
   });
 }
 

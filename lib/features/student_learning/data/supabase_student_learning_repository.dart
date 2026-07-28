@@ -46,7 +46,10 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
           .order('order_index', ascending: true),
       _client
           .from('lesson_progress')
-          .select('lesson_id, watch_percentage, completed')
+          .select(
+            'lesson_id, watch_percentage, completed, '
+            'last_position_seconds, duration_seconds',
+          )
           .eq('student_id', studentId),
       _client
           .from('enrollments')
@@ -66,6 +69,8 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
         row['lesson_id'] as String: LessonProgress(
           watchPercentage: _asInt(row['watch_percentage']).clamp(0, 100),
           completed: row['completed'] as bool? ?? false,
+          positionSeconds: _asInt(row['last_position_seconds']),
+          durationSeconds: _asInt(row['duration_seconds']),
         ),
     };
 
@@ -166,12 +171,19 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
     required LessonProgress current,
     required int watchPercentage,
     required bool completed,
+    required int positionSeconds,
+    required int durationSeconds,
   }) async {
     final nextPercentage = math.max(
       current.watchPercentage,
       watchPercentage.clamp(0, 100),
     );
     final nextCompleted = current.completed || completed;
+    final safeDuration = math.max(current.durationSeconds, durationSeconds);
+    final safePosition = positionSeconds.clamp(
+      0,
+      safeDuration > 0 ? safeDuration : positionSeconds,
+    );
     final Map<String, dynamic> row = await _client
         .from('lesson_progress')
         .upsert({
@@ -179,14 +191,23 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
           'lesson_id': lessonId,
           'watch_percentage': nextCompleted ? 100 : nextPercentage,
           'completed': nextCompleted,
+          'last_position_seconds': nextCompleted && safeDuration > 0
+              ? safeDuration
+              : safePosition,
+          'duration_seconds': safeDuration,
           'last_watched_at': DateTime.now().toUtc().toIso8601String(),
         }, onConflict: 'student_id,lesson_id')
-        .select('watch_percentage, completed')
+        .select(
+          'watch_percentage, completed, last_position_seconds, '
+          'duration_seconds',
+        )
         .single();
 
     return LessonProgress(
       watchPercentage: _asInt(row['watch_percentage']).clamp(0, 100),
       completed: row['completed'] as bool? ?? false,
+      positionSeconds: _asInt(row['last_position_seconds']),
+      durationSeconds: _asInt(row['duration_seconds']),
     );
   }
 
