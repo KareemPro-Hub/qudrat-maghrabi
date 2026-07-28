@@ -416,6 +416,9 @@ class _ProtectedVideoPlayer extends StatefulWidget {
 class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
   WebViewController? _controller;
   String? _error;
+  bool _audioReady = false;
+  bool _muted = false;
+  bool _changingAudio = false;
 
   @override
   void initState() {
@@ -490,6 +493,21 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
     try {
       final data = jsonDecode(message.message) as Map<String, dynamic>;
       switch (data['type']) {
+        case 'ready':
+          if (mounted) {
+            setState(() {
+              _audioReady = true;
+              _muted = data['muted'] as bool? ?? false;
+              _changingAudio = false;
+            });
+          }
+        case 'muted':
+          if (mounted) {
+            setState(() {
+              _muted = data['value'] as bool? ?? false;
+              _changingAudio = false;
+            });
+          }
         case 'timeupdate':
           widget.onProgress(
             (data['seconds'] as num?)?.toDouble() ?? 0,
@@ -506,6 +524,23 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
       }
     } catch (_) {
       // نتجاهل الرسائل غير المعروفة من مشغل الطرف الثالث.
+    }
+  }
+
+  Future<void> _toggleMute() async {
+    final controller = _controller;
+    if (controller == null || !_audioReady || _changingAudio) return;
+    setState(() => _changingAudio = true);
+    try {
+      await controller.runJavaScript(
+        'if (window.togglePlayerMute) window.togglePlayerMute();',
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 900));
+      if (mounted && _changingAudio) {
+        setState(() => _changingAudio = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _changingAudio = false);
     }
   }
 
@@ -567,7 +602,45 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
         child: CircularProgressIndicator(color: QmColors.pink),
       );
     }
-    return WebViewWidget(controller: controller);
+    return Stack(
+      children: [
+        Positioned.fill(child: WebViewWidget(controller: controller)),
+        PositionedDirectional(
+          top: 10,
+          start: 10,
+          child: Semantics(
+            button: true,
+            label: _muted ? 'تشغيل الصوت' : 'كتم الصوت',
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.68),
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: _audioReady && !_changingAudio ? _toggleMute : null,
+                child: SizedBox(
+                  width: 46,
+                  height: 46,
+                  child: _changingAudio
+                      ? const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          _muted
+                              ? Icons.volume_off_rounded
+                              : Icons.volume_up_rounded,
+                          color: _audioReady ? Colors.white : Colors.white54,
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   String _playerHtml({
@@ -599,11 +672,26 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
     document.addEventListener('contextmenu', (event) => event.preventDefault());
     const bridge = (payload) => Playback.postMessage(JSON.stringify(payload));
     const player = new playerjs.Player(document.getElementById('player'));
+    const reportMuted = (type = 'muted') => {
+      player.getMuted((value) => bridge({type, value, muted:value}));
+    };
+    window.togglePlayerMute = () => {
+      player.getMuted((isMuted) => {
+        if (isMuted) {
+          player.unmute();
+          player.setVolume(100);
+        } else {
+          player.mute();
+        }
+        setTimeout(() => reportMuted('muted'), 120);
+      });
+    };
     player.on('ready', () => {
       player.on('timeupdate', (data) => bridge({type:'timeupdate', seconds:data.seconds, duration:data.duration}));
       player.on('pause', () => bridge({type:'pause'}));
       player.on('ended', () => bridge({type:'ended'}));
       player.on('error', () => bridge({type:'error'}));
+      reportMuted('ready');
       const exactResume = $resumeSeconds;
       const legacyPercentage = $resumePercentage;
       if (exactResume > 0 && legacyPercentage < 100) {
