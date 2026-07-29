@@ -7,6 +7,7 @@ import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../c
 type Coupon = {
   id: string
   code: string
+  discount_percent: number
   allowed_email: string | null
   note: string | null
   is_active: boolean
@@ -16,7 +17,7 @@ type Coupon = {
   created_at: string
 }
 
-const emptyForm = { code: '', allowed_email: '', note: '', max_uses: '', expires_at: '' }
+const emptyForm = { code: '', discount_percent: '25', allowed_email: '', note: '', max_uses: '', expires_at: '' }
 
 function todayDateInputValue() {
   const now = new Date()
@@ -60,6 +61,10 @@ export default function AdminCoupons() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(allowedEmail)) {
       return toast.error('اكتب البريد الإلكتروني الصحيح للطالب المسموح له باستخدام الكود')
     }
+    const discountPercent = Number(form.discount_percent)
+    if (![25, 50, 75, 100].includes(discountPercent)) {
+      return toast.error('اختر نسبة خصم صحيحة')
+    }
 
     const maxUses = form.max_uses ? Number(form.max_uses) : null
     if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) {
@@ -80,6 +85,7 @@ export default function AdminCoupons() {
 
       const { error } = await supabase.from('discount_codes').insert({
         code: normalizedCode,
+        discount_percent: discountPercent,
         allowed_email: allowedEmail,
         note: form.note.trim() || null,
         max_uses: maxUses,
@@ -131,7 +137,7 @@ export default function AdminCoupons() {
     <>
       <SectionToolbar
         title="أكواد الخصم"
-        subtitle="أنشئ أكوادًا تمنح الطلاب اشتراكًا مجانيًا بالكامل لمناسباتك المختلفة."
+        subtitle="أنشئ أكوادًا مخصصة بنسبة خصم تختارها لكل طالب."
         action={<button className="primary-admin" onClick={openCreate}><Plus size={16} /> إنشاء كود جديد</button>}
       />
 
@@ -145,10 +151,10 @@ export default function AdminCoupons() {
         <EmptyState text="لا توجد أكواد خصم بعد" action={<button className="primary-admin" onClick={openCreate}>إنشاء أول كود</button>} />
       ) : (
         <article className="admin-card data-card" data-searchable>
-          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>كل الأكواد تمنح اشتراكًا مجانيًا 100% عند الاستخدام</p></div></header>
+          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>كل كود مرتبط ببريد الطالب ونسبة الخصم المحددة له</p></div></header>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>الكود</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الكود</th><th>نسبة الخصم</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
               <tbody>
                 {coupons.map((c) => {
                   const expired = c.expires_at ? new Date(c.expires_at) < new Date() : false
@@ -162,6 +168,7 @@ export default function AdminCoupons() {
                           <button className="row-action" onClick={() => copyCode(c.code)} title="نسخ الكود"><Copy size={12} /></button>
                         </div>
                       </td>
+                      <td><StatusBadge variant="success">{c.discount_percent}%</StatusBadge></td>
                       <td dir="ltr" style={{ textAlign: 'right' }}>{c.allowed_email || 'غير مخصص'}</td>
                       <td>{c.note || '—'}</td>
                       <td>{c.used_count}{c.max_uses != null ? ` / ${c.max_uses}` : ' (غير محدود)'}</td>
@@ -214,6 +221,20 @@ export default function AdminCoupons() {
                 />
               </div>
               <small className="cell-sub">اكتب اسم الطالب أو المناسبة؛ لن يتم توليد أي كود تلقائيًا.</small>
+            </label>
+            <label htmlFor="coupon-percentage"><span className="field-label">نسبة الخصم</span>
+              <select
+                id="coupon-percentage"
+                value={form.discount_percent}
+                onChange={(e) => setForm({ ...form, discount_percent: e.target.value })}
+                required
+              >
+                <option value="25">خصم 25%</option>
+                <option value="50">خصم 50%</option>
+                <option value="75">خصم 75%</option>
+                <option value="100">خصم 100% — اشتراك مجاني</option>
+              </select>
+              <small className="cell-sub">خصم 100% يفعّل الاشتراك مباشرةً دون فتح بوابة الدفع.</small>
             </label>
             <label htmlFor="coupon-email"><span className="field-label">البريد المسموح له باستخدام الكود</span>
               <input
@@ -269,7 +290,7 @@ export default function AdminCoupons() {
             </div>
             <p className="coupon-benefit-note">
               <Info size={18} aria-hidden="true" />
-              <span>يمنح هذا الكود اشتراكًا مجانيًا للحساب المرتبط بالبريد المحدد فقط.</span>
+              <span>يمنح هذا الكود خصمًا بنسبة {form.discount_percent}% للحساب المرتبط بالبريد المحدد فقط.</span>
             </p>
             <div className="form-row coupon-form-actions">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إنشاء الكود'}</button>

@@ -78,7 +78,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   let attemptQuery = supabase
     .from('payment_attempts')
-    .select('id, status, amount_minor, currency, student_id, course_id, enrollment_id')
+    .select('id, status, amount_minor, currency, student_id, course_id, enrollment_id, discount_code_id')
     .eq('provider', 'paymob')
 
   if (attemptId) {
@@ -136,6 +136,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           failure_reason: reason.slice(0, 500),
         })
         .eq('id', attempt.id)
+
+      if (attempt.discount_code_id) {
+        const { error: releaseError } = await supabase.rpc(
+          'release_discount_code_reservation',
+          { p_attempt_id: attempt.id },
+        )
+        if (releaseError) console.error('Discount reservation release failed', releaseError)
+      }
     }
     return res.status(200).json({ received: true, status: 'failed' })
   }

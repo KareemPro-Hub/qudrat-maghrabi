@@ -14,6 +14,7 @@ import {
 
 type CreateIntentionBody = {
   courseId?: string
+  couponCode?: string
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -64,9 +65,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(403).json({ error: 'STUDENT_ACCOUNT_REQUIRED' })
   }
 
-  const amountMinor = toMinorUnits(course.price)
+  const originalAmountMinor = toMinorUnits(course.price)
   const currency = String(course.currency || '').toUpperCase()
-  if (!amountMinor) return res.status(400).json({ error: 'COURSE_IS_FREE' })
+  if (!originalAmountMinor) return res.status(400).json({ error: 'COURSE_IS_FREE' })
   if (currency !== paymob.currency) {
     console.error('Course currency does not match the configured Paymob integration', {
       courseId: course.id,
@@ -75,6 +76,51 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     })
     return res.status(409).json({ error: 'PAYMENT_CURRENCY_MISMATCH' })
   }
+
+  const normalizedCouponCode = typeof body.couponCode === 'string'
+    ? body.couponCode.trim().toUpperCase()
+    : ''
+  let discountCode: { id: string; discount_percent: number } | null = null
+
+  if (normalizedCouponCode) {
+    const { data: coupon, error: couponError } = await supabase
+      .from('discount_codes')
+      .select('id, allowed_email, discount_percent, is_active, max_uses, used_count, expires_at')
+      .eq('code', normalizedCouponCode)
+      .maybeSingle()
+
+    if (couponError) {
+      console.error('Discount code lookup failed', couponError)
+      return res.status(500).json({ error: 'COUPON_VALIDATION_FAILED' })
+    }
+
+    const accountEmail = String(profile.email || user.email || '').trim().toLowerCase()
+    const allowedEmail = String(coupon?.allowed_email || '').trim().toLowerCase()
+    const discountPercent = Number(coupon?.discount_percent)
+    const expired = coupon?.expires_at ? new Date(coupon.expires_at).getTime() < Date.now() : false
+    const exhausted = coupon?.max_uses != null && Number(coupon.used_count) >= Number(coupon.max_uses)
+
+    if (
+      !coupon
+      || !coupon.is_active
+      || !allowedEmail
+      || allowedEmail !== accountEmail
+      || expired
+      || exhausted
+      || ![25, 50, 75, 100].includes(discountPercent)
+    ) {
+      return res.status(400).json({ error: 'COUPON_INVALID' })
+    }
+    if (discountPercent === 100) {
+      return res.status(409).json({ error: 'COUPON_REQUIRES_REDEMPTION' })
+    }
+
+    discountCode = { id: coupon.id, discount_percent: discountPercent }
+  }
+
+  const amountMinor = discountCode
+    ? Math.max(1, Math.round(originalAmountMinor * (100 - discountCode.discount_percent) / 100))
+    : originalAmountMinor
 
   const { data: existingEnrollment, error: enrollmentReadError } = await supabase
     .from('enrollments')
@@ -132,6 +178,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       provider: 'paymob',
       status: 'pending',
       amount_minor: amountMinor,
+      original_amount_minor: discountCode ? originalAmountMinor : null,
+      discount_code_id: discountCode?.id || null,
+      discount_percent: discountCode?.discount_percent || null,
       currency,
     })
     .select('id')
@@ -140,6 +189,21 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (attemptError || !attempt) {
     console.error('Payment attempt creation failed', attemptError)
     return res.status(500).json({ error: 'PAYMENT_SETUP_FAILED' })
+  }
+
+  if (discountCode) {
+    const { error: reservationError } = await supabase.rpc(
+      'reserve_discount_code_for_payment',
+      { p_attempt_id: attempt.id },
+    )
+    if (reservationError) {
+      console.warn('Discount code reservation rejected', reservationError.message)
+      await supabase
+        .from('payment_attempts')
+        .update({ status: 'failed', failure_reason: 'coupon_reservation_rejected' })
+        .eq('id', attempt.id)
+      return res.status(409).json({ error: 'COUPON_INVALID' })
+    }
   }
 
   const { firstName, lastName } = splitCustomerName(profile.full_name)
@@ -180,6 +244,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         attempt_id: attempt.id,
         enrollment_id: enrollmentId,
         course_id: course.id,
+        discount_percent: discountCode?.discount_percent || 0,
       },
     })
 
@@ -199,6 +264,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     })
   } catch (error) {
     console.error('Paymob intention creation failed', error)
+    if (discountCode) {
+      const { error: releaseError } = await supabase.rpc(
+        'release_discount_code_reservation',
+        { p_attempt_id: attempt.id },
+      )
+      if (releaseError) console.error('Discount reservation release failed', releaseError)
+    }
     await supabase
       .from('payment_attempts')
       .update({ status: 'failed', failure_reason: 'intention_creation_failed' })

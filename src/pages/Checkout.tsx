@@ -16,6 +16,7 @@ export default function Checkout() {
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [redeeming, setRedeeming] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent: number } | null>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -59,9 +60,22 @@ export default function Checkout() {
       return
     }
     if (data?.success) {
-      toast.success('تم تفعيل الكود ✅ جاري تفعيل اشتراكك مجانًا')
-      navigate(`/payment/success?source=coupon&courseId=${courseId}`)
+      const discountPercent = Number(data.discount_percent)
+      if (discountPercent === 100 && data.redeemed === true) {
+        toast.success('تم تطبيق خصم 100% وتفعيل اشتراكك مجانًا ✅')
+        navigate(`/payment/success?source=coupon&courseId=${courseId}`)
+        return
+      }
+      if ([25, 50, 75].includes(discountPercent)) {
+        const normalizedCode = couponCode.trim().toUpperCase()
+        setCouponCode(normalizedCode)
+        setAppliedCoupon({ code: normalizedCode, percent: discountPercent })
+        toast.success(`تم تطبيق خصم ${discountPercent}% ✅`)
+        return
+      }
+      toast.error('تعذر تحديد نسبة الخصم، حاول مرة أخرى')
     } else {
+      setAppliedCoupon(null)
       toast.error(data?.message || 'كود الخصم غير صالح')
     }
   }
@@ -83,7 +97,7 @@ export default function Checkout() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ courseId }),
+        body: JSON.stringify({ courseId, couponCode: appliedCoupon?.code }),
       })
       const result = await response.json().catch(() => ({}))
 
@@ -93,6 +107,11 @@ export default function Checkout() {
         return
       }
       if (!response.ok || !result.checkoutUrl || !result.attemptId) {
+        if (result.error?.startsWith('COUPON_')) {
+          setAppliedCoupon(null)
+          toast.error('تعذر استخدام كود الخصم. تحقّق منه ثم طبّقه مرة أخرى')
+          return
+        }
         const message = result.error === 'PAYMENT_NOT_CONFIGURED'
           ? 'بوابة الدفع قيد التجهيز، حاول بعد قليل'
           : result.error === 'STUDENT_ACCOUNT_REQUIRED'
@@ -121,6 +140,14 @@ export default function Checkout() {
   )
 
   if (!course) return null
+
+  const originalPrice = Number(course.price) || 0
+  const discountAmount = appliedCoupon ? originalPrice * appliedCoupon.percent / 100 : 0
+  const totalPrice = Math.max(0, originalPrice - discountAmount)
+  const formatPrice = (value: number) => value.toLocaleString('ar-EG', {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 2,
+  })
 
   return (
     <div className="min-h-screen py-12 bg-gray-50">
@@ -169,7 +196,10 @@ export default function Checkout() {
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value)
+                      if (appliedCoupon) setAppliedCoupon(null)
+                    }}
                     onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                     placeholder="اكتب كود الخصم"
                     aria-label="كود الخصم"
@@ -187,6 +217,11 @@ export default function Checkout() {
                     {redeeming ? 'جاري التحقق...' : 'تطبيق الكود'}
                   </button>
                 </div>
+                {appliedCoupon && (
+                  <p className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-center text-xs font-black text-green-700">
+                    تم تطبيق خصم {appliedCoupon.percent}% على هذه الباقة
+                  </p>
+                )}
               </div>
 
               <button
@@ -197,7 +232,7 @@ export default function Checkout() {
               >
                 {paymentLoading ? 'جاري تجهيز الدفع...' : (
                   <>
-                    ادفع الآن {course.price} <CurrencySymbol currency={course.currency} />
+                    ادفع الآن {formatPrice(totalPrice)} <CurrencySymbol currency={course.currency} />
                   </>
                 )}
               </button>
@@ -225,15 +260,21 @@ export default function Checkout() {
 
               <div className="space-y-3 text-sm text-right">
                 <div className="flex justify-between items-center">
-                  <span className="font-black text-brand-navy">{course.price} <CurrencySymbol currency={course.currency} /></span>
-                  <span className="text-gray-500">سعر الكورس</span>
+                  <span className="font-black text-brand-navy">{formatPrice(originalPrice)} <CurrencySymbol currency={course.currency} /></span>
+                  <span className="text-gray-500">سعر الباقة</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span className="font-bold">− {formatPrice(discountAmount)} <CurrencySymbol currency={course.currency} /></span>
+                    <span>خصم الكود ({appliedCoupon.percent}%)</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-green-600">
                   <span className="font-bold">مجانًا</span>
                   <span>ضريبة القيمة المضافة</span>
                 </div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                  <span className="font-black text-xl gradient-text">{course.price} <CurrencySymbol currency={course.currency} /></span>
+                  <span className="font-black text-xl gradient-text">{formatPrice(totalPrice)} <CurrencySymbol currency={course.currency} /></span>
                   <span className="font-black text-brand-navy">الإجمالي</span>
                 </div>
               </div>
