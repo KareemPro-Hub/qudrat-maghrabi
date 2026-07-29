@@ -245,7 +245,12 @@ export default function Dashboard() {
         </nav>
 
         <div className="sidebar-note">
-          <span><svg viewBox="0 0 24 24"><path d="m12 3 1.4 5.4L19 10l-5.6 1.6L12 17l-1.4-5.4L5 10l5.6-1.6z" /></svg></span>
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 4h8v4.5a4 4 0 0 1-8 0z" />
+              <path d="M8 6H5v1.5A3.5 3.5 0 0 0 8.5 11M16 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 13v4M8.5 20h7M10 17h4" />
+            </svg>
+          </span>
           <p>كل يوم خطوة،<br /><strong>وهدفك أقرب.</strong></p>
         </div>
       </aside>
