@@ -7,6 +7,7 @@ import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../c
 type Coupon = {
   id: string
   code: string
+  allowed_email: string | null
   note: string | null
   is_active: boolean
   max_uses: number | null
@@ -15,7 +16,7 @@ type Coupon = {
   created_at: string
 }
 
-const emptyForm = { code: '', note: '', max_uses: '', expires_at: '' }
+const emptyForm = { code: '', allowed_email: '', note: '', max_uses: '', expires_at: '' }
 
 function todayDateInputValue() {
   const now = new Date()
@@ -55,6 +56,10 @@ export default function AdminCoupons() {
     if (!/^[\p{L}\p{N}][\p{L}\p{N}_-]{2,31}$/u.test(normalizedCode)) {
       return toast.error('اكتب اسم كود من 3 إلى 32 حرفًا عربيًا أو إنجليزيًا أو رقمًا')
     }
+    const allowedEmail = form.allowed_email.trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(allowedEmail)) {
+      return toast.error('اكتب البريد الإلكتروني الصحيح للطالب المسموح له باستخدام الكود')
+    }
 
     const maxUses = form.max_uses ? Number(form.max_uses) : null
     if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) {
@@ -75,6 +80,7 @@ export default function AdminCoupons() {
 
       const { error } = await supabase.from('discount_codes').insert({
         code: normalizedCode,
+        allowed_email: allowedEmail,
         note: form.note.trim() || null,
         max_uses: maxUses,
         expires_at: form.expires_at ? expiryAtEndOfDay(form.expires_at) : null,
@@ -142,7 +148,7 @@ export default function AdminCoupons() {
           <header className="card-head"><div><h3>قائمة الأكواد</h3><p>كل الأكواد تمنح اشتراكًا مجانيًا 100% عند الاستخدام</p></div></header>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>الكود</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الكود</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
               <tbody>
                 {coupons.map((c) => {
                   const expired = c.expires_at ? new Date(c.expires_at) < new Date() : false
@@ -156,6 +162,7 @@ export default function AdminCoupons() {
                           <button className="row-action" onClick={() => copyCode(c.code)} title="نسخ الكود"><Copy size={12} /></button>
                         </div>
                       </td>
+                      <td dir="ltr" style={{ textAlign: 'right' }}>{c.allowed_email || 'غير مخصص'}</td>
                       <td>{c.note || '—'}</td>
                       <td>{c.used_count}{c.max_uses != null ? ` / ${c.max_uses}` : ' (غير محدود)'}</td>
                       <td>{c.expires_at ? new Date(c.expires_at).toLocaleDateString('ar-EG') : 'بدون انتهاء'}</td>
@@ -208,6 +215,21 @@ export default function AdminCoupons() {
               </div>
               <small className="cell-sub">اكتب اسم الطالب أو المناسبة؛ لن يتم توليد أي كود تلقائيًا.</small>
             </label>
+            <label htmlFor="coupon-email"><span className="field-label">البريد المسموح له باستخدام الكود</span>
+              <input
+                id="coupon-email"
+                type="email"
+                value={form.allowed_email}
+                onChange={(e) => setForm({ ...form, allowed_email: e.target.value })}
+                placeholder="student@example.com"
+                dir="ltr"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={254}
+                required
+              />
+              <small className="cell-sub">لن يعمل الكود إلا بعد تسجيل الدخول بحساب يحمل هذا البريد.</small>
+            </label>
             <label htmlFor="coupon-note"><span className="field-label">ملاحظة <span className="optional-label">اختياري</span></span>
               <input
                 id="coupon-note"
@@ -247,7 +269,7 @@ export default function AdminCoupons() {
             </div>
             <p className="coupon-benefit-note">
               <Info size={18} aria-hidden="true" />
-              <span>يمنح هذا الكود الطالب اشتراكًا مجانيًا بالكامل عند إتمام الطلب.</span>
+              <span>يمنح هذا الكود اشتراكًا مجانيًا للحساب المرتبط بالبريد المحدد فقط.</span>
             </p>
             <div className="form-row coupon-form-actions">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إنشاء الكود'}</button>
