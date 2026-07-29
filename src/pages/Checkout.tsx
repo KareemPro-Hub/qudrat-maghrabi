@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ShieldCheck, Lock } from 'lucide-react'
+import { ShieldCheck, Lock, TicketPercent } from 'lucide-react'
 import CurrencySymbol from '../components/CurrencySymbol'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -156,6 +156,39 @@ export default function Checkout() {
                 </div>
               </div>
 
+              <div className="mt-6 rounded-2xl border border-purple-200 bg-white p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2 text-right">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-brand-purple">
+                    <TicketPercent size={19} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-black text-brand-navy">لديك كود خصم؟</h3>
+                    <p className="mt-0.5 text-xs leading-5 text-gray-400">اكتبه قبل الدفع لتفعيل العرض المخصص لحسابك.</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    placeholder="اكتب كود الخصم"
+                    aria-label="كود الخصم"
+                    dir="auto"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="h-12 min-w-0 flex-1 rounded-xl border border-gray-200 px-4 text-start text-sm font-bold uppercase outline-none transition focus:border-brand-purple focus:ring-4 focus:ring-purple-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={redeeming || !couponCode.trim()}
+                    className="h-12 shrink-0 rounded-xl bg-brand-navy px-7 text-sm font-black text-white transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                  >
+                    {redeeming ? 'جاري التحقق...' : 'تطبيق الكود'}
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={handleStartPayment}
@@ -202,27 +235,6 @@ export default function Checkout() {
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                   <span className="font-black text-xl gradient-text">{course.price} <CurrencySymbol currency={course.currency} /></span>
                   <span className="font-black text-brand-navy">الإجمالي</span>
-                </div>
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-gray-100">
-                <p className="text-xs font-bold text-gray-500 mb-2 text-right">لديك كود خصم؟</p>
-                <div className="flex gap-2">
-                  <input
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
-                    placeholder="ادخل الكود هنا"
-                    dir="auto"
-                    className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-sm text-start focus:outline-none focus:border-brand-pink"
-                  />
-                  <button
-                    onClick={handleApplyCoupon}
-                    disabled={redeeming || !couponCode.trim()}
-                    className="px-5 h-11 rounded-xl bg-brand-navy text-white text-sm font-bold disabled:opacity-50 shrink-0"
-                  >
-                    {redeeming ? '...' : 'تطبيق'}
-                  </button>
                 </div>
               </div>
 
