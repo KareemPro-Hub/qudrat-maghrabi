@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Copy, Trash2, Eye, EyeOff, Ticket, Info, RefreshCw } from 'lucide-react'
+import { Plus, Copy, Trash2, Eye, EyeOff, Ticket, Info } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
@@ -15,14 +15,7 @@ type Coupon = {
   created_at: string
 }
 
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let s = ''
-  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)]
-  return `QM-${s}`
-}
-
-const emptyForm = { code: generateCode(), note: '', max_uses: '', expires_at: '' }
+const emptyForm = { code: '', note: '', max_uses: '', expires_at: '' }
 
 function todayDateInputValue() {
   const now = new Date()
@@ -52,15 +45,15 @@ export default function AdminCoupons() {
   }
 
   function openCreate() {
-    setForm({ ...emptyForm, code: generateCode() })
+    setForm({ ...emptyForm })
     setShowModal(true)
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const normalizedCode = form.code.trim().toUpperCase()
-    if (!/^[A-Z0-9-]{4,32}$/.test(normalizedCode)) {
-      return toast.error('اكتب كودًا من 4 إلى 32 حرفًا إنجليزيًا أو رقمًا')
+    if (!/^[\p{L}\p{N}][\p{L}\p{N}_-]{2,31}$/u.test(normalizedCode)) {
+      return toast.error('اكتب اسم كود من 3 إلى 32 حرفًا عربيًا أو إنجليزيًا أو رقمًا')
     }
 
     const maxUses = form.max_uses ? Number(form.max_uses) : null
@@ -192,28 +185,28 @@ export default function AdminCoupons() {
       {showModal && (
         <Modal title="إنشاء كود خصم" onClose={() => setShowModal(false)}>
           <form className="admin-form coupon-form" onSubmit={handleSave} noValidate>
-            <label htmlFor="coupon-code"><span className="field-label">كود الخصم</span>
+            <label htmlFor="coupon-code"><span className="field-label">اسم كود الخصم المخصص</span>
               <div className="coupon-code-row">
                 <input
                   id="coupon-code"
                   value={form.code}
-                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') })}
-                  dir="ltr"
+                  onChange={(e) => setForm({
+                    ...form,
+                    code: e.target.value
+                      .toUpperCase()
+                      .replace(/\s+/g, '-')
+                      .replace(/[^\p{L}\p{N}_-]/gu, ''),
+                  })}
+                  placeholder="مثال: هدية-حامد أو HAMED-GIFT"
+                  dir="auto"
                   maxLength={32}
                   autoComplete="off"
                   spellCheck={false}
                   autoFocus
                   required
                 />
-                <button
-                  type="button"
-                  className="ghost-button coupon-regenerate-button"
-                  onClick={() => setForm({ ...form, code: generateCode() })}
-                >
-                  <RefreshCw size={15} aria-hidden="true" />
-                  كود جديد
-                </button>
               </div>
+              <small className="cell-sub">اكتب اسم الطالب أو المناسبة؛ لن يتم توليد أي كود تلقائيًا.</small>
             </label>
             <label htmlFor="coupon-note"><span className="field-label">ملاحظة <span className="optional-label">اختياري</span></span>
               <input

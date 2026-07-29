@@ -213,8 +213,8 @@ export default function Checkout() {
                     onChange={(e) => setCouponCode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                     placeholder="ادخل الكود هنا"
-                    dir="ltr"
-                    className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-sm text-left focus:outline-none focus:border-brand-pink"
+                    dir="auto"
+                    className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-sm text-start focus:outline-none focus:border-brand-pink"
                   />
                   <button
                     onClick={handleApplyCoupon}
