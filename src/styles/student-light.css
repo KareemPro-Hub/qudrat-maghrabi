@@ -18,8 +18,13 @@
 .student-shell svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 .student-sidebar{position:fixed;z-index:20;inset:0 0 0 auto;width:var(--sidebar);display:flex;flex-direction:column;padding:25px 20px 22px;border-left:1px solid #eadff1;background:rgba(255,255,255,.93);box-shadow:-14px 0 38px rgba(67,35,88,.035);backdrop-filter:blur(16px)}
-.student-brand{height:92px;display:grid;place-items:center;margin-bottom:14px}
+.student-brand{min-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-bottom:14px;border-radius:16px;color:var(--purple);text-decoration:none;transition:background .25s ease,transform .25s ease,box-shadow .25s ease}
 .student-brand img{width:100px;height:auto;max-height:82px;object-fit:contain}
+.student-brand-home{display:flex;align-items:center;justify-content:center;gap:5px;padding:3px 9px;border-radius:999px;color:#75677e;font-size:11.5px;font-weight:700;line-height:1.4;transition:color .25s ease,background .25s ease}
+.student-brand-home svg{width:14px;height:14px}
+.student-brand:hover{background:#faf7ff;transform:translateY(-1px);box-shadow:0 8px 22px rgba(111,48,209,.07)}
+.student-brand:hover .student-brand-home{background:#f0e7ff;color:var(--purple)}
+.student-brand:focus-visible{outline:3px solid rgba(121,53,223,.25);outline-offset:3px}
 .student-nav{display:grid;gap:10px}
 .student-nav-item{width:100%;height:64px;display:flex;align-items:center;gap:13px;padding:8px 12px;border:1px solid transparent;border-radius:18px;background:transparent;color:#6d617c;font-size:16px;font-weight:700;text-align:right;transition:.25s ease}
 .student-nav-item:hover{background:#faf7ff;color:var(--purple);transform:translateX(-2px)}

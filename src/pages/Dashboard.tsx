@@ -222,8 +222,12 @@ export default function Dashboard() {
   return (
     <div className="student-shell">
       <aside className="student-sidebar" aria-label="التنقل الرئيسي">
-        <Link className="student-brand" to="/" aria-label="قدرات المغربي">
+        <Link className="student-brand" to="/" aria-label="العودة إلى الصفحة الرئيسية" title="العودة إلى الصفحة الرئيسية">
           <img src="/admin/logo.png" alt="قدرات المغربي" />
+          <span className="student-brand-home">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.4 12 3.8l8.2 6.6v8.4a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z" /><path d="M9 20.5v-6h6v6" /></svg>
+            العودة للصفحة الرئيسية
+          </span>
         </Link>
 
         <nav className="student-nav">
