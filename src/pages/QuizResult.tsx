@@ -198,8 +198,8 @@ export default function QuizResult() {
                           isSelected && !isRight ? 'bg-red-100 text-red-600' :
                           'bg-gray-100 text-gray-400'
                         }`}>
-                          <span>{optionLabels[opt]})</span>
-                          <span className="flex-1">{q[`option_${opt}`]}</span>
+                          <span>{optionLabels[opt]}{q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] ? ')' : ''}</span>
+                          {q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] && <span className="flex-1">{q[`option_${opt}`]}</span>}
                           {isRight && <CheckCircle size={12} />}
                           {isSelected && !isRight && <XCircle size={12} />}
                         </div>

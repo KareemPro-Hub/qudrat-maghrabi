@@ -10,7 +10,7 @@ const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 
 const optionLabels: Record<string, string> = { a: 'أ', b: 'ب', c: 'ج', d: 'د' }
 const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
-const emptyQ = { question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
+const emptyQ = { question_text: '', option_a: 'أ', option_b: 'ب', option_c: 'ج', option_d: 'د', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
 
 export default function AdminQuizzes() {
   const { user, profile } = useAuth()
@@ -209,7 +209,9 @@ export default function AdminQuizzes() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                                   {(['a', 'b', 'c', 'd'] as const).map((opt) => (
-                                    <div key={opt} className={`adm-option${q.correct_answer === opt ? ' correct' : ''}`}>{optionLabels[opt]}) {q[`option_${opt}`]}</div>
+                                    <div key={opt} className={`adm-option${q.correct_answer === opt ? ' correct' : ''}`}>
+                                      {optionLabels[opt]}{q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] ? `) ${q[`option_${opt}`]}` : ''}
+                                    </div>
                                   ))}
                                 </div>
                               </div>

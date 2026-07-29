@@ -161,9 +161,11 @@ export default function Quiz() {
                   }`}>
                     {optionLabels[opt]}
                   </div>
-                  <span className={`flex-1 font-semibold ${selected ? 'text-brand-navy' : 'text-gray-600'}`}>
-                    {q[`option_${opt}`]}
-                  </span>
+                  {q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] && (
+                    <span className={`flex-1 font-semibold ${selected ? 'text-brand-navy' : 'text-gray-600'}`}>
+                      {q[`option_${opt}`]}
+                    </span>
+                  )}
                   {selected && <CheckCircle size={18} className="text-brand-pink flex-shrink-0" />}
                 </button>
               )
