@@ -7,7 +7,14 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository(this._client);
 
+  static const _mobileAuthCallback = 'qudratmaghrabi://reset-password';
+
   final SupabaseClient _client;
+
+  @override
+  Stream<void> get passwordRecoveryEvents => _client.auth.onAuthStateChange
+      .where((data) => data.event == AuthChangeEvent.passwordRecovery)
+      .map((_) {});
 
   @override
   Future<AuthProfile?> restoreSession() async {
@@ -109,6 +116,101 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> signUp({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String password,
+    required AccountRole role,
+  }) async {
+    try {
+      final response = await _client.auth.signUp(
+        email: email.trim().toLowerCase(),
+        password: password,
+        emailRedirectTo: 'https://www.qudratmaghrabi.com/login',
+        data: {
+          'full_name': fullName.trim(),
+          'phone': phone.trim(),
+          'role': role.databaseValue,
+        },
+      );
+
+      if (response.user == null) {
+        throw const AuthFailure(
+          code: 'signup_failed',
+          message: 'تعذّر إنشاء الحساب. حاول مرة أخرى',
+        );
+      }
+
+      // Confirmation is required in production. Do not leave an accidental
+      // session active if that setting is temporarily disabled.
+      if (response.session != null) {
+        await _safeSignOut();
+      }
+    } on AuthFailure {
+      rethrow;
+    } on AuthException catch (error) {
+      throw AuthFailure(
+        code: error.code ?? 'signup_error',
+        message: _arabicSignUpMessage(error),
+      );
+    } catch (_) {
+      throw const AuthFailure(
+        code: 'network_error',
+        message: 'تعذّر الاتصال بالمنصة. تحقق من الإنترنت وحاول مجددًا',
+      );
+    }
+  }
+
+  @override
+  Future<void> sendPasswordReset({required String email}) async {
+    try {
+      await _client.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        redirectTo: _mobileAuthCallback,
+      );
+    } on AuthException catch (error) {
+      throw AuthFailure(
+        code: error.code ?? 'recovery_error',
+        message: _arabicRecoveryMessage(error),
+      );
+    } catch (_) {
+      throw const AuthFailure(
+        code: 'network_error',
+        message: 'تعذّر إرسال رابط الاستعادة. تحقق من الإنترنت وحاول مجددًا',
+      );
+    }
+  }
+
+  @override
+  Future<void> updateRecoveredPassword({required String password}) async {
+    try {
+      final response = await _client.auth.updateUser(
+        UserAttributes(password: password),
+      );
+      if (response.user == null) {
+        throw const AuthFailure(
+          code: 'password_update_failed',
+          message: 'تعذّر تحديث كلمة المرور. اطلب رابطًا جديدًا وحاول مجددًا',
+        );
+      }
+      await _safeSignOut();
+    } on AuthFailure {
+      rethrow;
+    } on AuthException catch (error) {
+      throw AuthFailure(
+        code: error.code ?? 'password_update_error',
+        message: _arabicPasswordUpdateMessage(error),
+      );
+    } catch (_) {
+      throw const AuthFailure(
+        code: 'network_error',
+        message: 'تعذّر تحديث كلمة المرور. تحقق من الإنترنت وحاول مجددًا',
+      );
+    }
+  }
+
+  @override
   Future<void> signOut() => _client.auth.signOut();
 
   Future<AuthProfile> _fetchProfile(String userId) async {
@@ -181,6 +283,53 @@ class SupabaseAuthRepository implements AuthRepository {
         return 'طريقة تسجيل الدخول هذه غير مفعّلة حاليًا';
       default:
         return 'تعذّر تسجيل الدخول. تحقق من البيانات والاتصال ثم حاول مجددًا';
+    }
+  }
+
+  String _arabicSignUpMessage(AuthException error) {
+    switch (error.code) {
+      case 'user_already_exists':
+        return 'البريد الإلكتروني مسجّل مسبقًا';
+      case 'email_address_invalid':
+        return 'أدخل بريدًا إلكترونيًا صحيحًا';
+      case 'weak_password':
+        return 'كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل';
+      case 'email_provider_disabled':
+      case 'signup_disabled':
+        return 'إنشاء الحسابات غير متاح حاليًا';
+      case 'over_email_send_rate_limit':
+      case 'over_request_rate_limit':
+        return 'تمت محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا';
+      default:
+        return 'تعذّر إنشاء الحساب. تحقق من البيانات وحاول مجددًا';
+    }
+  }
+
+  String _arabicRecoveryMessage(AuthException error) {
+    switch (error.code) {
+      case 'email_address_invalid':
+        return 'أدخل بريدًا إلكترونيًا صحيحًا';
+      case 'over_email_send_rate_limit':
+      case 'over_request_rate_limit':
+        return 'تم إرسال طلبات كثيرة. انتظر قليلًا ثم حاول مجددًا';
+      case 'email_provider_disabled':
+        return 'استعادة كلمة المرور عبر البريد غير متاحة حاليًا';
+      default:
+        return 'تعذّر إرسال رابط الاستعادة. حاول مجددًا';
+    }
+  }
+
+  String _arabicPasswordUpdateMessage(AuthException error) {
+    switch (error.code) {
+      case 'same_password':
+        return 'اختر كلمة مرور مختلفة عن كلمة المرور الحالية';
+      case 'weak_password':
+        return 'كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل';
+      case 'session_not_found':
+      case 'bad_jwt':
+        return 'انتهت صلاحية رابط الاستعادة. اطلب رابطًا جديدًا';
+      default:
+        return 'تعذّر تحديث كلمة المرور. اطلب رابطًا جديدًا وحاول مجددًا';
     }
   }
 }

@@ -5,6 +5,8 @@ import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
+import 'package:qudrat_maghrabi_app/features/auth/presentation/forgot_password_screen.dart';
+import 'package:qudrat_maghrabi_app/features/auth/presentation/register_screen.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -251,9 +253,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 TextButton(
                                   key: const Key('forgot-password-button'),
-                                  onPressed: () => _showMessage(
-                                    'سيتم تفعيل استعادة كلمة المرور عند الربط',
-                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => ForgotPasswordScreen(
+                                          authRepository: widget.authRepository,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   child: const Text('نسيت كلمة المرور؟'),
                                 ),
                               ],
@@ -270,9 +278,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 12),
                             TextButton(
                               key: const Key('create-account-button'),
-                              onPressed: () => _showMessage(
-                                'سننفّذ إنشاء الحساب بعد اعتماد شاشة الدخول',
-                              ),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => RegisterScreen(
+                                      authRepository: widget.authRepository,
+                                    ),
+                                  ),
+                                );
+                              },
                               child: Text.rich(
                                 TextSpan(
                                   text: 'ليس لديك حساب؟ ',

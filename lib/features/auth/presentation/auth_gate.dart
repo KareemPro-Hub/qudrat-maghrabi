@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
@@ -5,6 +7,7 @@ import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/login_screen.dart';
+import 'package:qudrat_maghrabi_app/features/auth/presentation/reset_password_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/signed_in_checkpoint_screen.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/presentation/parent_home_screen.dart';
@@ -38,10 +41,21 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   AuthProfile? _profile;
   bool _restoringSession = true;
+  bool _passwordRecoveryPending = false;
+  StreamSubscription<void>? _passwordRecoverySubscription;
 
   @override
   void initState() {
     super.initState();
+    _passwordRecoverySubscription = widget.authRepository.passwordRecoveryEvents
+        .listen((_) {
+          if (!mounted) return;
+          setState(() {
+            _passwordRecoveryPending = true;
+            _restoringSession = false;
+            _profile = null;
+          });
+        });
     _restoreSession();
   }
 
@@ -49,9 +63,15 @@ class _AuthGateState extends State<AuthGate> {
     final profile = await widget.authRepository.restoreSession();
     if (!mounted) return;
     setState(() {
-      _profile = profile;
+      if (!_passwordRecoveryPending) _profile = profile;
       _restoringSession = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _passwordRecoverySubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _signOut() async {
@@ -62,6 +82,29 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
+    if (_passwordRecoveryPending) {
+      return ResetPasswordScreen(
+        authRepository: widget.authRepository,
+        onCompleted: () {
+          if (!mounted) return;
+          setState(() {
+            _passwordRecoveryPending = false;
+            _profile = null;
+            _restoringSession = false;
+          });
+        },
+        onCancelled: () async {
+          await widget.authRepository.signOut();
+          if (!mounted) return;
+          setState(() {
+            _passwordRecoveryPending = false;
+            _profile = null;
+            _restoringSession = false;
+          });
+        },
+      );
+    }
+
     if (_restoringSession) {
       return const _SessionLoadingScreen();
     }

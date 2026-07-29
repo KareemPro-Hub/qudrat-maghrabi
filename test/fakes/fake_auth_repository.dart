@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
@@ -8,6 +10,9 @@ class FakeAuthRepository implements AuthRepository {
     this.restoredProfile,
     AuthProfile? signInProfile,
     this.signInFailure,
+    this.signUpFailure,
+    this.passwordResetFailure,
+    this.passwordUpdateFailure,
   }) : signInProfile = signInProfile ?? studentProfile;
 
   static const studentProfile = AuthProfile(
@@ -31,9 +36,30 @@ class FakeAuthRepository implements AuthRepository {
   AuthProfile? restoredProfile;
   AuthProfile signInProfile;
   AuthFailure? signInFailure;
+  AuthFailure? signUpFailure;
+  AuthFailure? passwordResetFailure;
+  AuthFailure? passwordUpdateFailure;
   AccountRole? lastExpectedRole;
+  AccountRole? lastSignUpRole;
+  String? lastSignUpName;
+  String? lastSignUpEmail;
+  String? lastSignUpPhone;
+  String? lastPasswordResetEmail;
+  String? lastRecoveredPassword;
   int signInCalls = 0;
+  int signUpCalls = 0;
+  int passwordResetCalls = 0;
+  int passwordUpdateCalls = 0;
   int signOutCalls = 0;
+
+  final _passwordRecoveryController = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get passwordRecoveryEvents => _passwordRecoveryController.stream;
+
+  void emitPasswordRecovery() {
+    _passwordRecoveryController.add(null);
+  }
 
   @override
   Future<AuthProfile?> restoreSession() async => restoredProfile;
@@ -49,6 +75,39 @@ class FakeAuthRepository implements AuthRepository {
     final failure = signInFailure;
     if (failure != null) throw failure;
     return signInProfile;
+  }
+
+  @override
+  Future<void> signUp({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String password,
+    required AccountRole role,
+  }) async {
+    signUpCalls += 1;
+    lastSignUpName = fullName;
+    lastSignUpEmail = email;
+    lastSignUpPhone = phone;
+    lastSignUpRole = role;
+    final failure = signUpFailure;
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> sendPasswordReset({required String email}) async {
+    passwordResetCalls += 1;
+    lastPasswordResetEmail = email;
+    final failure = passwordResetFailure;
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> updateRecoveredPassword({required String password}) async {
+    passwordUpdateCalls += 1;
+    lastRecoveredPassword = password;
+    final failure = passwordUpdateFailure;
+    if (failure != null) throw failure;
   }
 
   @override
