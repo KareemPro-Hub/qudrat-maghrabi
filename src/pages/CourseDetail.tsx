@@ -3,9 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { BookOpen, Clock, Users, Star, CheckCircle, Lock, Play, ArrowRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import CurrencySymbol from '../components/CurrencySymbol'
 import { Course } from '../types'
-import toast from 'react-hot-toast'
 
 export default function CourseDetail() {
   const { id } = useParams<{ id: string }>()
@@ -58,25 +56,17 @@ export default function CourseDetail() {
     }
 
     if (user && data) {
-      const { data: enrollment } = await supabase
-        .from('enrollments')
-        .select('id')
-        .eq('student_id', user.id)
-        .eq('course_id', data.id)
-        .eq('payment_status', 'paid')
-        .single()
-      setEnrolled(!!enrollment)
+      const { data: hasAccess } = await supabase.rpc('has_active_course_access', {
+        p_student_id: user.id,
+        p_course_id: data.id,
+      })
+      setEnrolled(hasAccess === true)
     }
     setLoading(false)
   }
 
-  const handleBuy = () => {
-    if (!user) {
-      toast.error('سجّل دخولك أولًا')
-      navigate('/login')
-      return
-    }
-    navigate(`/checkout/${id}`)
+  const handleSubscribe = () => {
+    navigate('/#qm-prices')
   }
 
   const levelMap: Record<string, string> = {
@@ -146,20 +136,21 @@ export default function CourseDetail() {
               </div>
               {course.price > 0 ? (
                 <>
-                  <div className="text-3xl font-black gradient-text mb-2">{course.price} <CurrencySymbol currency={course.currency} /></div>
-                  <p className="text-gray-400 text-sm mb-6">وصول مدى الحياة</p>
+                  <div className="inline-flex items-center gap-2 bg-purple-50 text-brand-purple text-lg font-black px-5 py-2 rounded-full mb-2">
+                    <Lock size={18} />
+                    متاح ضمن باقات المنصة
+                  </div>
+                  <p className="text-gray-400 text-sm mb-6">اشترك في الباقة المناسبة وافتح جميع كورسات المنصة</p>
 
                   {enrolled ? (
                     <Link to={hasChapters ? `/learn/${course.id}/chapters` : `/learn/${course.id}`} className="btn-primary w-full text-center py-4 text-lg block">
                       ادرس الآن ←
                     </Link>
                   ) : (
-                    <button onClick={handleBuy} className="btn-primary w-full py-4 text-lg">
-                      اشترك الآن
+                    <button onClick={handleSubscribe} className="btn-primary w-full py-4 text-lg">
+                      استعرض باقات الاشتراك
                     </button>
                   )}
-
-                  <p className="text-center text-gray-400 text-xs mt-3">ضمان استرداد خلال ٧ أيام</p>
                 </>
               ) : subCourses.length === 0 ? (
                 <>
@@ -172,7 +163,7 @@ export default function CourseDetail() {
               ) : (
                 <>
                   <div className="inline-flex items-center gap-2 bg-purple-50 text-brand-purple text-sm font-black px-4 py-2 rounded-full mb-4">باقة كورسات</div>
-                  <p className="text-gray-400 text-sm mb-6">اشترك في كل كورس فرعي بسعره الخاص</p>
+                  <p className="text-gray-400 text-sm mb-6">اشترك في إحدى باقات المنصة للوصول إلى الكورسات المدفوعة</p>
                   <a href="#sub-courses" className="btn-primary w-full text-center py-4 text-lg block">
                     استعرض الكورسات المتضمنة
                   </a>
@@ -188,7 +179,7 @@ export default function CourseDetail() {
         <div id="sub-courses" className="py-14">
           <div className="max-w-5xl mx-auto px-4">
             <h2 className="text-2xl font-black text-brand-navy mb-2 text-right">الكورسات المتضمنة في الباقة</h2>
-            <p className="text-gray-500 text-sm mb-8 text-right">اشترك في أي كورس فرعي لوحده أو في كل الباقة</p>
+            <p className="text-gray-500 text-sm mb-8 text-right">الكورسات المجانية متاحة مباشرة، والمدفوعة تُفتح باشتراك المنصة</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {subCourses.map((sc) => (
                 <Link key={sc.id} to={`/courses/${sc.id}`} className="bg-white rounded-2xl shadow-sm hover:shadow-brand transition-shadow overflow-hidden flex items-center gap-4 p-4">
@@ -203,7 +194,10 @@ export default function CourseDetail() {
                     <p className="font-black text-brand-navy">{sc.title}</p>
                     {sc.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{sc.description}</p>}
                     {sc.price > 0 ? (
-                      <div className="text-brand-purple font-black mt-2">{sc.price} <CurrencySymbol currency={sc.currency} /></div>
+                      <div className="inline-flex items-center gap-1.5 text-brand-purple bg-purple-50 text-xs font-black px-3 py-1 rounded-full mt-2">
+                        <Lock size={12} />
+                        ضمن باقات المنصة
+                      </div>
                     ) : (
                       <div className="inline-block text-green-600 bg-green-50 text-xs font-black px-3 py-1 rounded-full mt-2">مجاني</div>
                     )}
@@ -285,8 +279,8 @@ export default function CourseDetail() {
             </div>
             {!enrolled && course.price > 0 && (
               <div className="text-center mt-4">
-                <button onClick={handleBuy} className="btn-primary py-3 px-10 text-sm">
-                  🔓 اشترك لتفتح جميع الدروس
+                <button onClick={handleSubscribe} className="btn-primary py-3 px-10 text-sm">
+                  🔓 اشترك في باقة لفتح جميع الدروس
                 </button>
               </div>
             )}
@@ -317,8 +311,8 @@ export default function CourseDetail() {
           <div className="max-w-xl mx-auto px-4 text-center">
             <h3 className="text-2xl font-black text-brand-navy mb-2">جاهز تبدأ ؟</h3>
             <p className="text-gray-500 mb-6">انضم لآلاف الطلاب الذين حققوا نتائج مميزة</p>
-            <button onClick={handleBuy} className="btn-primary py-4 px-12 text-lg">
-              اشترك الآن بـ {course.price} <CurrencySymbol currency={course.currency} />
+            <button onClick={handleSubscribe} className="btn-primary py-4 px-12 text-lg">
+              استعرض باقات الاشتراك
             </button>
           </div>
         </div>

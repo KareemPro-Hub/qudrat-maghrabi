@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Clock, Users, Star, Lock } from 'lucide-react'
+import { BookOpen, Users, Star, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Course } from '../types'
-import CurrencySymbol from '../components/CurrencySymbol'
 
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -87,9 +86,12 @@ export default function Courses() {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   {course.price > 0 ? (
                     <>
-                      <div className="text-2xl font-black gradient-text">{course.price} <CurrencySymbol currency={course.currency} /></div>
+                      <div className="text-sm font-black text-brand-purple bg-purple-50 px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                        <Lock size={14} />
+                        ضمن باقات المنصة
+                      </div>
                       <span className="btn-primary py-2 px-6 text-sm">
-                        اشترك الآن
+                        عرض التفاصيل
                       </span>
                     </>
                   ) : !childCountByParent[course.id] ? (
