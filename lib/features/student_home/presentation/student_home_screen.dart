@@ -6,6 +6,8 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/account/presentation/account_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
+import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
+import 'package:qudrat_maghrabi_app/features/notifications/presentation/notification_screen.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/domain/student_course.dart';
@@ -14,8 +16,9 @@ import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learn
 import 'package:qudrat_maghrabi_app/features/student_learning/presentation/course_overview_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_list_screen.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
-import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/subscription_screen.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/store_subscription_screen.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({
@@ -23,6 +26,8 @@ class StudentHomeScreen extends StatefulWidget {
     required this.repository,
     required this.learningRepository,
     required this.quizRepository,
+    required this.subscriptionRepository,
+    required this.notificationRepository,
     required this.accountRepository,
     required this.parentHomeRepository,
     required this.onProfileUpdated,
@@ -35,6 +40,8 @@ class StudentHomeScreen extends StatefulWidget {
   final StudentHomeRepository repository;
   final StudentLearningRepository learningRepository;
   final StudentQuizRepository quizRepository;
+  final SubscriptionRepository subscriptionRepository;
+  final NotificationRepository notificationRepository;
   final AccountRepository accountRepository;
   final ParentHomeRepository parentHomeRepository;
   final ValueChanged<AuthProfile> onProfileUpdated;
@@ -73,21 +80,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       _snapshotFuture = next;
     });
     await next;
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, textAlign: TextAlign.center),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: QmColors.deepPurple,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      );
   }
 
   Future<void> _onNavigationTap(int index) async {
@@ -194,13 +186,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 _HomeHeader(
                   firstName: firstName,
                   unreadNotifications: snapshot.unreadNotifications,
-                  onNotificationTap: () {
-                    final count = snapshot.unreadNotifications;
-                    _showMessage(
-                      count == 0
-                          ? 'لا توجد إشعارات جديدة'
-                          : 'لديك $count إشعار جديد',
+                  onNotificationTap: () async {
+                    await Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => NotificationScreen(
+                          userId: widget.profile.id,
+                          repository: widget.notificationRepository,
+                        ),
+                      ),
                     );
+                    if (mounted) await _refresh();
                   },
                 ),
                 const SizedBox(height: 24),
@@ -293,7 +288,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Future<void> _showSubscriptions(StudentSubscription? subscription) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => SubscriptionScreen(subscription: subscription),
+        builder: (_) => StoreSubscriptionScreen(
+          subscription: subscription,
+          repository: widget.subscriptionRepository,
+        ),
       ),
     );
     if (mounted) await _refresh();

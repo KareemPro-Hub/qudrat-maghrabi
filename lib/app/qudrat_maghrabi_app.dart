@@ -4,10 +4,12 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_theme.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/auth_gate.dart';
+import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 
 class QudratMaghrabiApp extends StatelessWidget {
   const QudratMaghrabiApp({
@@ -17,6 +19,8 @@ class QudratMaghrabiApp extends StatelessWidget {
     required this.studentHomeRepository,
     required this.studentLearningRepository,
     required this.studentQuizRepository,
+    this.subscriptionRepository = const UnavailableSubscriptionRepository(),
+    this.notificationRepository = const EmptyNotificationRepository(),
     super.key,
   });
 
@@ -26,6 +30,8 @@ class QudratMaghrabiApp extends StatelessWidget {
   final StudentHomeRepository studentHomeRepository;
   final StudentLearningRepository studentLearningRepository;
   final StudentQuizRepository studentQuizRepository;
+  final SubscriptionRepository subscriptionRepository;
+  final NotificationRepository notificationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +59,8 @@ class QudratMaghrabiApp extends StatelessWidget {
         studentHomeRepository: studentHomeRepository,
         studentLearningRepository: studentLearningRepository,
         studentQuizRepository: studentQuizRepository,
+        subscriptionRepository: subscriptionRepository,
+        notificationRepository: notificationRepository,
       ),
     );
   }

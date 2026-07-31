@@ -9,12 +9,14 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/login_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/reset_password_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/signed_in_checkpoint_screen.dart';
+import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/parent_home/presentation/parent_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/presentation/student_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({
@@ -24,6 +26,8 @@ class AuthGate extends StatefulWidget {
     required this.studentHomeRepository,
     required this.studentLearningRepository,
     required this.studentQuizRepository,
+    required this.subscriptionRepository,
+    required this.notificationRepository,
     super.key,
   });
 
@@ -33,6 +37,8 @@ class AuthGate extends StatefulWidget {
   final StudentHomeRepository studentHomeRepository;
   final StudentLearningRepository studentLearningRepository;
   final StudentQuizRepository studentQuizRepository;
+  final SubscriptionRepository subscriptionRepository;
+  final NotificationRepository notificationRepository;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -125,6 +131,8 @@ class _AuthGateState extends State<AuthGate> {
         repository: widget.studentHomeRepository,
         learningRepository: widget.studentLearningRepository,
         quizRepository: widget.studentQuizRepository,
+        subscriptionRepository: widget.subscriptionRepository,
+        notificationRepository: widget.notificationRepository,
         accountRepository: widget.accountRepository,
         parentHomeRepository: widget.parentHomeRepository,
         onProfileUpdated: (updatedProfile) {
