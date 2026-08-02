@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X, ExternalLink, Clock, CheckCircle2, PlayCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
@@ -12,7 +12,7 @@ const optionLabels: Record<string, string> = { a: 'أ', b: 'ب', c: 'ج', d: 'د
 const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
 const emptyQ = { question_text: '', option_a: 'أ', option_b: 'ب', option_c: 'ج', option_d: 'د', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
 
-function QuestionPreview({ question, onClose }: { question: typeof emptyQ; onClose: () => void }) {
+function usePreviewDialog(onClose: () => void) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
     const previousOverflow = document.body.style.overflow
@@ -20,6 +20,10 @@ function QuestionPreview({ question, onClose }: { question: typeof emptyQ; onClo
     window.addEventListener('keydown', handleKeyDown)
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown) }
   }, [onClose])
+}
+
+function QuestionPreview({ question, onClose }: { question: typeof emptyQ; onClose: () => void }) {
+  usePreviewDialog(onClose)
 
   return (
     <div className="question-preview-overlay" role="dialog" aria-modal="true" aria-labelledby="question-preview-title" onMouseDown={onClose}>
@@ -60,6 +64,86 @@ function QuestionPreview({ question, onClose }: { question: typeof emptyQ; onClo
   )
 }
 
+function QuizPreview({ quiz, questions, onClose }: { quiz: any; questions: any[]; onClose: () => void }) {
+  const [current, setCurrent] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  usePreviewDialog(onClose)
+
+  const question = questions[current]
+  const answered = Object.keys(answers).length
+  const progress = ((current + 1) / questions.length) * 100
+
+  return (
+    <div className="question-preview-overlay" role="dialog" aria-modal="true" aria-labelledby="quiz-preview-title" onMouseDown={onClose}>
+      <section className="question-preview-modal quiz-preview-modal" onMouseDown={(event) => event.stopPropagation()}>
+        <header className="question-preview-header">
+          <div><span>معاينة الاختبار كاملًا</span><h3 id="quiz-preview-title">{quiz.title}</h3></div>
+          <button type="button" onClick={onClose} aria-label="إغلاق معاينة الاختبار"><X size={19} /></button>
+        </header>
+
+        <div className="question-preview-canvas">
+          <div className="quiz-preview-summary">
+            <div><h4>{quiz.title}</h4><p>{questions.length} سؤال · الدرجة الكاملة {quiz.total_marks}</p></div>
+            {quiz.time_limit_minutes && <span><Clock size={14} /> {quiz.time_limit_minutes} دقيقة</span>}
+          </div>
+
+          <div className="question-preview-progress"><span>{answered}/{questions.length} أُجيب عليها</span><span>السؤال {current + 1} من {questions.length}</span></div>
+          <div className="question-preview-progress-bar"><i style={{ width: `${progress}%` }} /></div>
+
+          <article className="question-preview-card">
+            <p className="question-preview-text"><span>{current + 1}.</span>{question.question_text}</p>
+            {question.question_image_url && (
+              <figure className="question-preview-image"><img src={question.question_image_url} alt="صورة السؤال" /></figure>
+            )}
+            {question.question_link_url && (
+              <a className="question-preview-link" href={question.question_link_url} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} />{question.question_link_text || question.question_link_url}</a>
+            )}
+            <div className="question-preview-options">
+              {(['a', 'b', 'c', 'd'] as const).map((opt) => {
+                const value = question[`option_${opt}`]
+                const selected = answers[question.id] === opt
+                return (
+                  <button
+                    type="button"
+                    key={opt}
+                    className={`question-preview-option${selected ? ' selected' : ''}`}
+                    onClick={() => setAnswers((previous) => ({ ...previous, [question.id]: opt }))}
+                  >
+                    <b>{optionLabels[opt]}</b>
+                    {value && value !== optionLabels[opt] && <span>{value}</span>}
+                    {selected && <CheckCircle2 size={18} />}
+                  </button>
+                )
+              })}
+            </div>
+          </article>
+
+          <nav className="quiz-preview-navigation" aria-label="التنقل بين أسئلة المعاينة">
+            <button type="button" className="ghost-button" disabled={current === 0} onClick={() => setCurrent((value) => value - 1)}>السابق</button>
+            <div className="quiz-preview-numbers">
+              {questions.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={`${index === current ? 'current' : ''}${answers[item.id] ? ' answered' : ''}`}
+                  onClick={() => setCurrent(index)}
+                  aria-label={`السؤال ${index + 1}`}
+                >{index + 1}</button>
+              ))}
+            </div>
+            {current < questions.length - 1 ? (
+              <button type="button" className="primary-admin" onClick={() => setCurrent((value) => value + 1)}>التالي</button>
+            ) : (
+              <button type="button" className="primary-admin" onClick={onClose}>إنهاء المعاينة</button>
+            )}
+          </nav>
+          <p className="question-preview-note">وضع تجريبي فقط؛ لا تُحفظ الإجابات ولا تُسجل محاولة للطالب.</p>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 export default function AdminQuizzes() {
   const { user, profile } = useAuth()
   const isQuizManager = profile?.role === 'quiz_manager'
@@ -77,6 +161,8 @@ export default function AdminQuizzes() {
   const [saving, setSaving] = useState(false)
   const [uploadingQImage, setUploadingQImage] = useState(false)
   const [previewQuestion, setPreviewQuestion] = useState<typeof emptyQ | null>(null)
+  const [previewQuiz, setPreviewQuiz] = useState<{ quiz: any; questions: any[] } | null>(null)
+  const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -105,8 +191,13 @@ export default function AdminQuizzes() {
   }
 
   async function fetchQuestions(quizId: string) {
-    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index')
+    const { data, error } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index')
+    if (error) {
+      toast.error('تعذر تحميل أسئلة الاختبار')
+      return null
+    }
     setQuestions((prev) => ({ ...prev, [quizId]: data || [] }))
+    return data || []
   }
 
   async function fetchLessons(courseId: string) {
@@ -179,6 +270,23 @@ export default function AdminQuizzes() {
     fetchAll()
   }
 
+  async function openQuizPreview(quiz: any) {
+    setPreviewLoadingId(quiz.id)
+    const quizQuestions = questions[quiz.id] ?? await fetchQuestions(quiz.id)
+    setPreviewLoadingId(null)
+
+    if (!quizQuestions) {
+      return
+    }
+
+    if (quizQuestions.length === 0) {
+      toast.error('أضف سؤالًا واحدًا على الأقل لمعاينة الاختبار')
+      return
+    }
+
+    setPreviewQuiz({ quiz, questions: quizQuestions })
+  }
+
   const totalAttempts = Object.values(attempts).reduce((s, a) => s + a.count, 0)
   const avgScoreAll = Object.values(attempts).length ? Math.round(Object.values(attempts).reduce((s, a) => s + a.avg, 0) / Object.values(attempts).length) : 0
   const publishedCount = quizzes.filter((q) => q.is_published).length
@@ -236,6 +344,9 @@ export default function AdminQuizzes() {
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button className="row-action" onClick={() => { setShowQModal(quiz.id); if (!questions[quiz.id]) fetchQuestions(quiz.id) }}>+ سؤال</button>
+                          <button type="button" className="row-action quiz-preview-action" onClick={() => openQuizPreview(quiz)} disabled={previewLoadingId === quiz.id}>
+                            <PlayCircle size={13} /> {previewLoadingId === quiz.id ? 'جاري التحميل' : 'معاينة الاختبار'}
+                          </button>
                           <button className="row-action" onClick={() => togglePublish(quiz)}>{quiz.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
                           <button className="row-action" onClick={() => deleteQuiz(quiz.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
                           <button className="row-action" onClick={() => { setExpanded(expanded === quiz.id ? null : quiz.id); if (!questions[quiz.id]) fetchQuestions(quiz.id) }}>
@@ -391,6 +502,7 @@ export default function AdminQuizzes() {
       )}
 
       {previewQuestion && <QuestionPreview question={previewQuestion} onClose={() => setPreviewQuestion(null)} />}
+      {previewQuiz && <QuizPreview quiz={previewQuiz.quiz} questions={previewQuiz.questions} onClose={() => setPreviewQuiz(null)} />}
     </>
   )
 }
