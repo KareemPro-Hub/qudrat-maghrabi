@@ -159,13 +159,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         console.warn('Free subscription coupon rejected', grantError?.message)
         return res.status(409).json({ error: 'COUPON_INVALID' })
       }
+      const grantedSubscription = granted as {
+        attempt_id: string
+        course_id: string
+        expires_at: string
+      }
 
       return res.status(200).json({
         free: true,
-        attemptId: granted.attempt_id,
-        courseId: granted.course_id,
+        attemptId: grantedSubscription.attempt_id,
+        courseId: grantedSubscription.course_id,
         planCode: plan.plan_code,
-        expiresAt: granted.expires_at,
+        expiresAt: grantedSubscription.expires_at,
       })
     }
 

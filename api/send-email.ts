@@ -427,7 +427,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       return res.status(failure.status).json(failure.body)
     }
 
-    return res.status(200).json({ success: true, id: result.id })
+    return res.status(200).json({ success: true, id: result?.id })
   } catch (error) {
     console.error('Email request failed', { error, type })
     return res.status(502).json({
