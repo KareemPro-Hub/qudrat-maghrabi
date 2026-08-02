@@ -22,6 +22,9 @@ export default function PaymentSuccess() {
   const [courseId, setCourseId] = useState<string | null>(
     searchParams.get('courseId') || sessionStorage.getItem('paymob_course_id'),
   )
+  const [planCode, setPlanCode] = useState<string | null>(
+    searchParams.get('plan') || sessionStorage.getItem('paymob_plan_code'),
+  )
   const [paymentId, setPaymentId] = useState<string | null>(searchParams.get('id'))
 
   const checkPayment = useCallback(async (poll = false) => {
@@ -52,10 +55,12 @@ export default function PaymentSuccess() {
         }
 
         setCourseId(result.courseId || null)
+        setPlanCode(result.planCode || null)
         setPaymentId(result.paymentId || null)
         if (result.status === 'paid') {
           sessionStorage.removeItem('paymob_attempt_id')
           sessionStorage.removeItem('paymob_course_id')
+          sessionStorage.removeItem('paymob_plan_code')
           setState('paid')
           return
         }
@@ -77,7 +82,13 @@ export default function PaymentSuccess() {
   }, [queryAttemptId])
 
   useEffect(() => {
-    if (!couponSuccess) void checkPayment(true)
+    if (!couponSuccess) {
+      void checkPayment(true)
+      return
+    }
+    sessionStorage.removeItem('paymob_attempt_id')
+    sessionStorage.removeItem('paymob_course_id')
+    sessionStorage.removeItem('paymob_plan_code')
   }, [checkPayment, couponSuccess])
 
   if (state === 'checking') return (
@@ -110,7 +121,7 @@ export default function PaymentSuccess() {
         </h1>
         <p className="text-gray-500 mb-8 leading-relaxed">
           {paid
-            ? 'مبروك! تم تأكيد الدفع وتفعيل الكورس في حسابك، ويمكنك البدء الآن.'
+            ? 'مبروك! تم تأكيد الاشتراك وتفعيل باقتك في حسابك، ويمكنك البدء الآن.'
             : failed
               ? 'لم تؤكد بوابة الدفع العملية. يمكنك العودة والمحاولة مجددًا دون أي تفعيل مكرر.'
               : state === 'pending'
@@ -134,8 +145,8 @@ export default function PaymentSuccess() {
               تحقق مرة أخرى
             </button>
           )}
-          {failed && courseId && (
-            <Link to={`/checkout/${courseId}`} className="btn-outline w-full py-3 block text-center">
+          {failed && (planCode || courseId) && (
+            <Link to={planCode ? `/checkout?plan=${encodeURIComponent(planCode)}` : `/checkout/${courseId}`} className="btn-outline w-full py-3 block text-center">
               العودة للدفع
             </Link>
           )}

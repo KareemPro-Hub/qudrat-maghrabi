@@ -38,10 +38,17 @@ function getLoginErrorMessage(error: LoginError) {
   }
 }
 
+function getSafeReturnTo(search: string) {
+  const value = new URLSearchParams(search).get('returnTo')
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : null
+}
+
 export default function Auth() {
   const location = useLocation()
   const navigate = useNavigate()
   const mode: Mode = location.pathname === '/register' ? 'signup' : 'login'
+  const returnTo = getSafeReturnTo(location.search)
+  const returnQuery = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''
 
   // Login state
   const [loginEmail, setLoginEmail] = useState('')
@@ -134,7 +141,7 @@ export default function Auth() {
       } else if (profile.role === 'parent') {
         navigate('/parent')
       } else {
-        navigate('/dashboard')
+        navigate(returnTo || '/dashboard')
       }
     } catch {
       toast.error('تعذّر الاتصال بخدمة تسجيل الدخول. حاول مجددًا')
@@ -156,7 +163,7 @@ export default function Auth() {
       password: form.password,
       options: {
         data: { full_name: form.full_name, phone: form.phone, role },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}${role === 'student' && returnTo ? returnTo : role === 'parent' ? '/parent' : '/dashboard'}`,
       },
     })
 
@@ -164,7 +171,7 @@ export default function Auth() {
       toast.error(error.message === 'User already registered' ? 'البريد الإلكتروني مسجل مسبقًا' : 'حدث خطأ، حاول مجددًا')
     } else {
       toast.success('تم التسجيل ! تحقق من بريدك لتأكيد الحساب')
-      navigate('/login')
+      navigate(`/login${returnQuery}`)
     }
     setSignupLoading(false)
   }
@@ -187,7 +194,7 @@ export default function Auth() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}${returnTo || '/dashboard'}`,
         },
       })
 
@@ -211,11 +218,11 @@ export default function Auth() {
     <div className="auth-shell" dir="rtl" data-mode={mode}>
       <div className="auth-mobile-tabs-wrap">
         <div className="auth-mobile-tabs">
-          <Link to="/login" className={mode === 'login' ? 'active' : ''} aria-current={mode === 'login' ? 'page' : undefined}>
+          <Link to={`/login${returnQuery}`} className={mode === 'login' ? 'active' : ''} aria-current={mode === 'login' ? 'page' : undefined}>
             <LogIn size={18} />
             <span>تسجيل الدخول</span>
           </Link>
-          <Link to="/register" className={mode === 'signup' ? 'active' : ''} aria-current={mode === 'signup' ? 'page' : undefined}>
+          <Link to={`/register${returnQuery}`} className={mode === 'signup' ? 'active' : ''} aria-current={mode === 'signup' ? 'page' : undefined}>
             <UserPlus size={18} />
             <span>إنشاء حساب</span>
           </Link>
@@ -372,7 +379,7 @@ export default function Auth() {
               </div>
 
               <div className="auth-switch">
-                ليس لديك حساب؟ <Link to="/register">إنشاء حساب</Link>
+                ليس لديك حساب؟ <Link to={`/register${returnQuery}`}>إنشاء حساب</Link>
               </div>
             </div>
           </div>
@@ -384,8 +391,8 @@ export default function Auth() {
           <div className="auth-visual-tint" />
           <div className="auth-notch" />
           <div className="auth-tabs">
-            <Link to="/login" className={`auth-tab${mode === 'login' ? ' active' : ''}`} aria-current={mode === 'login' ? 'page' : undefined}>تسجيل دخول</Link>
-            <Link to="/register" className={`auth-tab${mode === 'signup' ? ' active' : ''}`} aria-current={mode === 'signup' ? 'page' : undefined}>إنشاء حساب</Link>
+            <Link to={`/login${returnQuery}`} className={`auth-tab${mode === 'login' ? ' active' : ''}`} aria-current={mode === 'login' ? 'page' : undefined}>تسجيل دخول</Link>
+            <Link to={`/register${returnQuery}`} className={`auth-tab${mode === 'signup' ? ' active' : ''}`} aria-current={mode === 'signup' ? 'page' : undefined}>إنشاء حساب</Link>
           </div>
         </div>
       </div>

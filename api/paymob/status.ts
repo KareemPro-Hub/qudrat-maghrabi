@@ -35,7 +35,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const { data: attempt, error } = await supabase
     .from('payment_attempts')
-    .select('id, status, course_id, enrollment_id, provider_transaction_id, failure_reason, created_at')
+    .select('id, status, course_id, enrollment_id, provider_transaction_id, failure_reason, created_at, metadata')
     .eq('id', attemptId)
     .eq('student_id', user.id)
     .maybeSingle()
@@ -53,5 +53,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     enrollmentId: attempt.enrollment_id,
     paymentId: attempt.provider_transaction_id,
     failureReason: attempt.failure_reason,
+    planCode: attempt.metadata && typeof attempt.metadata === 'object'
+      ? (attempt.metadata as Record<string, unknown>).plan_code || null
+      : null,
   })
 }

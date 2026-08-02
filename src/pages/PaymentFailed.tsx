@@ -3,7 +3,8 @@ import { XCircle } from 'lucide-react'
 
 export default function PaymentFailed() {
   const [searchParams] = useSearchParams()
-  const courseId = searchParams.get('courseId')
+  const courseId = searchParams.get('courseId') || sessionStorage.getItem('paymob_course_id')
+  const planCode = searchParams.get('plan') || sessionStorage.getItem('paymob_plan_code')
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #2D174B 0%, #3D1070 100%)' }}>
@@ -19,8 +20,8 @@ export default function PaymentFailed() {
         </p>
 
         <div className="space-y-3">
-          {courseId && (
-            <Link to={`/checkout/${courseId}`} className="btn-primary w-full py-4 text-lg block text-center">
+          {(planCode || courseId) && (
+            <Link to={planCode ? `/checkout?plan=${encodeURIComponent(planCode)}` : `/checkout/${courseId}`} className="btn-primary w-full py-4 text-lg block text-center">
               حاول مجددًا
             </Link>
           )}

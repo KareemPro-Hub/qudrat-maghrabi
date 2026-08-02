@@ -26,7 +26,7 @@ const valuePoints = [
 
 const plans = [
   {
-    key: 'basic', kicker: 'لمدة شهر واحد', name: 'الأساسية', price: '49',
+    key: 'basic', planCode: 'monthly', kicker: 'لمدة شهر واحد', name: 'الأساسية', price: '49',
     features: [
       { text: 'تأسيس قوي يبدأ بك من الصفر', ok: true },
       { text: 'فيديوهات احترافية بجودة عالية', ok: true },
@@ -37,7 +37,7 @@ const plans = [
     cta: 'ابدأ الآن', extra: '',
   },
   {
-    key: 'hot', kicker: 'لمدة 3 أشهر', name: 'المميزة', price: '99',
+    key: 'hot', planCode: 'quarterly', kicker: 'لمدة 3 أشهر', name: 'المميزة', price: '99',
     features: [
       { text: 'جميع مزايا الباقة الأساسية', ok: true },
       { text: 'أحدث بنوك أسئلة المحوسب', ok: true },
@@ -48,7 +48,7 @@ const plans = [
     cta: 'ابدأ الآن', extra: ' qm-hot',
   },
   {
-    key: 'pro', kicker: 'لمدة 6 أشهر', name: 'الاحترافية', price: '179',
+    key: 'pro', planCode: 'semiannual', kicker: 'لمدة 6 أشهر', name: 'الاحترافية', price: '179',
     features: [
       { text: 'جميع مزايا الباقة المميزة', ok: true },
       { text: 'بث مباشر أسبوعي مع الطلاب', ok: true },
@@ -364,7 +364,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/login">{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
+                  <Link to={`/checkout?plan=${plan.planCode}`}>{plan.cta} <svg viewBox="0 0 24 24"><path d="M19 12H5m5-5-5 5 5 5" /></svg></Link>
                 </div>
               </article>
             ))}

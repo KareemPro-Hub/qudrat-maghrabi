@@ -14,8 +14,21 @@ import {
 
 type CreateIntentionBody = {
   courseId?: string
+  planCode?: string
   couponCode?: string
 }
+
+type WebSubscriptionPlan = {
+  product_id: string
+  plan_code: string
+  name_ar: string
+  duration_months: number
+  bundle_course_id: string
+  web_price_minor: number
+  web_currency: string
+}
+
+const PLAN_CODES = new Set(['monthly', 'quarterly', 'semiannual'])
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'POST') {
@@ -26,19 +39,22 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!token) return res.status(401).json({ error: 'UNAUTHORIZED' })
 
   const body = parseBody<CreateIntentionBody>(req.body)
-  if (!isUuid(body?.courseId)) {
-    return res.status(400).json({ error: 'INVALID_COURSE' })
+  const planCode = typeof body?.planCode === 'string'
+    ? body.planCode.trim().toLowerCase()
+    : ''
+  const hasPlan = PLAN_CODES.has(planCode)
+  const hasLegacyCourse = isUuid(body?.courseId)
+  if (!hasPlan && !hasLegacyCourse) {
+    return res.status(400).json({ error: 'INVALID_SUBSCRIPTION' })
   }
 
   let supabase
-  let paymob
   try {
     supabase = getSupabaseAdmin()
-    paymob = getPaymobConfig()
   } catch (error) {
     if (error instanceof ConfigurationError) {
       console.error(error.message)
-      return res.status(503).json({ error: 'PAYMENT_NOT_CONFIGURED' })
+      return res.status(503).json({ error: 'SERVICE_NOT_CONFIGURED' })
     }
     throw error
   }
@@ -46,38 +62,54 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token)
   if (userError || !user) return res.status(401).json({ error: 'UNAUTHORIZED' })
 
-  const [{ data: course, error: courseError }, { data: profile, error: profileError }] = await Promise.all([
-    supabase
-      .from('courses')
-      .select('id, title, price, currency, is_published')
-      .eq('id', body.courseId)
-      .eq('is_published', true)
-      .maybeSingle(),
-    supabase
-      .from('profiles')
-      .select('id, full_name, email, phone, role, is_active')
-      .eq('id', user.id)
-      .maybeSingle(),
-  ])
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, phone, role, is_active')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  if (courseError || !course) return res.status(404).json({ error: 'COURSE_NOT_FOUND' })
   if (profileError || !profile || profile.is_active === false || profile.role !== 'student') {
     return res.status(403).json({ error: 'STUDENT_ACCOUNT_REQUIRED' })
   }
 
-  const originalAmountMinor = toMinorUnits(course.price)
-  const currency = String(course.currency || '').toUpperCase()
-  if (!originalAmountMinor) return res.status(400).json({ error: 'COURSE_IS_FREE' })
-  if (currency !== paymob.currency) {
-    console.error('Course currency does not match the configured Paymob integration', {
-      courseId: course.id,
-      courseCurrency: currency,
-      paymobCurrency: paymob.currency,
-    })
-    return res.status(409).json({ error: 'PAYMENT_CURRENCY_MISMATCH' })
+  let plan: WebSubscriptionPlan | null = null
+  if (hasPlan) {
+    const { data, error } = await supabase
+      .from('store_subscription_plans')
+      .select('product_id, plan_code, name_ar, duration_months, bundle_course_id, web_price_minor, web_currency')
+      .eq('plan_code', planCode)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Subscription plan lookup failed', error)
+      return res.status(500).json({ error: 'PAYMENT_SETUP_FAILED' })
+    }
+    if (!data || !data.web_price_minor || !data.web_currency) {
+      return res.status(404).json({ error: 'PLAN_NOT_FOUND' })
+    }
+    plan = data as WebSubscriptionPlan
   }
 
-  const normalizedCouponCode = typeof body.couponCode === 'string'
+  const targetCourseId = plan?.bundle_course_id || body!.courseId!
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('id, title, price, currency, is_published')
+    .eq('id', targetCourseId)
+    .eq('is_published', true)
+    .maybeSingle()
+
+  if (courseError || !course) return res.status(404).json({ error: 'COURSE_NOT_FOUND' })
+
+  const originalAmountMinor = plan
+    ? Number(plan.web_price_minor)
+    : toMinorUnits(course.price)
+  const currency = String(plan?.web_currency || course.currency || '').toUpperCase()
+  if (!originalAmountMinor || !Number.isSafeInteger(originalAmountMinor)) {
+    return res.status(400).json({ error: 'SUBSCRIPTION_PRICE_INVALID' })
+  }
+
+  const normalizedCouponCode = typeof body?.couponCode === 'string'
     ? body.couponCode.trim().toUpperCase()
     : ''
   let discountCode: { id: string; discount_percent: number } | null = null
@@ -111,11 +143,54 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     ) {
       return res.status(400).json({ error: 'COUPON_INVALID' })
     }
+
     if (discountPercent === 100) {
-      return res.status(409).json({ error: 'COUPON_REQUIRES_REDEMPTION' })
+      if (!plan) return res.status(409).json({ error: 'COUPON_REQUIRES_REDEMPTION' })
+
+      const { data: granted, error: grantError } = await supabase
+        .rpc('grant_web_subscription_coupon', {
+          p_student_id: user.id,
+          p_plan_code: plan.plan_code,
+          p_code: normalizedCouponCode,
+        })
+        .single()
+
+      if (grantError || !granted) {
+        console.warn('Free subscription coupon rejected', grantError?.message)
+        return res.status(409).json({ error: 'COUPON_INVALID' })
+      }
+
+      return res.status(200).json({
+        free: true,
+        attemptId: granted.attempt_id,
+        courseId: granted.course_id,
+        planCode: plan.plan_code,
+        expiresAt: granted.expires_at,
+      })
     }
 
     discountCode = { id: coupon.id, discount_percent: discountPercent }
+  }
+
+  let paymob
+  try {
+    paymob = getPaymobConfig()
+  } catch (error) {
+    if (error instanceof ConfigurationError) {
+      console.error(error.message)
+      return res.status(503).json({ error: 'PAYMENT_NOT_CONFIGURED' })
+    }
+    throw error
+  }
+
+  if (currency !== paymob.currency) {
+    console.error('Subscription currency does not match the configured Paymob integration', {
+      planCode: plan?.plan_code,
+      courseId: course.id,
+      subscriptionCurrency: currency,
+      paymobCurrency: paymob.currency,
+    })
+    return res.status(409).json({ error: 'PAYMENT_CURRENCY_MISMATCH' })
   }
 
   const amountMinor = discountCode
@@ -124,7 +199,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const { data: existingEnrollment, error: enrollmentReadError } = await supabase
     .from('enrollments')
-    .select('id, payment_status')
+    .select('id, payment_status, expires_at')
     .eq('student_id', user.id)
     .eq('course_id', course.id)
     .maybeSingle()
@@ -133,7 +208,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     console.error('Enrollment lookup failed', enrollmentReadError)
     return res.status(500).json({ error: 'PAYMENT_SETUP_FAILED' })
   }
-  if (existingEnrollment?.payment_status === 'paid') {
+  if (!plan && existingEnrollment?.payment_status === 'paid') {
     return res.status(409).json({ error: 'ALREADY_ENROLLED', courseId: course.id })
   }
 
@@ -182,6 +257,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       discount_code_id: discountCode?.id || null,
       discount_percent: discountCode?.discount_percent || null,
       currency,
+      subscription_product_id: plan?.product_id || null,
+      subscription_duration_months: plan?.duration_months || null,
+      metadata: plan ? { plan_code: plan.plan_code, plan_name: plan.name_ar } : {},
     })
     .select('id')
     .single()
@@ -207,6 +285,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
 
   const { firstName, lastName } = splitCustomerName(profile.full_name)
+  const itemName = plan ? `${plan.name_ar} - ${plan.duration_months} شهر` : course.title
 
   try {
     const intention = await createPaymobIntention(paymob, {
@@ -214,9 +293,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       currency,
       payment_methods: paymob.integrationIds,
       items: [{
-        name: course.title,
+        name: itemName,
         amount: amountMinor,
-        description: `اشتراك كورس ${course.title}`,
+        description: plan ? `اشتراك ${plan.name_ar}` : `اشتراك كورس ${course.title}`,
         quantity: 1,
       }],
       billing_data: {
@@ -244,6 +323,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         attempt_id: attempt.id,
         enrollment_id: enrollmentId,
         course_id: course.id,
+        plan_code: plan?.plan_code || null,
+        subscription_duration_months: plan?.duration_months || null,
         discount_percent: discountCode?.discount_percent || 0,
       },
     })
@@ -261,6 +342,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(200).json({
       attemptId: attempt.id,
       checkoutUrl: intention.checkoutUrl,
+      courseId: course.id,
+      planCode: plan?.plan_code || null,
     })
   } catch (error) {
     console.error('Paymob intention creation failed', error)

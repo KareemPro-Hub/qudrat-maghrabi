@@ -104,6 +104,7 @@ export default function App() {
         <Route path="/learn/:courseId/chapters" element={<LearnChapters />} />
         <Route path="/learn/:courseId/:chapterId" element={<LearnChapterLessons />} />
         <Route path="/learn/:courseId/:chapterId/:lessonId" element={<Learn />} />
+        <Route path="/checkout" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
