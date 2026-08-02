@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X, ExternalLink } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
@@ -11,6 +11,54 @@ const CLOUDINARY_PRESET = 'qudrat_thumbnails'
 const optionLabels: Record<string, string> = { a: 'أ', b: 'ب', c: 'ج', d: 'د' }
 const emptyQuiz = { title: '', course_id: '', lesson_id: '', description: '', total_marks: 10, pass_marks: 6, time_limit_minutes: '' }
 const emptyQ = { question_text: '', option_a: 'أ', option_b: 'ب', option_c: 'ج', option_d: 'د', correct_answer: 'a', marks: 1, explanation: '', explanation_video_id: '', question_image_url: '', question_link_url: '', question_link_text: '' }
+
+function QuestionPreview({ question, onClose }: { question: typeof emptyQ; onClose: () => void }) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', handleKeyDown) }
+  }, [onClose])
+
+  return (
+    <div className="question-preview-overlay" role="dialog" aria-modal="true" aria-labelledby="question-preview-title" onMouseDown={onClose}>
+      <section className="question-preview-modal" onMouseDown={(event) => event.stopPropagation()}>
+        <header className="question-preview-header">
+          <div><span>معاينة الطالب</span><h3 id="question-preview-title">شكل السؤال قبل الحفظ</h3></div>
+          <button type="button" onClick={onClose} aria-label="إغلاق المعاينة"><X size={19} /></button>
+        </header>
+        <div className="question-preview-canvas">
+          <div className="question-preview-progress"><span>0/1 أُجيب عليها</span><span>السؤال 1 من 1</span></div>
+          <div className="question-preview-progress-bar"><i /></div>
+          <article className="question-preview-card">
+            <p className="question-preview-text">
+              <span>1.</span>{question.question_text?.trim() || 'سيظهر نص السؤال هنا كما يراه الطالب.'}
+            </p>
+            {question.question_image_url && (
+              <figure className="question-preview-image"><img src={question.question_image_url} alt="معاينة صورة السؤال" /></figure>
+            )}
+            {question.question_link_url && (
+              <a className="question-preview-link" href={question.question_link_url} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} />{question.question_link_text || question.question_link_url}</a>
+            )}
+            <div className="question-preview-options">
+              {(['a', 'b', 'c', 'd'] as const).map((opt) => {
+                const value = question[`option_${opt}`]
+                return (
+                  <div key={opt} className="question-preview-option">
+                    <b>{optionLabels[opt]}</b>
+                    {value && value !== optionLabels[opt] && <span>{value}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          </article>
+          <p className="question-preview-note">هذه المعاينة لا تحفظ السؤال. الصورة تظهر كاملة داخل المساحة نفسها المستخدمة عند الطالب.</p>
+        </div>
+      </section>
+    </div>
+  )
+}
 
 export default function AdminQuizzes() {
   const { user, profile } = useAuth()
@@ -28,6 +76,7 @@ export default function AdminQuizzes() {
   const [qForm, setQForm] = useState(emptyQ)
   const [saving, setSaving] = useState(false)
   const [uploadingQImage, setUploadingQImage] = useState(false)
+  const [previewQuestion, setPreviewQuestion] = useState<typeof emptyQ | null>(null)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -205,7 +254,10 @@ export default function AdminQuizzes() {
                               <div key={q.id} className="adm-question-card">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                                   <p style={{ margin: 0, fontWeight: 700, fontSize: 11.5 }}><span style={{ color: '#7736e7' }}>{i + 1}.</span> {q.question_text}</p>
-                                  <button onClick={() => deleteQuestion(q.id, quiz.id)} style={{ background: 'none', border: 0, color: '#d33b55' }}><Trash2 size={13} /></button>
+                                  <div className="adm-question-card-actions">
+                                    <button type="button" onClick={() => setPreviewQuestion(q)} aria-label="معاينة السؤال"><Eye size={14} /></button>
+                                    <button type="button" onClick={() => deleteQuestion(q.id, quiz.id)} aria-label="حذف السؤال"><Trash2 size={13} /></button>
+                                  </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                                   {(['a', 'b', 'c', 'd'] as const).map((opt) => (
@@ -287,6 +339,7 @@ export default function AdminQuizzes() {
 
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة الاختبار'}</button>
+              <button type="button" className="question-preview-trigger" onClick={() => setPreviewQuestion({ ...qForm })} disabled={uploadingQImage}><Eye size={16} /> معاينة السؤال</button>
               <button type="button" className="ghost-button" onClick={() => { setShowQuizModal(false); setQForm(emptyQ) }}>إلغاء</button>
             </div>
           </form>
@@ -330,11 +383,14 @@ export default function AdminQuizzes() {
             <label>شرح الإجابة — رقم فيديو Bunny (اختياري)<input value={qForm.explanation_video_id} onChange={(e) => setQForm({ ...qForm, explanation_video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" /></label>
             <div className="form-row">
               <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة السؤال ✅'}</button>
+              <button type="button" className="question-preview-trigger" onClick={() => setPreviewQuestion({ ...qForm })} disabled={uploadingQImage}><Eye size={16} /> معاينة السؤال</button>
               <button type="button" className="ghost-button" onClick={() => setShowQModal(null)}>إغلاق</button>
             </div>
           </form>
         </Modal>
       )}
+
+      {previewQuestion && <QuestionPreview question={previewQuestion} onClose={() => setPreviewQuestion(null)} />}
     </>
   )
 }
