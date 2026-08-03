@@ -12,13 +12,12 @@ function isAttemptId(value: string | null) {
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams()
-  const couponSuccess = searchParams.get('source') === 'coupon'
   const queryAttemptId = [
     searchParams.get('attemptId'),
     searchParams.get('special_reference'),
     searchParams.get('merchant_order_id'),
   ].find(isAttemptId) || null
-  const [state, setState] = useState<PaymentState>(couponSuccess ? 'paid' : 'checking')
+  const [state, setState] = useState<PaymentState>('checking')
   const [courseId, setCourseId] = useState<string | null>(
     searchParams.get('courseId') || sessionStorage.getItem('paymob_course_id'),
   )
@@ -82,14 +81,8 @@ export default function PaymentSuccess() {
   }, [queryAttemptId])
 
   useEffect(() => {
-    if (!couponSuccess) {
-      void checkPayment(true)
-      return
-    }
-    sessionStorage.removeItem('paymob_attempt_id')
-    sessionStorage.removeItem('paymob_course_id')
-    sessionStorage.removeItem('paymob_plan_code')
-  }, [checkPayment, couponSuccess])
+    void checkPayment(true)
+  }, [checkPayment])
 
   if (state === 'checking') return (
     <div className="min-h-screen flex items-center justify-center">
