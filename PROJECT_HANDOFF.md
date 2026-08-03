@@ -19,7 +19,7 @@
 - المسار المحلي: `/Users/KareemMac/Documents/Codex/منصة قدرات المغربي`
 - المستودع: `https://github.com/KareemPro-Hub/qudrat-maghrabi.git`
 - الفرع: `main`
-- آخر Commit متزامن محليًا ومع `origin/main`: `1c66a8a` — إصلاح بناء وظائف الدفع والبريد.
+- آخر Commit برمجي قبل ملف التسليم: `1c66a8a` — إصلاح بناء وظائف الدفع والبريد. يليه Commit توثيق ملف التسليم على `main`.
 - حالة Git عند التسليم: نظيفة عدا ملف Finder غير متتبع اسمه `Icon` ويتضمن محرف رجوع مخفيًا؛ لا تضفه إلى Commit.
 - النشر: Vercel على نطاق `https://www.qudratmaghrabi.com/`.
 - التقنية: React + TypeScript + Vite + Supabase + Vercel.
