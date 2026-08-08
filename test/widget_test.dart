@@ -216,6 +216,13 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('كورس التأسيس يظل مجانيًا'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('سياسة الخصوصية'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('الشروط والأحكام'), findsOneWidget);
+    expect(find.text('سياسة الخصوصية'), findsOneWidget);
   });
 
   testWidgets(
@@ -449,12 +456,24 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete-account-tile')));
     await tester.pumpAndSettle();
+
+    expect(find.textContaining('حذف الحساب لا يلغي اشتراك'), findsOneWidget);
+    expect(
+      find.byKey(const Key('manage-before-delete-button')),
+      findsOneWidget,
+    );
     await tester.enterText(
       find.byKey(const Key('delete-password-input')),
       'password123',
     );
+    await tester.ensureVisible(
+      find.byKey(const Key('delete-understood-checkbox')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete-understood-checkbox')));
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('delete-account-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete-account-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-delete-account-button')));

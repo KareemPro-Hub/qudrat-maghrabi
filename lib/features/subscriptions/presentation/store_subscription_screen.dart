@@ -7,6 +7,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_plan.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class StoreSubscriptionScreen extends StatefulWidget {
   const StoreSubscriptionScreen({
@@ -181,6 +182,8 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                       const _RenewalNote(),
                       const SizedBox(height: 12),
                       const _FreeCourseNote(),
+                      const SizedBox(height: 18),
+                      const _PurchaseLegalLinks(),
                     ],
                   ),
                 ),
@@ -472,7 +475,7 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!offer.priceLabel.contains(RegExp(r'[A-Za-zج$€£¥]'))) ...[
+                if (!offer.canPurchase) ...[
                   const SizedBox(width: 5),
                   const Text(
                     'ج.م',
@@ -608,6 +611,47 @@ class _FreeCourseNote extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PurchaseLegalLinks extends StatelessWidget {
+  const _PurchaseLegalLinks();
+
+  Future<void> _open(BuildContext context, String url) async {
+    final opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذّر فتح الرابط. حاول مرة أخرى.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      children: [
+        TextButton(
+          onPressed: () =>
+              _open(context, 'https://www.qudratmaghrabi.com/terms'),
+          child: const Text('الشروط والأحكام'),
+        ),
+        TextButton(
+          onPressed: () =>
+              _open(context, 'https://www.qudratmaghrabi.com/privacy'),
+          child: const Text('سياسة الخصوصية'),
+        ),
+      ],
     );
   }
 }

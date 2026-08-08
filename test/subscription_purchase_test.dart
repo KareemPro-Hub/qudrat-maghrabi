@@ -8,6 +8,9 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_p
 import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/store_subscription_screen.dart';
 
 class _FakeStoreRepository implements SubscriptionRepository {
+  _FakeStoreRepository({this.localizedMonthlyPrice});
+
+  final String? localizedMonthlyPrice;
   final controller = StreamController<SubscriptionUpdate>.broadcast();
   int purchaseCalls = 0;
   int restoreCalls = 0;
@@ -25,7 +28,11 @@ class _FakeStoreRepository implements SubscriptionRepository {
         for (final plan in SubscriptionPlan.all)
           SubscriptionOffer(
             plan: plan,
-            priceLabel: '${plan.fallbackPriceEgp}',
+            priceLabel:
+                plan == SubscriptionPlan.monthly &&
+                    localizedMonthlyPrice != null
+                ? localizedMonthlyPrice!
+                : '${plan.fallbackPriceEgp}',
             canPurchase: true,
           ),
       ],
@@ -129,5 +136,19 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsOneWidget);
+  });
+
+  testWidgets('store currency is shown without adding a fallback currency', (
+    tester,
+  ) async {
+    final repository = _FakeStoreRepository(
+      localizedMonthlyPrice: 'ر.س. ١٩٫٩٩',
+    );
+    addTearDown(repository.dispose);
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ر.س. ١٩٫٩٩'), findsOneWidget);
+    expect(find.text('ج.م'), findsNothing);
   });
 }

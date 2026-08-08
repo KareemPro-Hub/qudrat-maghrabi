@@ -43,6 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+
+# Android release signing credentials (keep local and back them up securely)
+/android/key.properties
+/android/app/upload-keystore.jks
 
 # Local compile-time configuration (never commit real values)
 /config/supabase.*.json

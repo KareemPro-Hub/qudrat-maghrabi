@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
@@ -825,6 +826,28 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             icon: Icons.fact_check_outlined,
             text: 'نتائج الاختبارات والإشعارات',
           ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF5DF),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Text(
+              'حذف الحساب لا يلغي اشتراك App Store أو Google Play تلقائيًا. ألغِ الاشتراك من المتجر أولًا لتجنّب أي تجديد لاحق.',
+              style: TextStyle(
+                color: QmColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                height: 1.5,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            key: const Key('manage-before-delete-button'),
+            onPressed: () => _openStoreSubscriptions(context),
+            icon: const Icon(Icons.settings_outlined),
+            label: const Text('إدارة الاشتراك قبل الحذف'),
+          ),
           const SizedBox(height: 18),
           TextField(
             key: const Key('delete-password-input'),
@@ -918,6 +941,19 @@ class _DeletionItem extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<void> _openStoreSubscriptions(BuildContext context) async {
+  final uri = defaultTargetPlatform == TargetPlatform.iOS
+      ? Uri.parse('https://apps.apple.com/account/subscriptions')
+      : Uri.parse(
+          'https://play.google.com/store/account/subscriptions'
+          '?package=com.qudratmaghrabi.app',
+        );
+  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!opened && context.mounted) {
+    _showError(context, 'تعذّر فتح إدارة الاشتراك. حاول مرة أخرى.');
   }
 }
 

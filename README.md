@@ -1,17 +1,30 @@
-# qudrat_maghrabi_app
+# تطبيق قدرات المغربي
 
-A new Flutter project.
+تطبيق Flutter عربي للطلاب وأولياء الأمور، ويدعم iOS وAndroid.
 
-## Getting Started
+## التشغيل والبناء
 
-This project is a starting point for a Flutter application.
+ضع إعدادات Supabase المحلية في `config/supabase.dev.json`، ثم شغّل:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter run --dart-define-from-file=config/supabase.dev.json
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+فحوص الإصدار:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter analyze
+flutter test
+flutter build appbundle --release --dart-define-from-file=config/supabase.dev.json
+flutter build ipa --release --dart-define-from-file=config/supabase.dev.json
+```
+
+يتطلب بناء Android النهائي ملف `android/key.properties` وملف مفتاح الرفع المحلي. لا تُحفظ بيانات التوقيع أو إعدادات Supabase الحقيقية في Git.
+
+معرّف الحزمة للتطبيقين: `com.qudratmaghrabi.app`.
+
+معرّفات الاشتراكات:
+
+- `com.qudratmaghrabi.app.subscription.monthly`
+- `com.qudratmaghrabi.app.subscription.quarterly`
+- `com.qudratmaghrabi.app.subscription.semiannual`
