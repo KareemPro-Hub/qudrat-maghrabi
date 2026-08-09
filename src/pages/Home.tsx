@@ -26,7 +26,7 @@ const valuePoints = [
 
 const plans = [
   {
-    key: 'basic', planCode: 'monthly', kicker: 'لمدة شهر واحد', name: 'الأساسية', price: '49',
+    key: 'basic', planCode: 'monthly', kicker: 'لمدة شهر واحد', name: 'الأساسية', price: '49.99',
     features: [
       { text: 'تأسيس قوي يبدأ بك من الصفر', ok: true },
       { text: 'فيديوهات احترافية بجودة عالية', ok: true },
@@ -37,7 +37,7 @@ const plans = [
     cta: 'ابدأ الآن', extra: '',
   },
   {
-    key: 'hot', planCode: 'quarterly', kicker: 'لمدة 3 أشهر', name: 'المميزة', price: '99',
+    key: 'hot', planCode: 'quarterly', kicker: 'لمدة 3 أشهر', name: 'المميزة', price: '99.99',
     features: [
       { text: 'جميع مزايا الباقة الأساسية', ok: true },
       { text: 'أحدث بنوك أسئلة المحوسب', ok: true },
@@ -48,7 +48,7 @@ const plans = [
     cta: 'ابدأ الآن', extra: ' qm-hot',
   },
   {
-    key: 'pro', planCode: 'semiannual', kicker: 'لمدة 6 أشهر', name: 'الاحترافية', price: '179',
+    key: 'pro', planCode: 'semiannual', kicker: 'لمدة 6 أشهر', name: 'الاحترافية', price: '179.99',
     features: [
       { text: 'جميع مزايا الباقة المميزة', ok: true },
       { text: 'بث مباشر أسبوعي مع الطلاب', ok: true },
@@ -351,7 +351,7 @@ export default function Home() {
                 <header className="qm-price-cap">
                   <h3>{plan.name}</h3>
                   <small className="qm-price-duration">{plan.kicker}</small>
-                  <div className="qm-price-lockup"><strong>{plan.price}</strong><span><CurrencySymbol currency="EGP" className="qm-price-sar" /></span></div>
+                  <div className="qm-price-lockup"><strong>{plan.price}</strong><span><CurrencySymbol currency="SAR" className="qm-price-sar" /></span></div>
                 </header>
                 <div className="qm-price-pocket">
                   <ul>
