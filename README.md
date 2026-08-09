@@ -21,7 +21,9 @@ flutter build ipa --release --dart-define-from-file=config/supabase.dev.json
 
 يتطلب بناء Android النهائي ملف `android/key.properties` وملف مفتاح الرفع المحلي. لا تُحفظ بيانات التوقيع أو إعدادات Supabase الحقيقية في Git.
 
-معرّف الحزمة للتطبيقين: `com.qudratmaghrabi.app`.
+معرّف حزمة iOS: `com.alimaghrabi.qudrat.ios`.
+
+معرّف حزمة Android: `com.qudratmaghrabi.app`.
 
 معرّفات الاشتراكات:
 
