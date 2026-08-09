@@ -478,7 +478,7 @@ class _PlanCard extends StatelessWidget {
                 if (!offer.canPurchase) ...[
                   const SizedBox(width: 5),
                   const Text(
-                    'ج.م',
+                    'ر.س',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,

@@ -8,7 +8,7 @@ class SubscriptionPlan {
     required this.name,
     required this.duration,
     required this.durationDays,
-    required this.fallbackPriceEgp,
+    required this.fallbackPriceSar,
     required this.benefits,
     this.popular = false,
   });
@@ -18,7 +18,7 @@ class SubscriptionPlan {
   final String name;
   final String duration;
   final int durationDays;
-  final int fallbackPriceEgp;
+  final double fallbackPriceSar;
   final List<String> benefits;
   final bool popular;
 
@@ -28,7 +28,7 @@ class SubscriptionPlan {
     name: 'الأساسية',
     duration: 'شهر واحد',
     durationDays: 30,
-    fallbackPriceEgp: 49,
+    fallbackPriceSar: 49.99,
     benefits: ['كل كورسات المنصة', 'الاختبارات والتدريبات', 'متابعة التقدّم'],
   );
 
@@ -38,7 +38,7 @@ class SubscriptionPlan {
     name: 'المميزة',
     duration: '3 أشهر',
     durationDays: 90,
-    fallbackPriceEgp: 99,
+    fallbackPriceSar: 99.99,
     popular: true,
     benefits: [
       'كل مزايا الباقة الأساسية',
@@ -53,7 +53,7 @@ class SubscriptionPlan {
     name: 'الاحترافية',
     duration: '6 أشهر',
     durationDays: 180,
-    fallbackPriceEgp: 179,
+    fallbackPriceSar: 179.99,
     benefits: [
       'كل مزايا الباقة المميزة',
       'أطول مدة وصول',

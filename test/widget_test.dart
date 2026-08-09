@@ -195,21 +195,21 @@ void main() {
     expect(find.text('الاشتراك والباقات'), findsOneWidget);
     expect(find.text('شهر واحد'), findsWidgets);
     expect(find.text('3 أشهر'), findsWidgets);
-    expect(find.text('49'), findsOneWidget);
+    expect(find.text('49.99'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('3 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('3 أشهر'), findsWidgets);
-    expect(find.text('99'), findsOneWidget);
+    expect(find.text('99.99'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('6 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('6 أشهر'), findsWidgets);
-    expect(find.text('179'), findsOneWidget);
+    expect(find.text('179.99'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.textContaining('كورس التأسيس يظل مجانيًا'),
       260,
