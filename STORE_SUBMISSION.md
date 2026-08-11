@@ -18,9 +18,9 @@
 
 ## منتجات الاشتراك
 
-- `com.qudratmaghrabi.app.subscription.monthly`
-- `com.qudratmaghrabi.app.subscription.quarterly`
-- `com.qudratmaghrabi.app.subscription.semiannual`
+- `com.qudratmaghrabi.app.subscription.monthly` — 49 ريالًا شهريًا.
+- `com.qudratmaghrabi.app.subscription.quarterly` — 99 ريالًا كل 3 أشهر.
+- `com.qudratmaghrabi.app.subscription.semiannual` — 179 ريالًا كل 6 أشهر.
 
 يجب إنشاء المنتجات بالمعرّفات نفسها، وتفعيل التجديد التلقائي، وربط إشعارات الخادم بواجهة `store-server-notification`، وضبط أسرار Apple وGoogle الخاصة بالتحقق في Supabase قبل اختبار Sandbox.
 

@@ -45,6 +45,10 @@ app.*.map.json
 /android/app/release
 /android/build/
 
+# Locally retained store binaries (do not commit large signed artifacts)
+/release/**/*.aab
+/release/**/*.apk
+
 # Android release signing credentials (keep local and back them up securely)
 /android/key.properties
 /android/app/upload-keystore.jks

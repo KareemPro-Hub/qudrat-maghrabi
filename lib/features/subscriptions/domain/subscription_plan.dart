@@ -28,7 +28,7 @@ class SubscriptionPlan {
     name: 'الأساسية',
     duration: 'شهر واحد',
     durationDays: 30,
-    fallbackPriceSar: 49.99,
+    fallbackPriceSar: 49,
     benefits: ['كل كورسات المنصة', 'الاختبارات والتدريبات', 'متابعة التقدّم'],
   );
 
@@ -38,7 +38,7 @@ class SubscriptionPlan {
     name: 'المميزة',
     duration: '3 أشهر',
     durationDays: 90,
-    fallbackPriceSar: 99.99,
+    fallbackPriceSar: 99,
     popular: true,
     benefits: [
       'كل مزايا الباقة الأساسية',
@@ -53,7 +53,7 @@ class SubscriptionPlan {
     name: 'الاحترافية',
     duration: '6 أشهر',
     durationDays: 180,
-    fallbackPriceSar: 179.99,
+    fallbackPriceSar: 179,
     benefits: [
       'كل مزايا الباقة المميزة',
       'أطول مدة وصول',

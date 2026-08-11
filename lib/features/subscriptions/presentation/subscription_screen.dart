@@ -14,14 +14,14 @@ class SubscriptionScreen extends StatelessWidget {
     _SubscriptionPlan(
       name: 'الأساسية',
       duration: 'شهر واحد',
-      price: 49.99,
+      price: 49,
       accent: QmColors.purple,
       benefits: ['كل كورسات المنصة', 'الاختبارات والتدريبات', 'متابعة التقدّم'],
     ),
     _SubscriptionPlan(
       name: 'المميزة',
       duration: '3 أشهر',
-      price: 99.99,
+      price: 99,
       accent: QmColors.pink,
       popular: true,
       benefits: [
@@ -33,7 +33,7 @@ class SubscriptionScreen extends StatelessWidget {
     _SubscriptionPlan(
       name: 'الاحترافية',
       duration: '6 أشهر',
-      price: 179.99,
+      price: 179,
       accent: Color(0xFFFF7A54),
       benefits: [
         'كل مزايا الباقة المميزة',
@@ -335,7 +335,7 @@ class _PlanCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  plan.price.toStringAsFixed(2),
+                  plan.price.toStringAsFixed(0),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 42,

@@ -32,7 +32,7 @@ class _FakeStoreRepository implements SubscriptionRepository {
                 plan == SubscriptionPlan.monthly &&
                     localizedMonthlyPrice != null
                 ? localizedMonthlyPrice!
-                : plan.fallbackPriceSar.toStringAsFixed(2),
+                : plan.fallbackPriceSar.toStringAsFixed(0),
             canPurchase: true,
           ),
       ],
@@ -96,8 +96,8 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('49.99'), findsOneWidget);
-    expect(find.text('99.99'), findsOneWidget);
+    expect(find.text('49'), findsOneWidget);
+    expect(find.text('99'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('select-شهر واحد')));
     await tester.pump();
 

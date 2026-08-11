@@ -27,7 +27,7 @@ class SubscriptionOffer {
   factory SubscriptionOffer.fallback(SubscriptionPlan plan) {
     return SubscriptionOffer(
       plan: plan,
-      priceLabel: plan.fallbackPriceSar.toStringAsFixed(2),
+      priceLabel: plan.fallbackPriceSar.toStringAsFixed(0),
       canPurchase: false,
     );
   }
