@@ -117,8 +117,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         if (typeof video?.status === 'number' && video.status < 3) {
           return res.status(409).json({ error: 'الفيديو لسه بيتعالج على Bunny، جرّب بعد شوية' })
         }
-      } else if (bunnyRes.status === 401) {
-        console.error('Bunny API key rejected', { libraryId: LIBRARY_ID, status: bunnyRes.status })
+      } else if (bunnyRes.status === 401 || bunnyRes.status === 402 || bunnyRes.status === 403) {
+        // حساب Bunny موقوف (انتهاء الفترة التجريبية أو رصيد صفر) — المكتبة بترفض أي طلب.
+        console.error('Bunny account/library access denied', { libraryId: LIBRARY_ID, status: bunnyRes.status })
+        return res.status(503).json({
+          error: 'خدمة الفيديو متوقفة مؤقتًا من مزوّد البث (حساب Bunny محتاج تفعيل/شحن). الدروس محفوظة وهترجع فور تفعيل الحساب.',
+        })
       }
     } catch (probeErr) {
       // فشل الفحص مش سبب لمنع المشاهدة — نكمل ونوقّع التوكن عادي.
