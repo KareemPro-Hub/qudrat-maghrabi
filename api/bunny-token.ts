@@ -91,6 +91,41 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const TOKEN_KEY = process.env.BUNNY_STREAM_TOKEN_KEY
   if (!LIBRARY_ID || !TOKEN_KEY) return res.status(500).json({ error: 'Bunny Stream not configured' })
 
+  // تشخيص واضح بدل صفحة 404 الصامتة جوّه المشغّل:
+  // نتأكد إن الفيديو موجود فعلًا في المكتبة وإن الترميز خلص قبل ما نوقّع التوكن.
+  const BUNNY_API_KEY = process.env.BUNNY_STREAM_API_KEY
+  if (BUNNY_API_KEY) {
+    try {
+      const bunnyRes = await fetch(`https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${safeVideoId}`, {
+        headers: { AccessKey: BUNNY_API_KEY, accept: 'application/json' },
+      })
+
+      if (bunnyRes.status === 404) {
+        console.error('Bunny video missing', { libraryId: LIBRARY_ID, videoId: safeVideoId })
+        return res.status(404).json({
+          error: 'الفيديو مش موجود في مكتبة Bunny — راجع رقم الفيديو في لوحة الإدارة أو رقم المكتبة في إعدادات السيرفر',
+        })
+      }
+
+      if (bunnyRes.ok) {
+        const video: any = await bunnyRes.json()
+        // status: 0 queued · 1 processing · 2 encoding · 3 finished · 4 resolution finished · 5 failed
+        if (video?.status === 5) {
+          console.error('Bunny video failed encoding', { libraryId: LIBRARY_ID, videoId: safeVideoId })
+          return res.status(409).json({ error: 'الفيديو فشل في المعالجة على Bunny — لازم يترفع تاني' })
+        }
+        if (typeof video?.status === 'number' && video.status < 3) {
+          return res.status(409).json({ error: 'الفيديو لسه بيتعالج على Bunny، جرّب بعد شوية' })
+        }
+      } else if (bunnyRes.status === 401) {
+        console.error('Bunny API key rejected', { libraryId: LIBRARY_ID, status: bunnyRes.status })
+      }
+    } catch (probeErr) {
+      // فشل الفحص مش سبب لمنع المشاهدة — نكمل ونوقّع التوكن عادي.
+      console.error('Bunny video probe failed', probeErr)
+    }
+  }
+
   try {
     const expires = Math.floor(Date.now() / 1000) + 60 * 60 // صالح لبدء جلسة المشاهدة لمدة ساعة
     const hashSource = `${TOKEN_KEY}${safeVideoId}${expires}`
