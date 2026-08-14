@@ -257,11 +257,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   subscription: snapshot.subscription,
                   onTap: () => _showSubscriptions(snapshot.subscription),
                 ),
-                const SizedBox(height: 30),
-                _MotivationCard(
-                  accessibleCourses: snapshot.myCourses.length,
-                  availableCourses: snapshot.availableCourses.length,
-                ),
               ],
             ),
           ),
@@ -1065,66 +1060,6 @@ class _CourseImage extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _MotivationCard extends StatelessWidget {
-  const _MotivationCard({
-    required this.accessibleCourses,
-    required this.availableCourses,
-  });
-
-  final int accessibleCourses;
-  final int availableCourses;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF4F8),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFFFD9E7)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Text('🔥', style: TextStyle(fontSize: 24)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'لا تحفظ.. افهم وتفوّق',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  accessibleCourses == 0
-                      ? '$availableCourses كورسات في انتظار انطلاقتك'
-                      : '$accessibleCourses كورسات متاحة لك الآن',
-                  style: const TextStyle(
-                    color: QmColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
