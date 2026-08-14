@@ -64,7 +64,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_forward_rounded),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),
       body: DecoratedBox(

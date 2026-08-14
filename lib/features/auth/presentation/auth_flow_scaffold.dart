@@ -47,7 +47,7 @@ class AuthFlowScaffold extends StatelessWidget {
                                 key: const Key('auth-back-button'),
                                 tooltip: 'رجوع',
                                 onPressed: () => Navigator.maybePop(context),
-                                icon: const Icon(Icons.arrow_forward_rounded),
+                                icon: const Icon(Icons.arrow_back_rounded),
                               ),
                             )
                           else

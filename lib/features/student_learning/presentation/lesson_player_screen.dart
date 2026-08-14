@@ -220,7 +220,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
           backgroundColor: QmColors.background,
           leading: IconButton(
             onPressed: _close,
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
         ),
         body: SafeArea(

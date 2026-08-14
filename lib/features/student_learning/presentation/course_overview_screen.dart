@@ -125,7 +125,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
               padding: const EdgeInsets.all(8),
               child: IconButton.filledTonal(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_forward_rounded),
+                icon: const Icon(Icons.arrow_back_rounded),
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white.withValues(alpha: .92),
                   foregroundColor: QmColors.deepPurple,

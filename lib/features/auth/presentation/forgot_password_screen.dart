@@ -147,7 +147,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           OutlinedButton.icon(
             key: const Key('recovery-back-button'),
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
             label: const Text('العودة لتسجيل الدخول'),
           ),
         ],
