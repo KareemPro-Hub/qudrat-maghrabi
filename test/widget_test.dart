@@ -49,7 +49,7 @@ void main() {
       0,
     );
 
-    await tester.pump(const Duration(milliseconds: 3000));
+    await tester.pump(const Duration(milliseconds: 3800));
     expect(
       tester.widget<FadeTransition>(wordmarkFadeFinder.first).opacity.value,
       greaterThan(.5),

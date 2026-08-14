@@ -1,5 +1,6 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 
 class BrandLaunchGate extends StatefulWidget {
   const BrandLaunchGate({required this.child, super.key});
@@ -16,8 +17,11 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
   late final Animation<double> _markOpacity;
   late final Animation<double> _markScale;
   late final Animation<double> _markLift;
+  late final Animation<double> _haloOpacity;
+  late final Animation<double> _haloScale;
   late final Animation<double> _wordmarkOpacity;
   late final Animation<double> _wordmarkLift;
+  late final Animation<double> _wordmarkReveal;
   bool _finished = false;
 
   @override
@@ -25,33 +29,55 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4600),
+      duration: const Duration(milliseconds: 6600),
       animationBehavior: AnimationBehavior.preserve,
     );
     _markOpacity = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0, .18, curve: Curves.easeOut),
+      curve: const Interval(.02, .16, curve: Curves.easeOutCubic),
     );
-    _markScale = Tween<double>(begin: .72, end: 1).animate(
+    _markScale =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: .74, end: 1.055), weight: 72),
+          TweenSequenceItem(tween: Tween(begin: 1.055, end: 1), weight: 28),
+        ]).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(.02, .25, curve: Curves.easeOutCubic),
+          ),
+        );
+    _markLift = Tween<double>(begin: 0, end: -50).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0, .24, curve: Curves.easeOutBack),
+        curve: const Interval(.27, .46, curve: Curves.easeInOutCubicEmphasized),
       ),
     );
-    _markLift = Tween<double>(begin: 0, end: -58).animate(
+    _haloOpacity = Tween<double>(begin: 0, end: .72).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(.22, .4, curve: Curves.easeInOutCubic),
+        curve: const Interval(.03, .22, curve: Curves.easeOut),
+      ),
+    );
+    _haloScale = Tween<double>(begin: .68, end: 1.08).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(.02, .38, curve: Curves.easeOutCubic),
       ),
     );
     _wordmarkOpacity = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(.36, .58, curve: Curves.easeOut),
+      curve: const Interval(.44, .59, curve: Curves.easeOutCubic),
     );
-    _wordmarkLift = Tween<double>(begin: 22, end: 0).animate(
+    _wordmarkLift = Tween<double>(begin: 26, end: 0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(.36, .6, curve: Curves.easeOutCubic),
+        curve: const Interval(.43, .64, curve: Curves.easeOutCubic),
+      ),
+    );
+    _wordmarkReveal = Tween<double>(begin: .01, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(.43, .66, curve: Curves.easeOutCubic),
       ),
     );
     _controller.addStatusListener((status) {
@@ -71,9 +97,11 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 620),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
       child: _finished
           ? KeyedSubtree(key: const Key('app-content'), child: widget.child)
           : _BrandLaunchScene(
@@ -81,8 +109,11 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
               markOpacity: _markOpacity,
               markScale: _markScale,
               markLift: _markLift,
+              haloOpacity: _haloOpacity,
+              haloScale: _haloScale,
               wordmarkOpacity: _wordmarkOpacity,
               wordmarkLift: _wordmarkLift,
+              wordmarkReveal: _wordmarkReveal,
             ),
     );
   }
@@ -93,105 +124,142 @@ class _BrandLaunchScene extends StatelessWidget {
     required this.markOpacity,
     required this.markScale,
     required this.markLift,
+    required this.haloOpacity,
+    required this.haloScale,
     required this.wordmarkOpacity,
     required this.wordmarkLift,
+    required this.wordmarkReveal,
     super.key,
   });
 
   final Animation<double> markOpacity;
   final Animation<double> markScale;
   final Animation<double> markLift;
+  final Animation<double> haloOpacity;
+  final Animation<double> haloScale;
   final Animation<double> wordmarkOpacity;
   final Animation<double> wordmarkLift;
+  final Animation<double> wordmarkReveal;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F4FB),
+      backgroundColor: const Color(0xFFFAF7FF),
       body: IgnorePointer(
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -110,
-              right: -95,
-              child: _AmbientGlow(color: Color(0x22FF4D9D), size: 280),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -.12),
+              radius: .92,
+              colors: [Color(0xFFFFFFFF), Color(0xFFFAF7FF), Color(0xFFF4EDFF)],
+              stops: [0, .55, 1],
             ),
-            const Positioned(
-              bottom: -125,
-              left: -90,
-              child: _AmbientGlow(color: Color(0x207A2DD6), size: 310),
-            ),
-            Center(
-              child: SizedBox(
-                width: 300,
-                height: 270,
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([
-                    markOpacity,
-                    markScale,
-                    markLift,
-                    wordmarkOpacity,
-                    wordmarkLift,
-                  ]),
-                  builder: (context, _) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Transform.translate(
-                          offset: Offset(0, markLift.value),
-                          child: FadeTransition(
-                            opacity: markOpacity,
-                            child: ScaleTransition(
-                              scale: markScale,
-                              child: Image.asset(
-                                'assets/brand/qudrat_maghrabi_mark.png',
-                                key: const Key('brand-launch-mark'),
-                                width: 188,
-                                fit: BoxFit.contain,
-                                semanticLabel: 'شعار قدرات المغربي',
+          ),
+          child: Stack(
+            children: [
+              const Positioned(
+                top: -125,
+                right: -105,
+                child: _AmbientGlow(color: Color(0x26FF4D9D), size: 300),
+              ),
+              const Positioned(
+                bottom: -140,
+                left: -105,
+                child: _AmbientGlow(color: Color(0x247A2DD6), size: 330),
+              ),
+              Center(
+                child: SizedBox(
+                  width: 330,
+                  height: 310,
+                  child: AnimatedBuilder(
+                    animation: Listenable.merge([
+                      markOpacity,
+                      markScale,
+                      markLift,
+                      haloOpacity,
+                      haloScale,
+                      wordmarkOpacity,
+                      wordmarkLift,
+                      wordmarkReveal,
+                    ]),
+                    builder: (context, _) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Transform.translate(
+                            offset: Offset(0, markLift.value),
+                            child: Opacity(
+                              opacity: haloOpacity.value,
+                              child: Transform.scale(
+                                scale: haloScale.value,
+                                child: Container(
+                                  width: 246,
+                                  height: 142,
+                                  decoration: const BoxDecoration(
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        Color(0x38FF7AAA),
+                                        Color(0x1F8B45E8),
+                                        Color(0x007A2DD6),
+                                      ],
+                                      stops: [0, .55, 1],
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Transform.translate(
-                          offset: Offset(0, 30 + wordmarkLift.value),
-                          child: FadeTransition(
-                            opacity: wordmarkOpacity,
-                            child: const Column(
-                              key: Key('brand-launch-wordmark'),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'قدرات المغربي',
-                                  style: TextStyle(
-                                    color: QmColors.deepPurple,
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.1,
-                                  ),
+                          Transform.translate(
+                            offset: Offset(0, markLift.value),
+                            child: FadeTransition(
+                              opacity: markOpacity,
+                              child: ScaleTransition(
+                                scale: markScale,
+                                child: Image.asset(
+                                  'assets/brand/qudrat_maghrabi_mark.png',
+                                  key: const Key('brand-launch-mark'),
+                                  width: 190,
+                                  fit: BoxFit.contain,
+                                  semanticLabel: 'شعار قدرات المغربي',
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'QUDRAT MAGHRABI',
-                                  textDirection: TextDirection.ltr,
-                                  style: TextStyle(
-                                    color: QmColors.purple,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 2.4,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                          Transform.translate(
+                            offset: Offset(0, 47 + wordmarkLift.value),
+                            child: FadeTransition(
+                              opacity: wordmarkOpacity,
+                              child: ClipRect(
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  heightFactor: wordmarkReveal.value,
+                                  child: ClipRect(
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      heightFactor: .30,
+                                      child: Image.asset(
+                                        'assets/brand/qudrat_maghrabi_logo.png',
+                                        key: const Key('brand-launch-wordmark'),
+                                        width: 238,
+                                        fit: BoxFit.contain,
+                                        semanticLabel:
+                                            'قدرات المغربي Qudrat Maghrabi',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -206,10 +274,13 @@ class _AmbientGlow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
     );
   }
 }
