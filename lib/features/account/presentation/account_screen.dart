@@ -306,21 +306,26 @@ class _AccountHero extends StatelessWidget {
             height: 76,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .16),
+              color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withValues(alpha: .4),
-                width: 2,
+                color: Colors.white.withValues(alpha: .8),
+                width: 3,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x330F0520),
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
-            child: Text(
-              profile.fullName.trim().isEmpty
-                  ? 'ط'
-                  : profile.fullName.trim().characters.first,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Image.asset(
+                'assets/brand/qudrat_maghrabi_mark.png',
+                key: const Key('account-brand-logo'),
+                fit: BoxFit.contain,
               ),
             ),
           ),

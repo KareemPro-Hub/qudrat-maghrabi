@@ -428,6 +428,7 @@ void main() {
     await tester.tap(find.text('حسابي'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('account-brand-logo')), findsOneWidget);
     expect(find.text('إدارة الحساب'), findsOneWidget);
     await tester.scrollUntilVisible(find.byKey(const Key('privacy-tile')), 250);
     await tester.pumpAndSettle();
