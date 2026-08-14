@@ -241,22 +241,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('الاشتراك والباقات'), findsOneWidget);
-    expect(find.text('شهر واحد'), findsWidgets);
-    expect(find.text('3 أشهر'), findsWidgets);
+    expect(find.textContaining('شهر واحد'), findsWidgets);
+    expect(find.textContaining('3 أشهر'), findsWidgets);
     expect(find.text('49'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('3 أشهر'),
+      find.textContaining('3 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('3 أشهر'), findsWidgets);
+    expect(find.textContaining('3 أشهر'), findsWidgets);
     expect(find.text('99'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('6 أشهر'),
+      find.textContaining('6 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('6 أشهر'), findsWidgets);
+    expect(find.textContaining('6 أشهر'), findsWidgets);
     expect(find.text('179'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.textContaining('كورس التأسيس يظل مجانيًا'),

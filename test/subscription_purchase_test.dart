@@ -102,7 +102,10 @@ void main() {
     expect(find.byKey(const Key('manage-subscription-button')), findsNothing);
     expect(find.text('49'), findsOneWidget);
     expect(find.text('99'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('select-شهر واحد')));
+    final monthlyButton = find.byKey(const ValueKey('select-شهر واحد'));
+    await tester.ensureVisible(monthlyButton);
+    await tester.pumpAndSettle();
+    await tester.tap(monthlyButton);
     await tester.pump();
 
     expect(repository.purchaseCalls, 1);

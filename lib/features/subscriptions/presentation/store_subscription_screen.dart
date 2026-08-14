@@ -395,162 +395,255 @@ class _PlanCard extends StatelessWidget {
 
   SubscriptionPlan get plan => offer.plan;
 
-  Color get accent => switch (plan.id) {
-    'quarterly' => QmColors.pink,
-    'semiannual' => const Color(0xFFFF7A54),
-    _ => QmColors.purple,
+  _PlanPalette get palette => switch (plan.id) {
+    'quarterly' => const _PlanPalette(
+      capStart: Color(0xFFDD0877),
+      capEnd: Color(0xFFF01D91),
+      pocketStart: Color(0xFFFFC6DF),
+      pocketEnd: Color(0xFFEB73B0),
+      ink: Color(0xFF7A0C48),
+    ),
+    'semiannual' => const _PlanPalette(
+      capStart: Color(0xFFFF6F3F),
+      capEnd: Color(0xFFFF9142),
+      pocketStart: Color(0xFFFFD7C5),
+      pocketEnd: Color(0xFFF89E79),
+      ink: Color(0xFF7A3410),
+    ),
+    _ => const _PlanPalette(
+      capStart: Color(0xFF7025ED),
+      capEnd: Color(0xFFA52CF3),
+      pocketStart: Color(0xFFD9C4FF),
+      pocketEnd: Color(0xFF9D77EF),
+      ink: Color(0xFF3F1568),
+    ),
   };
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: plan.popular ? accent.withValues(alpha: .5) : QmColors.border,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x100F0520),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
+    final colors = palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 4, 22),
+      child: Stack(
+        alignment: Alignment.topCenter,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [accent, Color.lerp(accent, Colors.pink, .32)!],
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (plan.popular)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 7),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          child: const Text(
-                            'الأكثر اختيارًا',
-                            style: TextStyle(
-                              color: QmColors.pink,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
+          Padding(
+            padding: const EdgeInsets.only(top: 126),
+            child: ClipPath(
+              clipper: const _PlanPocketClipper(),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 390),
+                padding: const EdgeInsets.fromLTRB(28, 72, 28, 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [colors.pocketStart, colors.pocketEnd],
+                  ),
+                  border: Border.all(color: Colors.white.withValues(alpha: .7)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x3A2F1D62),
+                      blurRadius: 28,
+                      offset: Offset(0, 18),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    for (final benefit in plan.benefits)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x1F371554),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                benefit.included
+                                    ? Icons.check_rounded
+                                    : Icons.close_rounded,
+                                color: benefit.included
+                                    ? const Color(0xFF23A374)
+                                    : const Color(0xFFFF5A68),
+                                size: 18,
+                              ),
                             ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                benefit.text,
+                                style: TextStyle(
+                                  color: benefit.included
+                                      ? colors.ink
+                                      : colors.ink.withValues(alpha: .55),
+                                  fontWeight: benefit.included
+                                      ? FontWeight.w800
+                                      : FontWeight.w500,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        key: ValueKey('select-${plan.duration}'),
+                        onPressed: offer.canPurchase && !purchaseBlocked
+                            ? onSelect
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: .24),
+                          disabledBackgroundColor: Colors.white.withValues(
+                            alpha: .20,
+                          ),
+                          foregroundColor: Colors.white,
+                          disabledForegroundColor: colors.ink.withValues(
+                            alpha: .42,
+                          ),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: .48),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        icon: processing
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.4,
+                                ),
+                              )
+                            : const Icon(Icons.arrow_back_rounded, size: 20),
+                        label: Text(
+                          offer.canPurchase
+                              ? 'ابدأ الآن'
+                              : 'بانتظار تفعيل المتجر',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 260,
+            constraints: const BoxConstraints(minHeight: 158),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 34),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [colors.capStart, colors.capEnd],
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+                bottom: Radius.circular(5),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.capStart.withValues(alpha: .34),
+                  blurRadius: 24,
+                  offset: const Offset(0, 13),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -42,
+                  right: -32,
+                  child: Container(
+                    width: 150,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .10),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
                         plan.name,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w900,
+                          height: 1.15,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        plan.duration,
+                        'لمدة ${plan.duration}',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: .84),
+                          color: Colors.white.withValues(alpha: .9),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: Text(
-                    offer.priceLabel,
-                    textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                if (!offer.canPurchase) ...[
-                  const SizedBox(width: 5),
-                  const Text(
-                    'ر.س',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                for (final benefit in plan.benefits)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 11),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          color: accent,
-                          size: 21,
-                        ),
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: Text(
-                            benefit,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    key: ValueKey('select-${plan.duration}'),
-                    onPressed: offer.canPurchase && !purchaseBlocked
-                        ? onSelect
-                        : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: accent,
-                      disabledBackgroundColor: accent.withValues(alpha: .35),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: processing
-                        ? const SizedBox.square(
-                            dimension: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
+                      const SizedBox(height: 13),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                offer.priceLabel,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 46,
+                                  fontWeight: FontWeight.w900,
+                                  height: .9,
+                                ),
+                              ),
                             ),
-                          )
-                        : Text(
-                            offer.canPurchase
-                                ? 'اشترك في ${plan.duration}'
-                                : 'بانتظار تفعيل المتجر',
-                            style: const TextStyle(fontWeight: FontWeight.w900),
                           ),
+                          if (!offer.canPurchase) ...[
+                            const SizedBox(width: 7),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 3),
+                              child: Text(
+                                'ر.س',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -560,6 +653,48 @@ class _PlanCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PlanPalette {
+  const _PlanPalette({
+    required this.capStart,
+    required this.capEnd,
+    required this.pocketStart,
+    required this.pocketEnd,
+    required this.ink,
+  });
+
+  final Color capStart;
+  final Color capEnd;
+  final Color pocketStart;
+  final Color pocketEnd;
+  final Color ink;
+}
+
+class _PlanPocketClipper extends CustomClipper<Path> {
+  const _PlanPocketClipper();
+
+  @override
+  Path getClip(Size size) {
+    const notchDepth = 30.0;
+    final notchStart = size.width * .23;
+    final notchEnd = size.width * .77;
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width * .17, 0)
+      ..lineTo(notchStart, notchDepth)
+      ..lineTo(notchEnd, notchDepth)
+      ..lineTo(size.width * .83, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height - 28)
+      ..quadraticBezierTo(size.width, size.height, size.width - 28, size.height)
+      ..lineTo(28, size.height)
+      ..quadraticBezierTo(0, size.height, 0, size.height - 28)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(covariant _PlanPocketClipper oldClipper) => false;
 }
 
 class _RenewalNote extends StatelessWidget {

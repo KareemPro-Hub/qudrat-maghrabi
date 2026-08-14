@@ -1,6 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
+class SubscriptionBenefit {
+  const SubscriptionBenefit(this.text, {this.included = true});
+
+  final String text;
+  final bool included;
+}
+
+@immutable
 class SubscriptionPlan {
   const SubscriptionPlan({
     required this.id,
@@ -19,7 +27,7 @@ class SubscriptionPlan {
   final String duration;
   final int durationDays;
   final double fallbackPriceSar;
-  final List<String> benefits;
+  final List<SubscriptionBenefit> benefits;
   final bool popular;
 
   static const monthly = SubscriptionPlan(
@@ -29,7 +37,13 @@ class SubscriptionPlan {
     duration: 'شهر واحد',
     durationDays: 30,
     fallbackPriceSar: 49,
-    benefits: ['كل كورسات المنصة', 'الاختبارات والتدريبات', 'متابعة التقدّم'],
+    benefits: [
+      SubscriptionBenefit('تأسيس قوي يبدأ بك من الصفر'),
+      SubscriptionBenefit('فيديوهات احترافية بجودة عالية'),
+      SubscriptionBenefit('اختبار تطبيقي بعد كل درس'),
+      SubscriptionBenefit('تحليل إجاباتك بالذكاء الاصطناعي', included: false),
+      SubscriptionBenefit('تقارير تكشف مستواك بدقة', included: false),
+    ],
   );
 
   static const quarterly = SubscriptionPlan(
@@ -41,9 +55,11 @@ class SubscriptionPlan {
     fallbackPriceSar: 99,
     popular: true,
     benefits: [
-      'كل مزايا الباقة الأساسية',
-      'أفضل قيمة للطالب',
-      'وصول مستمر 90 يومًا',
+      SubscriptionBenefit('جميع مزايا الباقة الأساسية'),
+      SubscriptionBenefit('أحدث بنوك أسئلة المحوسب'),
+      SubscriptionBenefit('محاكاة مكثفة بلا حدود'),
+      SubscriptionBenefit('حلول التجميعات بأسرع الاستراتيجيات'),
+      SubscriptionBenefit('خطة ذكية تناسب نقاط ضعفك', included: false),
     ],
   );
 
@@ -55,9 +71,11 @@ class SubscriptionPlan {
     durationDays: 180,
     fallbackPriceSar: 179,
     benefits: [
-      'كل مزايا الباقة المميزة',
-      'أطول مدة وصول',
-      'استعداد كامل حتى الاختبار',
+      SubscriptionBenefit('جميع مزايا الباقة المميزة'),
+      SubscriptionBenefit('بث مباشر أسبوعي مع الطلاب'),
+      SubscriptionBenefit('قروب تفاعلي للدعم المستمر'),
+      SubscriptionBenefit('جلسات مراجعة مركزة ومباشرة'),
+      SubscriptionBenefit('تحليل شامل وخطة تفوق شخصية'),
     ],
   );
 
