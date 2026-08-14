@@ -361,6 +361,10 @@ void main() {
     expect(find.text('نتيجة فورية لتحديد مستواك'), findsOneWidget);
     expect(find.text('اختبر قدراتك .. واصنع تفوقك.'), findsOneWidget);
     expect(
+      tester.widget<Text>(find.byKey(const Key('quiz-hero-title'))).maxLines,
+      1,
+    );
+    expect(
       find.text('تابع نتائجك فورًا، وتعرّف على نقاط القوة والضعف لديك !'),
       findsOneWidget,
     );

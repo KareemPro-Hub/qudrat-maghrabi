@@ -205,11 +205,21 @@ class _QuizHero extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                'اختبر قدراتك .. واصنع تفوقك.',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
+              SizedBox(
+                width: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    'اختبر قدراتك .. واصنع تفوقك.',
+                    key: const Key('quiz-hero-title'),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
