@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_plan.dart';
 
 enum SubscriptionUpdateType { pending, verified, restored, cancelled, error }
@@ -71,6 +72,8 @@ class SubscriptionCatalog {
 abstract interface class SubscriptionRepository {
   Stream<SubscriptionUpdate> get updates;
 
+  Future<StudentSubscription?> loadCurrentSubscription();
+
   Future<SubscriptionCatalog> loadCatalog();
 
   Future<void> purchase(SubscriptionPlan plan);
@@ -85,6 +88,9 @@ class UnavailableSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Stream<SubscriptionUpdate> get updates => const Stream.empty();
+
+  @override
+  Future<StudentSubscription?> loadCurrentSubscription() async => null;
 
   @override
   Future<SubscriptionCatalog> loadCatalog() async {

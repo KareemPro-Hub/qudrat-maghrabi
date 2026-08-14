@@ -10,14 +10,9 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_p
 import 'package:url_launcher/url_launcher.dart';
 
 class StoreSubscriptionScreen extends StatefulWidget {
-  const StoreSubscriptionScreen({
-    required this.repository,
-    this.subscription,
-    super.key,
-  });
+  const StoreSubscriptionScreen({required this.repository, super.key});
 
   final SubscriptionRepository repository;
-  final StudentSubscription? subscription;
 
   @override
   State<StoreSubscriptionScreen> createState() =>
@@ -27,6 +22,7 @@ class StoreSubscriptionScreen extends StatefulWidget {
 class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
   late Future<SubscriptionCatalog> _catalogFuture;
   StreamSubscription<SubscriptionUpdate>? _updatesSubscription;
+  StudentSubscription? _subscription;
   String? _processingProductId;
   bool _restoring = false;
 
@@ -34,6 +30,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
   void initState() {
     super.initState();
     _catalogFuture = widget.repository.loadCatalog();
+    unawaited(_loadSubscription());
     _updatesSubscription = widget.repository.updates.listen(_onUpdate);
   }
 
@@ -74,12 +71,24 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
       setState(() {
         _catalogFuture = widget.repository.loadCatalog();
       });
+      unawaited(_loadSubscription());
     }
+  }
+
+  Future<void> _loadSubscription() async {
+    StudentSubscription? subscription;
+    try {
+      subscription = await widget.repository.loadCurrentSubscription();
+    } catch (_) {
+      subscription = null;
+    }
+    if (!mounted) return;
+    setState(() => _subscription = subscription);
   }
 
   Future<void> _reloadCatalog() async {
     setState(() => _catalogFuture = widget.repository.loadCatalog());
-    await _catalogFuture;
+    await Future.wait([_catalogFuture, _loadSubscription()]);
   }
 
   Future<void> _buy(SubscriptionPlan plan) async {
@@ -118,10 +127,10 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
                   sliver: SliverList.list(
                     children: [
-                      _SubscriptionHero(subscription: widget.subscription),
+                      _SubscriptionHero(subscription: _subscription),
                       const SizedBox(height: 18),
                       _ManagementActions(
-                        hasSubscription: widget.subscription != null,
+                        hasSubscription: _subscription != null,
                         restoring: _restoring,
                         onRestore: _restore,
                         onManage: widget.repository.openSubscriptionManagement,

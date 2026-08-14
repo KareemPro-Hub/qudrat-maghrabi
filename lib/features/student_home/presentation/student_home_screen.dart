@@ -246,7 +246,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                           course: course,
                           onTap: () => course.hasAccess
                               ? _showCourseDetails(course)
-                              : _showSubscriptions(snapshot.subscription),
+                              : _showSubscriptions(),
                         );
                       },
                     ),
@@ -255,7 +255,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 const SizedBox(height: 24),
                 _SubscriptionStatusCard(
                   subscription: snapshot.subscription,
-                  onTap: () => _showSubscriptions(snapshot.subscription),
+                  onTap: _showSubscriptions,
                 ),
               ],
             ),
@@ -306,7 +306,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       course: course,
                       onTap: () => course.hasAccess
                           ? _showCourseDetails(course)
-                          : _showSubscriptions(snapshot.subscription),
+                          : _showSubscriptions(),
                     ),
                   ),
                 ),
@@ -329,13 +329,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  Future<void> _showSubscriptions(StudentSubscription? subscription) async {
+  Future<void> _showSubscriptions() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => StoreSubscriptionScreen(
-          subscription: subscription,
-          repository: widget.subscriptionRepository,
-        ),
+        builder: (_) =>
+            StoreSubscriptionScreen(repository: widget.subscriptionRepository),
       ),
     );
     if (mounted) await _refresh();

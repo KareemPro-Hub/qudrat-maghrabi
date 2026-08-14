@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/data/store_subscription_parser.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_plan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,6 +28,23 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Stream<SubscriptionUpdate> get updates => _updates.stream;
+
+  @override
+  Future<StudentSubscription?> loadCurrentSubscription() async {
+    final studentId = _supabase.auth.currentUser?.id;
+    if (studentId == null) return null;
+    final response = await _supabase
+        .from('store_subscriptions')
+        .select(
+          'product_id, status, purchased_at, current_period_start, '
+          'current_period_end, store_subscription_plans!inner('
+          'name_ar, bundle_course_id)',
+        )
+        .eq('student_id', studentId);
+    return activeStoreSubscriptionFromRows(
+      (response as List).cast<Map<String, dynamic>>(),
+    );
+  }
 
   @override
   Future<SubscriptionCatalog> loadCatalog() async {

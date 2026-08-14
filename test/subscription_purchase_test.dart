@@ -8,9 +8,10 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_p
 import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/store_subscription_screen.dart';
 
 class _FakeStoreRepository implements SubscriptionRepository {
-  _FakeStoreRepository({this.localizedMonthlyPrice});
+  _FakeStoreRepository({this.localizedMonthlyPrice, this.currentSubscription});
 
   final String? localizedMonthlyPrice;
+  final StudentSubscription? currentSubscription;
   final controller = StreamController<SubscriptionUpdate>.broadcast();
   int purchaseCalls = 0;
   int restoreCalls = 0;
@@ -19,6 +20,11 @@ class _FakeStoreRepository implements SubscriptionRepository {
 
   @override
   Stream<SubscriptionUpdate> get updates => controller.stream;
+
+  @override
+  Future<StudentSubscription?> loadCurrentSubscription() async {
+    return currentSubscription;
+  }
 
   @override
   Future<SubscriptionCatalog> loadCatalog() async {
@@ -71,18 +77,12 @@ class _FakeStoreRepository implements SubscriptionRepository {
   Future<void> dispose() => controller.close();
 }
 
-Widget _app(
-  _FakeStoreRepository repository, {
-  StudentSubscription? subscription,
-}) {
+Widget _app(_FakeStoreRepository repository) {
   return MaterialApp(
     locale: const Locale('ar'),
     home: Directionality(
       textDirection: TextDirection.rtl,
-      child: StoreSubscriptionScreen(
-        repository: repository,
-        subscription: subscription,
-      ),
+      child: StoreSubscriptionScreen(repository: repository),
     ),
   );
 }
@@ -96,6 +96,10 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
+    expect(find.text('افتح كل الكورسات'), findsOneWidget);
+    expect(find.text('اشتراكك فعّال'), findsNothing);
+    expect(find.textContaining('2036'), findsNothing);
+    expect(find.byKey(const Key('manage-subscription-button')), findsNothing);
     expect(find.text('49'), findsOneWidget);
     expect(find.text('99'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('select-شهر واحد')));
@@ -108,19 +112,16 @@ void main() {
   testWidgets('student can restore purchases and manage active renewal', (
     tester,
   ) async {
-    final repository = _FakeStoreRepository();
-    addTearDown(repository.dispose);
-    await tester.pumpWidget(
-      _app(
-        repository,
-        subscription: StudentSubscription(
-          bundleId: 'bundle',
-          planName: 'الباقة المميزة',
-          startedAt: DateTime(2026, 7, 1),
-          expiresAt: DateTime(2026, 10, 1),
-        ),
+    final repository = _FakeStoreRepository(
+      currentSubscription: StudentSubscription(
+        bundleId: 'bundle',
+        planName: 'الباقة المميزة',
+        startedAt: DateTime(2026, 7, 1),
+        expiresAt: DateTime(2026, 10, 1),
       ),
     );
+    addTearDown(repository.dispose);
+    await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('restore-purchases-button')));
