@@ -206,7 +206,7 @@ class _QuizHero extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'اختبر فهمك.. ثم تفوّق',
+                'اختبر قدراتك .. واصنع تفوقك.',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -214,7 +214,7 @@ class _QuizHero extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'نتيجة فورية وتحليل واضح لكل محاولة.',
+                'تابع نتائجك فورًا، وتعرّف على نقاط القوة والضعف لديك !',
                 style: TextStyle(color: Color(0xE6FFFFFF)),
               ),
               const SizedBox(height: 20),
