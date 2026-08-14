@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
@@ -426,6 +427,7 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = palette;
     return Container(
+      key: ValueKey('plan-card-${plan.id}'),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -440,6 +442,7 @@ class _PlanCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _PlanGlassHeader(
             offer: offer,
@@ -552,6 +555,7 @@ class _PlanGlassHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
+      key: ValueKey('plan-header-${offer.plan.id}'),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -560,6 +564,7 @@ class _PlanGlassHeader extends StatelessWidget {
         ),
       ),
       child: Stack(
+        fit: StackFit.passthrough,
         clipBehavior: Clip.hardEdge,
         children: [
           Positioned(
@@ -681,12 +686,19 @@ class _PlanPrice extends StatelessWidget {
 
   bool get _usesSaudiRiyal {
     final label = _normalizedLabel;
-    return !offer.canPurchase ||
+    return _showSaudiPreview ||
+        !offer.canPurchase ||
         _sarPattern.hasMatch(label) ||
         _numericPattern.hasMatch(label);
   }
 
+  bool get _showSaudiPreview =>
+      kDebugMode && RegExp(r'[$€£]').hasMatch(_normalizedLabel);
+
   String get _amountLabel {
+    if (_showSaudiPreview) {
+      return offer.plan.fallbackPriceSar.toStringAsFixed(0);
+    }
     final amount = _normalizedLabel.replaceAll(_sarPattern, '').trim();
     return amount.isEmpty
         ? offer.plan.fallbackPriceSar.toStringAsFixed(0)
