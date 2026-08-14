@@ -168,7 +168,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('مدفوع'), findsOneWidget);
+    expect(find.text('كورس مدفوع'), findsOneWidget);
     expect(find.text('249 ج.م'), findsOneWidget);
     expect(find.text('الرئيسية'), findsOneWidget);
     expect(find.text('الكورسات'), findsOneWidget);
@@ -299,7 +299,7 @@ void main() {
         250,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('مشترك'), findsOneWidget);
+      expect(find.text('كورس مدفوع'), findsOneWidget);
       expect(find.text('ابدأ التعلّم'), findsWidgets);
     },
   );

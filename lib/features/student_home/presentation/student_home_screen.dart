@@ -232,7 +232,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                   const SizedBox(height: 14),
                   SizedBox(
-                    height: 330,
+                    height: 350,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
@@ -305,7 +305,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 child: Center(
                   child: SizedBox(
                     width: 286,
-                    height: 330,
+                    height: 350,
                     child: _CourseCard(
                       key: ValueKey('catalog-${course.id}'),
                       course: course,
@@ -865,38 +865,11 @@ class _CourseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
-                  children: [
-                    _CourseImage(
-                      imageUrl: course.thumbnailUrl,
-                      width: double.infinity,
-                      height: 155,
-                      borderRadius: 0,
-                    ),
-                    PositionedDirectional(
-                      top: 12,
-                      start: 12,
-                      child: _AccessBadge(course: course),
-                    ),
-                    if (!course.hasAccess && !course.isFree)
-                      PositionedDirectional(
-                        top: 12,
-                        end: 12,
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: QmColors.deepPurple.withValues(alpha: .88),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.lock_outline_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                  ],
+                _CourseImage(
+                  imageUrl: course.thumbnailUrl,
+                  width: double.infinity,
+                  height: 155,
+                  borderRadius: 0,
                 ),
                 Expanded(
                   child: Padding(
@@ -904,6 +877,8 @@ class _CourseCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _CourseTypeLabel(course: course),
+                        const SizedBox(height: 9),
                         Text(
                           course.title,
                           maxLines: 2,
@@ -994,24 +969,19 @@ class _CourseCard extends StatelessWidget {
   }
 }
 
-class _AccessBadge extends StatelessWidget {
-  const _AccessBadge({required this.course});
+class _CourseTypeLabel extends StatelessWidget {
+  const _CourseTypeLabel({required this.course});
 
   final StudentCourse course;
 
   @override
   Widget build(BuildContext context) {
-    final label = course.isFree
-        ? 'مجاني بالكامل'
-        : course.hasAccess
-        ? 'مشترك'
-        : 'مدفوع';
-    final background = course.isFree || course.hasAccess
+    final isFree = course.isFree;
+    final label = isFree ? 'كورس مجاني' : 'كورس مدفوع';
+    final background = isFree
         ? const Color(0xFFE6FAF1)
         : const Color(0xFFFFEEF5);
-    final foreground = course.isFree || course.hasAccess
-        ? QmColors.success
-        : QmColors.pink;
+    final foreground = isFree ? QmColors.success : QmColors.pink;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),

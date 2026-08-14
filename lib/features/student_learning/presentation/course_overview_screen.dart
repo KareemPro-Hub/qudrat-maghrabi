@@ -144,12 +144,8 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                 Row(
                   children: [
                     _StatusPill(
-                      label: content.price <= 0
-                          ? 'مجاني بالكامل'
-                          : content.hasAccess
-                          ? 'مشترك'
-                          : 'مدفوع',
-                      accessible: content.hasAccess,
+                      label: content.price <= 0 ? 'كورس مجاني' : 'كورس مدفوع',
+                      isFree: content.price <= 0,
                     ),
                     const Spacer(),
                     const Icon(
@@ -265,32 +261,32 @@ class _CourseHero extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.accessible});
+  const _StatusPill({required this.label, required this.isFree});
 
   final String label;
-  final bool accessible;
+  final bool isFree;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: accessible ? const Color(0xFFE6FAF1) : const Color(0xFFFFEEF5),
+        color: isFree ? const Color(0xFFE6FAF1) : const Color(0xFFFFEEF5),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            accessible ? Icons.verified_rounded : Icons.lock_rounded,
+            isFree ? Icons.redeem_rounded : Icons.workspace_premium_rounded,
             size: 16,
-            color: accessible ? QmColors.success : QmColors.pink,
+            color: isFree ? QmColors.success : QmColors.pink,
           ),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
-              color: accessible ? QmColors.success : QmColors.pink,
+              color: isFree ? QmColors.success : QmColors.pink,
               fontSize: 12,
               fontWeight: FontWeight.w900,
             ),
