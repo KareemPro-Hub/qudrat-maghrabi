@@ -129,7 +129,7 @@ void main() {
 
     expect(repository.signInCalls, 1);
     expect(repository.lastExpectedRole, AccountRole.student);
-    expect(find.text('الكورسات المتاحة'), findsOneWidget);
+    expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
   });
 
   testWidgets('a persisted session bypasses the login screen', (tester) async {
@@ -140,7 +140,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('أهلًا بعودتك'), findsNothing);
-    expect(find.text('الكورسات المتاحة'), findsOneWidget);
+    expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
   });
 
   testWidgets('student home presents free and paid courses clearly', (
@@ -152,15 +152,14 @@ void main() {
     await tester.pumpWidget(createTestApp(repository));
     await tester.pumpAndSettle();
 
+    expect(find.text('هدية البداية'), findsOneWidget);
+
     await tester.scrollUntilVisible(
-      find.text('الكورسات المتاحة'),
+      find.text('اكتشف باقي الكورسات'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-
-    expect(find.text('مجاني بالكامل'), findsWidgets);
-    expect(find.text('دورة تأسيس 2027'), findsWidgets);
 
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('question-bank-course')),
@@ -173,6 +172,26 @@ void main() {
     expect(find.text('249 ج.م'), findsOneWidget);
     expect(find.text('الرئيسية'), findsOneWidget);
     expect(find.text('الكورسات'), findsOneWidget);
+  });
+
+  testWidgets('student sees the free course surprise with a full 16:9 cover', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    await tester.pumpWidget(createTestApp(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
+    expect(find.text('مفاجأة ! كورس تأسيس كامل هدية لك'), findsOneWidget);
+    expect(find.text('ابدأ الكورس مجانًا'), findsOneWidget);
+    expect(
+      tester
+          .widget<AspectRatio>(find.byKey(const Key('free-course-cover-16-9')))
+          .aspectRatio,
+      16 / 9,
+    );
   });
 
   testWidgets('student can review all three subscription plans', (
@@ -294,9 +313,9 @@ void main() {
     await tester.pumpWidget(createTestApp(repository));
     await tester.pumpAndSettle();
 
-    final foundationTitle = find.text('دورة تأسيس 2027').first;
-    await tester.ensureVisible(foundationTitle);
-    await tester.tap(foundationTitle);
+    final freeCourseCard = find.byKey(const Key('free-course-surprise-card'));
+    await tester.ensureVisible(freeCourseCard);
+    await tester.tap(freeCourseCard);
     await tester.pumpAndSettle();
 
     expect(find.text('محتوى الكورس'), findsOneWidget);

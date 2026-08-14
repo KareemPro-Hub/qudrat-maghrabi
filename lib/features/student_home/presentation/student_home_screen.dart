@@ -159,8 +159,17 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         .trim()
         .split(RegExp(r'\s+'))
         .first;
-    final bundle = snapshot.bundles.isEmpty ? null : snapshot.bundles.first;
     final nextCourse = snapshot.continueCourse ?? snapshot.recommendedCourse;
+    StudentCourse? freeCourse;
+    for (final course in snapshot.availableCourses) {
+      if (course.isFree) {
+        freeCourse = course;
+        break;
+      }
+    }
+    final otherCourses = snapshot.availableCourses
+        .where((course) => course.id != freeCourse?.id)
+        .toList(growable: false);
 
     return RefreshIndicator(
       color: QmColors.pink,
@@ -191,14 +200,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                _JourneyCard(
-                  title: bundle?.title ?? 'رحلتك نحو الـ 95+',
-                  coursesCount:
-                      bundle?.childCoursesCount ??
-                      snapshot.availableCourses.length,
-                  onTap: () => _onNavigationTap(1),
-                ),
-                if (nextCourse != null) ...[
+                if (freeCourse != null)
+                  _FreeCourseSurpriseCard(
+                    course: freeCourse,
+                    onTap: () => _showCourseDetails(freeCourse!),
+                  ),
+                if (nextCourse != null && nextCourse.id != freeCourse?.id) ...[
                   const SizedBox(height: 30),
                   _SectionTitle(
                     title: snapshot.continueCourse == null
@@ -214,26 +221,26 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     onTap: () => _showCourseDetails(nextCourse),
                   ),
                 ],
-                const SizedBox(height: 32),
-                _SectionTitle(
-                  title: 'الكورسات المتاحة',
-                  subtitle: 'اختر مسارك وابدأ التعلّم بثقة',
-                  trailing: '${snapshot.availableCourses.length} كورسات',
-                ),
-                const SizedBox(height: 14),
-                if (snapshot.availableCourses.isEmpty)
-                  const _EmptyCoursesCard()
-                else
+                if (otherCourses.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  _SectionTitle(
+                    title: 'اكتشف باقي الكورسات',
+                    subtitle: 'واصل رحلتك نحو هدفك',
+                    trailing: otherCourses.length == 1
+                        ? 'كورس واحد'
+                        : '${otherCourses.length} كورسات',
+                  ),
+                  const SizedBox(height: 14),
                   SizedBox(
                     height: 330,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsetsDirectional.only(end: 2),
-                      itemCount: snapshot.availableCourses.length,
+                      itemCount: otherCourses.length,
                       separatorBuilder: (_, _) => const SizedBox(width: 14),
                       itemBuilder: (context, index) {
-                        final course = snapshot.availableCourses[index];
+                        final course = otherCourses[index];
                         return _CourseCard(
                           key: ValueKey(course.id),
                           course: course,
@@ -244,6 +251,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       },
                     ),
                   ),
+                ],
                 const SizedBox(height: 24),
                 _SubscriptionStatusCard(
                   subscription: snapshot.subscription,
@@ -535,133 +543,139 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _JourneyCard extends StatelessWidget {
-  const _JourneyCard({
-    required this.title,
-    required this.coursesCount,
-    required this.onTap,
-  });
+class _FreeCourseSurpriseCard extends StatelessWidget {
+  const _FreeCourseSurpriseCard({required this.course, required this.onTap});
 
-  final String title;
-  final int coursesCount;
+  final StudentCourse course;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 190),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [QmColors.deepPurple, Color(0xFF6824C7), QmColors.purple],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x407A2DD6),
-            blurRadius: 28,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(30),
       clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          const PositionedDirectional(
-            top: -56,
-            end: -30,
-            child: _DecorativeCircle(size: 170),
+      child: InkWell(
+        key: const Key('free-course-surprise-card'),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: QmColors.border),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F6824C7),
+                blurRadius: 28,
+                offset: Offset(0, 14),
+              ),
+            ],
           ),
-          const PositionedDirectional(
-            bottom: -70,
-            start: -25,
-            child: _DecorativeCircle(size: 150),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Stack(
+                children: [
+                  AspectRatio(
+                    key: const Key('free-course-cover-16-9'),
+                    aspectRatio: 16 / 9,
+                    child: ColoredBox(
+                      color: QmColors.deepPurple,
+                      child: _CourseImage(
+                        imageUrl: course.thumbnailUrl,
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 0,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  PositionedDirectional(
+                    top: 14,
+                    start: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE5FFF3),
+                        borderRadius: BorderRadius.circular(99),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x22000000), blurRadius: 12),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.card_giftcard_rounded,
+                            color: QmColors.success,
+                            size: 17,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'هدية البداية',
+                            style: TextStyle(
+                              color: QmColors.success,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'مفاجأة ! كورس تأسيس كامل هدية لك',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: QmColors.deepPurple,
+                        fontWeight: FontWeight.w900,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'ابدأ الآن، وابنِ أساسًا قويًا يقربك من الدرجة التي تحلم بها.',
+                      style: TextStyle(
+                        color: QmColors.textSecondary,
+                        fontSize: 15,
+                        height: 1.55,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: onTap,
+                        iconAlignment: IconAlignment.end,
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text('ابدأ الكورس مجانًا'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: QmColors.deepPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .14),
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: .2),
-                    ),
-                  ),
-                  child: Text(
-                    '$coursesCount مسارات تعليمية',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    height: 1.25,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'افهم، تدرّب، وتفوّق بخطة واضحة.',
-                  style: TextStyle(color: Color(0xD9FFFFFF), fontSize: 15),
-                ),
-                const SizedBox(height: 18),
-                FilledButton.icon(
-                  onPressed: onTap,
-                  iconAlignment: IconAlignment.end,
-                  icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                  label: const Text('استعرض الكورسات'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: QmColors.deepPurple,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DecorativeCircle extends StatelessWidget {
-  const _DecorativeCircle({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: .06),
-        border: Border.all(color: Colors.white.withValues(alpha: .08)),
+        ),
       ),
     );
   }
@@ -1023,12 +1037,14 @@ class _CourseImage extends StatelessWidget {
     required this.width,
     required this.height,
     required this.borderRadius,
+    this.fit = BoxFit.cover,
   });
 
   final String? imageUrl;
   final double width;
   final double height;
   final double borderRadius;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -1057,7 +1073,7 @@ class _CourseImage extends StatelessWidget {
         url,
         width: width,
         height: height,
-        fit: BoxFit.cover,
+        fit: fit,
         errorBuilder: (_, _, _) => fallback,
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
