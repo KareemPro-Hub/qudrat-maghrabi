@@ -343,12 +343,14 @@ class _PlanCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 5),
-                const Text(
-                  'ر.س',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Image.asset(
+                  'assets/brand/saudi_riyal_symbol.png',
+                  width: 20,
+                  height: 24,
+                  fit: BoxFit.contain,
+                  color: Colors.white,
+                  colorBlendMode: BlendMode.srcIn,
+                  semanticLabel: 'ريال سعودي',
                 ),
               ],
             ),

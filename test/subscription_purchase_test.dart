@@ -142,9 +142,11 @@ void main() {
     expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsOneWidget);
   });
 
-  testWidgets('store currency is shown without adding a fallback currency', (
-    tester,
-  ) async {
+  testWidgets('Saudi price uses the official Riyal symbol', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final repository = _FakeStoreRepository(
       localizedMonthlyPrice: 'ر.س. ١٩٫٩٩',
     );
@@ -152,7 +154,10 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('ر.س. ١٩٫٩٩'), findsOneWidget);
+    expect(find.text('١٩٫٩٩'), findsOneWidget);
+    expect(find.byKey(const Key('saudi-riyal-symbol')), findsWidgets);
+    expect(find.textContaining('ر.س'), findsNothing);
     expect(find.text('ج.م'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }
