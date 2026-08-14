@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:qudrat_maghrabi_app/core/presentation/brand_launch_gate.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
@@ -52,15 +53,17 @@ class QudratMaghrabiApp extends StatelessWidget {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: AuthGate(
-        authRepository: authRepository,
-        accountRepository: accountRepository,
-        parentHomeRepository: parentHomeRepository,
-        studentHomeRepository: studentHomeRepository,
-        studentLearningRepository: studentLearningRepository,
-        studentQuizRepository: studentQuizRepository,
-        subscriptionRepository: subscriptionRepository,
-        notificationRepository: notificationRepository,
+      home: BrandLaunchGate(
+        child: AuthGate(
+          authRepository: authRepository,
+          accountRepository: accountRepository,
+          parentHomeRepository: parentHomeRepository,
+          studentHomeRepository: studentHomeRepository,
+          studentLearningRepository: studentLearningRepository,
+          studentQuizRepository: studentQuizRepository,
+          subscriptionRepository: subscriptionRepository,
+          notificationRepository: notificationRepository,
+        ),
       ),
     );
   }

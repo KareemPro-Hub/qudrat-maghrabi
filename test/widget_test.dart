@@ -33,6 +33,33 @@ QudratMaghrabiApp createTestApp([
 }
 
 void main() {
+  testWidgets('app launch reveals the mark before the wordmark', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createTestApp());
+
+    expect(find.byKey(const Key('brand-launch-scene')), findsOneWidget);
+    expect(find.byKey(const Key('brand-launch-mark')), findsOneWidget);
+    final wordmarkFadeFinder = find.ancestor(
+      of: find.byKey(const Key('brand-launch-wordmark')),
+      matching: find.byType(FadeTransition),
+    );
+    expect(
+      tester.widget<FadeTransition>(wordmarkFadeFinder.first).opacity.value,
+      0,
+    );
+
+    await tester.pump(const Duration(milliseconds: 3000));
+    expect(
+      tester.widget<FadeTransition>(wordmarkFadeFinder.first).opacity.value,
+      greaterThan(.5),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('brand-launch-scene')), findsNothing);
+    expect(find.text('أهلًا بعودتك'), findsOneWidget);
+  });
+
   testWidgets('login screen starts in Arabic RTL with student selected', (
     tester,
   ) async {
