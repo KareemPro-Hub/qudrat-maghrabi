@@ -327,6 +327,23 @@ void main() {
     expect(find.text('ابدأ الاختبار'), findsOneWidget);
   });
 
+  testWidgets('student can open the courses tab from bottom navigation', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    await tester.pumpWidget(createTestApp(repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('الكورسات'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('courses-tab-content')), findsOneWidget);
+    expect(find.text('كل الكورسات'), findsOneWidget);
+    expect(find.text('دورة تأسيس 2027'), findsOneWidget);
+  });
+
   testWidgets('student completes a quiz and sees the secure review', (
     tester,
   ) async {

@@ -54,7 +54,6 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   final _scrollController = ScrollController();
-  final _coursesKey = GlobalKey();
   late Future<StudentHomeSnapshot> _snapshotFuture;
   int _selectedNavigationIndex = 0;
 
@@ -85,17 +84,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Future<void> _onNavigationTap(int index) async {
     if (index == 1) {
       setState(() => _selectedNavigationIndex = index);
-      final coursesContext = _coursesKey.currentContext;
-      if (coursesContext != null) {
-        Scrollable.ensureVisible(
-          coursesContext,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeOutCubic,
-          alignment: 0.05,
-        ).whenComplete(() {
-          if (mounted) setState(() => _selectedNavigationIndex = 0);
-        });
-      }
       return;
     }
     if (index == 2) {
@@ -126,11 +114,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return;
     }
     setState(() => _selectedNavigationIndex = 0);
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeOutCubic,
-    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   @override
@@ -150,7 +140,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               if (snapshot.hasError || !snapshot.hasData) {
                 return _HomeErrorView(onRetry: _refresh);
               }
-              return _buildContent(snapshot.data!);
+              return _selectedNavigationIndex == 1
+                  ? _buildCoursesContent(snapshot.data!)
+                  : _buildContent(snapshot.data!);
             },
           ),
         ),
@@ -223,13 +215,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                 ],
                 const SizedBox(height: 32),
-                KeyedSubtree(
-                  key: _coursesKey,
-                  child: _SectionTitle(
-                    title: 'الكورسات المتاحة',
-                    subtitle: 'اختر مسارك وابدأ التعلّم بثقة',
-                    trailing: '${snapshot.availableCourses.length} كورسات',
-                  ),
+                _SectionTitle(
+                  title: 'الكورسات المتاحة',
+                  subtitle: 'اختر مسارك وابدأ التعلّم بثقة',
+                  trailing: '${snapshot.availableCourses.length} كورسات',
                 ),
                 const SizedBox(height: 14),
                 if (snapshot.availableCourses.isEmpty)
@@ -268,6 +257,58 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoursesContent(StudentHomeSnapshot snapshot) {
+    return RefreshIndicator(
+      color: QmColors.pink,
+      onRefresh: _refresh,
+      child: ListView(
+        key: const Key('courses-tab-content'),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 130),
+        children: [
+          Text(
+            'كل الكورسات',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: QmColors.deepPurple,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'اختر مسارك وابدأ التعلّم بثقة',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: QmColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          if (snapshot.availableCourses.isEmpty)
+            const _EmptyCoursesCard()
+          else
+            ...snapshot.availableCourses.map(
+              (course) => Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: Center(
+                  child: SizedBox(
+                    width: 286,
+                    height: 330,
+                    child: _CourseCard(
+                      key: ValueKey('catalog-${course.id}'),
+                      course: course,
+                      onTap: () => course.hasAccess
+                          ? _showCourseDetails(course)
+                          : _showSubscriptions(snapshot.subscription),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
