@@ -12,7 +12,7 @@ class BrandLaunchGate extends StatefulWidget {
 }
 
 class _BrandLaunchGateState extends State<BrandLaunchGate>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
   late final Animation<double> _markOpacity;
   late final Animation<double> _markScale;
@@ -23,10 +23,12 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
   late final Animation<double> _wordmarkLift;
   late final Animation<double> _wordmarkReveal;
   bool _finished = false;
+  bool _wentToBackground = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 6600),
@@ -89,7 +91,25 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _wentToBackground = true;
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && _wentToBackground) {
+      _wentToBackground = false;
+      if (mounted) {
+        setState(() => _finished = false);
+        _controller.forward(from: 0);
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }

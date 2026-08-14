@@ -60,6 +60,27 @@ void main() {
     expect(find.text('أهلًا بعودتك'), findsOneWidget);
   });
 
+  testWidgets('returning from the background replays the branded launch', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createTestApp());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('app-content')), findsOneWidget);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    expect(find.byKey(const Key('brand-launch-scene')), findsOneWidget);
+    expect(find.byKey(const Key('brand-launch-mark')), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('brand-launch-scene')), findsNothing);
+    expect(find.byKey(const Key('app-content')), findsOneWidget);
+  });
+
   testWidgets('login screen starts in Arabic RTL with student selected', (
     tester,
   ) async {
