@@ -344,7 +344,7 @@ void main() {
     await tester.tap(find.text('اختبار الأعداد العشرية'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('ما الصورة العشرية للنصف؟'), findsOneWidget);
+    expect(find.textContaining('ما الصورة العشرية للنصف ؟'), findsOneWidget);
     await tester.tap(find.text('0.5'));
     await tester.tap(find.text('التالي'));
     await tester.pumpAndSettle();
@@ -353,7 +353,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(quizRepository.submitCalls, 1);
-    expect(find.text('أحسنت! اجتزت الاختبار 🎉'), findsOneWidget);
+    expect(find.text('أحسنت ! اجتزت الاختبار 🎉'), findsOneWidget);
     expect(find.text('مراجعة الإجابات'), findsOneWidget);
     expect(find.text('2 إجابات صحيحة من 2'), findsOneWidget);
   });

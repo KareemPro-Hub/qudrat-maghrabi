@@ -102,11 +102,11 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
         context: context,
         builder: (context) => AlertDialog(
           title: const Text(
-            'إنهاء الاختبار؟',
+            'إنهاء الاختبار ؟',
             style: TextStyle(fontWeight: FontWeight.w900),
           ),
           content: Text(
-            'لم تجب عن $unanswered ${unanswered == 1 ? 'سؤال' : 'أسئلة'}. هل تريد التسليم الآن؟',
+            'لم تجب عن $unanswered ${unanswered == 1 ? 'سؤال' : 'أسئلة'}. هل تريد التسليم الآن ؟',
           ),
           actions: [
             TextButton(
@@ -162,7 +162,7 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
           context: context,
           builder: (context) => AlertDialog(
             title: const Text(
-              'مغادرة الاختبار؟',
+              'مغادرة الاختبار ؟',
               style: TextStyle(fontWeight: FontWeight.w900),
             ),
             content: const Text(

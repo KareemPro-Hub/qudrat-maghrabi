@@ -161,7 +161,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       ..showSnackBar(
         SnackBar(
           content: const Text(
-            'أحسنت! تم إكمال الدرس بنجاح 🎉',
+            'أحسنت ! تم إكمال الدرس بنجاح 🎉',
             textAlign: TextAlign.center,
           ),
           behavior: SnackBarBehavior.floating,

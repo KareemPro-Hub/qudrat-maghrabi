@@ -32,7 +32,7 @@ class FoundationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'لا تحفظ! افهم وتفوّق 🔥',
+                    'لا تحفظ ! افهم وتفوّق 🔥',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: QmColors.textSecondary,
                       fontWeight: FontWeight.w400,

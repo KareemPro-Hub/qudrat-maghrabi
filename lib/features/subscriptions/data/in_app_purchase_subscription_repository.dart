@@ -205,7 +205,7 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
           productId: purchase.productID,
           message: purchase.status == PurchaseStatus.restored
               ? 'تمت استعادة اشتراكك وتحديث الوصول بنجاح.'
-              : 'تم تفعيل اشتراكك بنجاح. استمتع بكل كورسات المنصة!',
+              : 'تم تفعيل اشتراكك بنجاح. استمتع بكل كورسات المنصة !',
         ),
       );
     } on FunctionException catch (error) {

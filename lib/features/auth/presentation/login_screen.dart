@@ -262,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     );
                                   },
-                                  child: const Text('نسيت كلمة المرور؟'),
+                                  child: const Text('نسيت كلمة المرور ؟'),
                                 ),
                               ],
                             ),
@@ -289,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               child: Text.rich(
                                 TextSpan(
-                                  text: 'ليس لديك حساب؟ ',
+                                  text: 'ليس لديك حساب ؟ ',
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(color: QmColors.textSecondary),
                                   children: const [

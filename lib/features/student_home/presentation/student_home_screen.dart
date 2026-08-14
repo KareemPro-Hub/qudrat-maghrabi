@@ -437,7 +437,7 @@ class _HomeHeader extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                'جاهز تخطو خطوة جديدة نحو هدفك؟',
+                'جاهز تخطو خطوة جديدة نحو هدفك ؟',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: QmColors.textSecondary),

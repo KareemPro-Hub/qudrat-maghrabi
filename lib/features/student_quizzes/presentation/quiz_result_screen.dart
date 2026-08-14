@@ -191,7 +191,7 @@ class _ResultHero extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            passed ? 'أحسنت! اجتزت الاختبار 🎉' : 'المرة القادمة أفضل',
+            passed ? 'أحسنت ! اجتزت الاختبار 🎉' : 'المرة القادمة أفضل',
             textAlign: TextAlign.center,
             style: Theme.of(
               context,

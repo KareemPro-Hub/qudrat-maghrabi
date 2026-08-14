@@ -20,7 +20,7 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
     QuizQuestion(
       id: 'question-1',
       quizId: 'quiz-1',
-      text: 'ما الصورة العشرية للنصف؟',
+      text: 'ما الصورة العشرية للنصف ؟',
       options: {'a': '0.5', 'b': '0.2', 'c': '1.5', 'd': '2.0'},
       marks: 1,
       orderIndex: 1,
@@ -28,7 +28,7 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
     QuizQuestion(
       id: 'question-2',
       quizId: 'quiz-1',
-      text: 'أي عدد هو الأكبر؟',
+      text: 'أي عدد هو الأكبر ؟',
       options: {'a': '0.09', 'b': '0.9', 'c': '0.19', 'd': '0.29'},
       marks: 1,
       orderIndex: 2,
@@ -83,7 +83,7 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
       questions: const [
         QuizReviewQuestion(
           id: 'question-1',
-          text: 'ما الصورة العشرية للنصف؟',
+          text: 'ما الصورة العشرية للنصف ؟',
           options: {'a': '0.5', 'b': '0.2', 'c': '1.5', 'd': '2.0'},
           correctAnswer: 'a',
           marks: 1,
@@ -92,7 +92,7 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
         ),
         QuizReviewQuestion(
           id: 'question-2',
-          text: 'أي عدد هو الأكبر؟',
+          text: 'أي عدد هو الأكبر ؟',
           options: {'a': '0.09', 'b': '0.9', 'c': '0.19', 'd': '0.29'},
           correctAnswer: 'b',
           marks: 1,
