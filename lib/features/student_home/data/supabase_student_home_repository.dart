@@ -43,6 +43,14 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
           .select('id, course_id, title, order_index, is_published')
           .eq('is_published', true)
           .order('order_index', ascending: true),
+      _client
+          .from('store_subscriptions')
+          .select(
+            'product_id, status, purchased_at, current_period_start, '
+            'current_period_end, store_subscription_plans!inner('
+            'name_ar, bundle_course_id)',
+          )
+          .eq('student_id', studentId),
     ]);
 
     final courseRows = _rows(responses[0]);
@@ -51,6 +59,7 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
     final progressRows = _rows(responses[3]);
     final notificationRows = _rows(responses[4]);
     final lessonRows = _rows(responses[5]);
+    final storeSubscriptionRows = _rows(responses[6]);
 
     final statsByCourse = <String, Map<String, dynamic>>{
       for (final row in statsRows) row['course_id'] as String: row,
@@ -85,6 +94,9 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
     final activeBundleIds = activeBundleEnrollmentRows
         .map((row) => row['course_id'] as String)
         .toSet();
+    final activeStoreSubscriptionRows =
+        storeSubscriptionRows.where(_isEntitledStoreSubscription).toList()
+          ..sort(_compareStoreSubscriptionExpiry);
 
     final courses = courseRows.map((row) {
       final id = row['id'] as String;
@@ -166,30 +178,47 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       availableCourses: availableCourses,
       myCourses: myCourses,
       unreadNotifications: notificationRows.length,
-      subscription: activeBundleEnrollmentRows.isEmpty
+      subscription: activeStoreSubscriptionRows.isEmpty
           ? null
-          : _subscriptionFrom(activeBundleEnrollmentRows.first),
+          : _storeSubscriptionFrom(activeStoreSubscriptionRows.first),
     );
   }
 
-  StudentSubscription _subscriptionFrom(Map<String, dynamic> row) {
-    final startedAt = DateTime.tryParse(row['enrolled_at']?.toString() ?? '');
-    final expiresAt = DateTime.tryParse(row['expires_at']?.toString() ?? '');
-    String planName = 'اشتراك المنصة';
-    if (startedAt != null && expiresAt != null) {
-      final days = expiresAt.difference(startedAt).inDays;
-      planName = days >= 150
-          ? 'الباقة الاحترافية'
-          : days >= 60
-          ? 'الباقة المميزة'
-          : 'الباقة الأساسية';
-    }
+  StudentSubscription _storeSubscriptionFrom(Map<String, dynamic> row) {
+    final plan = row['store_subscription_plans'] as Map<String, dynamic>?;
     return StudentSubscription(
-      bundleId: row['course_id'] as String,
-      planName: planName,
-      startedAt: startedAt,
-      expiresAt: expiresAt,
+      bundleId: plan?['bundle_course_id'] as String? ?? '',
+      planName: plan?['name_ar'] as String? ?? 'اشتراك المنصة',
+      startedAt: DateTime.tryParse(
+        row['current_period_start']?.toString() ?? '',
+      ),
+      expiresAt: DateTime.tryParse(row['current_period_end']?.toString() ?? ''),
     );
+  }
+
+  bool _isEntitledStoreSubscription(Map<String, dynamic> row) {
+    const entitledStatuses = {'active', 'grace', 'cancelled'};
+    if (!entitledStatuses.contains(row['status'])) return false;
+    final expiry = DateTime.tryParse(
+      row['current_period_end']?.toString() ?? '',
+    );
+    return expiry != null && expiry.isAfter(DateTime.now());
+  }
+
+  int _compareStoreSubscriptionExpiry(
+    Map<String, dynamic> first,
+    Map<String, dynamic> second,
+  ) {
+    final firstExpiry = DateTime.tryParse(
+      first['current_period_end']?.toString() ?? '',
+    );
+    final secondExpiry = DateTime.tryParse(
+      second['current_period_end']?.toString() ?? '',
+    );
+    if (firstExpiry == null && secondExpiry == null) return 0;
+    if (firstExpiry == null) return 1;
+    if (secondExpiry == null) return -1;
+    return secondExpiry.compareTo(firstExpiry);
   }
 
   int _compareEnrollmentExpiry(
