@@ -114,7 +114,7 @@ export default function AdminCoupons() {
   }
 
   async function deleteCoupon(id: string) {
-    if (!confirm('هل تريد حذف كود الخصم نهائيًا؟')) return
+    if (!confirm('هل تريد حذف كود الخصم نهائيًا ؟')) return
     const { error } = await supabase.from('discount_codes').delete().eq('id', id)
     if (error) return toast.error('تعذر حذف الكود')
     toast.success('تم الحذف')

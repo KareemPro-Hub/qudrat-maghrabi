@@ -271,7 +271,7 @@ export default function Checkout() {
                 <div className="mb-3 flex items-center gap-2 text-right">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-brand-purple"><TicketPercent size={19} /></span>
                   <div>
-                    <h3 className="text-sm font-black text-brand-navy">لديك كود خصم؟</h3>
+                    <h3 className="text-sm font-black text-brand-navy">لديك كود خصم ؟</h3>
                     <p className="mt-0.5 text-xs leading-5 text-gray-400">اكتبه قبل الدفع لتفعيل العرض المخصص لحسابك.</p>
                   </div>
                 </div>

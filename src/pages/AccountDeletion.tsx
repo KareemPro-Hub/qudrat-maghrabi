@@ -45,7 +45,7 @@ export default function AccountDeletion() {
         </div>
 
         <div className="qm-info-card">
-          <h2><span className="qm-info-num">٣</span>ما الذي يتم حذفه؟</h2>
+          <h2><span className="qm-info-num">٣</span>ما الذي يتم حذفه ؟</h2>
           <p>
             يُحذف حساب تسجيل الدخول والملف الشخصي والاشتراكات وتقدم الدروس ونتائج
             الاختبارات والإشعارات وروابط ولي الأمر المرتبطة بالحساب. قد نحتفظ فقط

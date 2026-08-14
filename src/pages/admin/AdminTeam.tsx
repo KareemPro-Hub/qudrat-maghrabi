@@ -382,7 +382,7 @@ export default function AdminTeam() {
         <Modal title="تأكيد حذف العضو" onClose={() => { if (!managing) setDeletingMember(null) }}>
           <div className="admin-form">
             <p className="delete-member-warning">
-              هل تريد حذف <strong>{deletingMember.full_name}</strong> نهائيًا؟ سيُحذف حساب تسجيل الدخول ويمكنك دعوته من جديد لاحقًا.
+              هل تريد حذف <strong>{deletingMember.full_name}</strong> نهائيًا ؟ سيُحذف حساب تسجيل الدخول ويمكنك دعوته من جديد لاحقًا.
             </p>
             <div className="form-row">
               <button type="button" className="danger-admin" onClick={deleteMember} disabled={managing}>

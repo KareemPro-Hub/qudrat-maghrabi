@@ -357,7 +357,7 @@ export default function Auth() {
                       </span>
                       تذكّرني
                     </label>
-                    <Link to="/forgot-password" className="auth-forgot">نسيت كلمة المرور؟</Link>
+                    <Link to="/forgot-password" className="auth-forgot">نسيت كلمة المرور ؟</Link>
                   </div>
                   <button type="submit" className="auth-submit" disabled={loginLoading}>
                     {loginLoading ? 'جاري الدخول...' : 'تسجيل دخول'}
@@ -379,7 +379,7 @@ export default function Auth() {
               </div>
 
               <div className="auth-switch">
-                ليس لديك حساب؟ <Link to={`/register${returnQuery}`}>إنشاء حساب</Link>
+                ليس لديك حساب ؟ <Link to={`/register${returnQuery}`}>إنشاء حساب</Link>
               </div>
             </div>
           </div>
