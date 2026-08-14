@@ -122,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return AuthFlowScaffold(
       title: 'أنشئ حسابك',
-      subtitle: 'ابدأ رحلتك في قدرات المغربي بخطوات بسيطة',
+      subtitle: 'ابدأ رحلتك نحو التفوق مع قدرات المغربي.',
       child: Form(
         key: _formKey,
         child: Column(
