@@ -906,17 +906,24 @@ class _CourseCard extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            const Icon(
-                              Icons.signal_cellular_alt_rounded,
-                              color: QmColors.pink,
+                            Icon(
+                              course.isFree
+                                  ? Icons.card_giftcard_rounded
+                                  : Icons.workspace_premium_rounded,
+                              color: course.isFree
+                                  ? QmColors.success
+                                  : QmColors.pink,
                               size: 17,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              _levelLabel(course.level),
-                              style: const TextStyle(
-                                color: QmColors.textSecondary,
+                              course.isFree ? 'مجاني' : 'مدفوع',
+                              style: TextStyle(
+                                color: course.isFree
+                                    ? QmColors.success
+                                    : QmColors.pink,
                                 fontSize: 13,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -1315,16 +1322,5 @@ String _currencyLabel(String currency) {
       return 'ر.س';
     default:
       return currency;
-  }
-}
-
-String _levelLabel(String level) {
-  switch (level) {
-    case 'intermediate':
-      return 'متوسط';
-    case 'advanced':
-      return 'متقدم';
-    default:
-      return 'مبتدئ';
   }
 }

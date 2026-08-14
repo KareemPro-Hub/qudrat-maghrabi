@@ -169,6 +169,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('كورس مدفوع'), findsOneWidget);
+    expect(find.text('مدفوع'), findsOneWidget);
+    expect(find.text('مبتدئ'), findsNothing);
     expect(find.text('249 ج.م'), findsOneWidget);
     expect(find.text('الرئيسية'), findsOneWidget);
     expect(find.text('الكورسات'), findsOneWidget);
