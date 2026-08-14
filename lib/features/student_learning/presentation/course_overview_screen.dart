@@ -116,7 +116,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
         ),
         slivers: [
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: MediaQuery.sizeOf(context).width * 9 / 16,
             pinned: true,
             stretch: true,
             foregroundColor: Colors.white,
@@ -246,53 +246,20 @@ class _CourseHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = content.thumbnailUrl;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (url == null)
-          const DecoratedBox(
-            decoration: BoxDecoration(gradient: QmGradients.brand),
-          )
-        else
-          Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const DecoratedBox(
+    return ColoredBox(
+      key: const Key('course-cover-hero'),
+      color: QmColors.deepPurple,
+      child: url == null
+          ? const DecoratedBox(
               decoration: BoxDecoration(gradient: QmGradients.brand),
+            )
+          : Image.network(
+              url,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const DecoratedBox(
+                decoration: BoxDecoration(gradient: QmGradients.brand),
+              ),
             ),
-          ),
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0x22000000), Color(0xC832134F)],
-            ),
-          ),
-        ),
-        Center(
-          child: Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .92),
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x44000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 12),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              size: 44,
-              color: QmColors.purple,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

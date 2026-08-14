@@ -318,6 +318,20 @@ void main() {
     await tester.tap(freeCourseCard);
     await tester.pumpAndSettle();
 
+    final coverHero = find.byKey(const Key('course-cover-hero'));
+    expect(coverHero, findsOneWidget);
+    expect(
+      find.descendant(
+        of: coverHero,
+        matching: find.byIcon(Icons.play_arrow_rounded),
+      ),
+      findsNothing,
+    );
+    await tester.scrollUntilVisible(
+      find.text('محتوى الكورس'),
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('محتوى الكورس'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('الباب الأول - الجبر'),
