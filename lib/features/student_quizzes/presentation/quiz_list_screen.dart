@@ -133,7 +133,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'طبّق بعد الدرس واعرف مستواك فورًا',
+            'نتيجة فورية لتحديد مستواك',
             style: TextStyle(color: QmColors.textSecondary),
           ),
           const SizedBox(height: 16),

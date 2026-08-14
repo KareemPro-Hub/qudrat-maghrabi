@@ -358,6 +358,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('التدريب والاختبارات'), findsOneWidget);
+    expect(find.text('نتيجة فورية لتحديد مستواك'), findsOneWidget);
     expect(find.text('اختبر قدراتك .. واصنع تفوقك.'), findsOneWidget);
     expect(
       find.text('تابع نتائجك فورًا، وتعرّف على نقاط القوة والضعف لديك !'),
