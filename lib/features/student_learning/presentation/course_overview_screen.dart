@@ -4,18 +4,21 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/presentation/lesson_player_screen.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 
 class CourseOverviewScreen extends StatefulWidget {
   const CourseOverviewScreen({
     required this.courseId,
     required this.studentId,
     required this.repository,
+    required this.quizRepository,
     super.key,
   });
 
   final String courseId;
   final String studentId;
   final StudentLearningRepository repository;
+  final StudentQuizRepository quizRepository;
 
   @override
   State<CourseOverviewScreen> createState() => _CourseOverviewScreenState();
@@ -64,6 +67,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
           initialLessonId: lesson.id,
           studentId: widget.studentId,
           repository: widget.repository,
+          quizRepository: widget.quizRepository,
         ),
       ),
     );

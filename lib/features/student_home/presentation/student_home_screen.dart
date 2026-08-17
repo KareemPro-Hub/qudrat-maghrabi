@@ -324,6 +324,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           courseId: course.id,
           studentId: widget.profile.id,
           repository: widget.learningRepository,
+          quizRepository: widget.quizRepository,
         ),
       ),
     );

@@ -7,6 +7,10 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/lesson_homework_section.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_screen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class LessonPlayerScreen extends StatefulWidget {
@@ -15,6 +19,7 @@ class LessonPlayerScreen extends StatefulWidget {
     required this.initialLessonId,
     required this.studentId,
     required this.repository,
+    required this.quizRepository,
     super.key,
   });
 
@@ -22,6 +27,7 @@ class LessonPlayerScreen extends StatefulWidget {
   final String initialLessonId;
   final String studentId;
   final StudentLearningRepository repository;
+  final StudentQuizRepository quizRepository;
 
   @override
   State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
@@ -38,6 +44,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   Future<void> _saveChain = Future.value();
   bool _closing = false;
   bool _allowPop = false;
+  late Future<List<StudentQuiz>> _quizzesFuture;
 
   CourseLesson get _lesson => _lessons[_selectedIndex];
 
@@ -51,6 +58,23 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       _lessons.indexWhere((lesson) => lesson.id == widget.initialLessonId),
     );
     _resetTracking();
+    _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
+  }
+
+  void _reloadQuizzes() {
+    setState(() {
+      _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
+    });
+  }
+
+  Future<void> _openHomework(StudentQuiz quiz) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) =>
+            QuizAttemptScreen(quiz: quiz, repository: widget.quizRepository),
+      ),
+    );
+    if (mounted) _reloadQuizzes();
   }
 
   void _resetTracking() {
@@ -384,6 +408,28 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                     height: 1.7,
                   ),
                 ),
+              ),
+              const SizedBox(height: 28),
+              FutureBuilder<List<StudentQuiz>>(
+                future: _quizzesFuture,
+                builder: (context, snapshot) {
+                  final homework =
+                      snapshot.data
+                          ?.where((quiz) => quiz.lessonId == _lesson.id)
+                          .toList() ??
+                      const <StudentQuiz>[];
+                  return LessonHomeworkSection(
+                    quizzes: homework,
+                    loading: snapshot.connectionState != ConnectionState.done,
+                    errorMessage: snapshot.hasError
+                        ? snapshot.error is QuizFailure
+                              ? snapshot.error.toString()
+                              : 'تعذّر تحميل واجبات الدرس'
+                        : null,
+                    onRetry: _reloadQuizzes,
+                    onOpen: _openHomework,
+                  );
+                },
               ),
             ],
           ),
