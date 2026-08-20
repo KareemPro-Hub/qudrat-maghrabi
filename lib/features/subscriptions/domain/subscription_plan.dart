@@ -36,7 +36,7 @@ class SubscriptionPlan {
     name: 'الأساسية',
     duration: 'شهر واحد',
     durationDays: 30,
-    fallbackPriceSar: 49,
+    fallbackPriceSar: 79,
     benefits: [
       SubscriptionBenefit('تأسيس قوي يبدأ بك من الصفر'),
       SubscriptionBenefit('فيديوهات احترافية بجودة عالية'),
@@ -52,7 +52,7 @@ class SubscriptionPlan {
     name: 'المميزة',
     duration: '3 أشهر',
     durationDays: 90,
-    fallbackPriceSar: 99,
+    fallbackPriceSar: 199,
     popular: true,
     benefits: [
       SubscriptionBenefit('جميع مزايا الباقة الأساسية'),
@@ -69,7 +69,7 @@ class SubscriptionPlan {
     name: 'الاحترافية',
     duration: '6 أشهر',
     durationDays: 180,
-    fallbackPriceSar: 179,
+    fallbackPriceSar: 299,
     benefits: [
       SubscriptionBenefit('جميع مزايا الباقة المميزة'),
       SubscriptionBenefit('بث مباشر أسبوعي مع الطلاب'),

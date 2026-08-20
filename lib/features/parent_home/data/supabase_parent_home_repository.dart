@@ -19,7 +19,21 @@ class SupabaseParentHomeRepository implements ParentHomeRepository {
           )
           .eq('parent_id', parentId)
           .order('created_at', ascending: true);
-      final links = _rows(linksResponse);
+      final links = _rows(linksResponse).toList(growable: true);
+      final accessProfile = await _client
+          .rpc('get_my_access_profile')
+          .maybeSingle();
+      if (accessProfile?['primary_role'] == 'student' &&
+          !links.any((row) => row['student_id'] == parentId)) {
+        links.insert(0, {
+          'student_id': parentId,
+          'student_profile': {
+            'id': parentId,
+            'full_name': accessProfile?['full_name'],
+            'email': accessProfile?['email'],
+          },
+        });
+      }
       if (links.isEmpty) return ParentHomeSnapshot.empty;
 
       final studentIds = links

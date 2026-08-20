@@ -100,8 +100,8 @@ void main() {
     expect(find.text('اشتراكك فعّال'), findsNothing);
     expect(find.textContaining('2036'), findsNothing);
     expect(find.byKey(const Key('manage-subscription-button')), findsNothing);
-    expect(find.text('49'), findsOneWidget);
-    expect(find.text('99'), findsOneWidget);
+    expect(find.text('79'), findsOneWidget);
+    expect(find.text('199'), findsOneWidget);
     final monthlyCard = find.byKey(const ValueKey('plan-card-monthly'));
     final monthlyHeader = find.byKey(const ValueKey('plan-header-monthly'));
     expect(
@@ -175,7 +175,7 @@ void main() {
     await tester.pumpWidget(_app(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('49'), findsOneWidget);
+    expect(find.text('79'), findsOneWidget);
     expect(find.text(r'$11.99'), findsNothing);
     expect(find.byKey(const Key('saudi-riyal-symbol')), findsWidgets);
   });

@@ -649,7 +649,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                         onPressed: onTap,
                         iconAlignment: IconAlignment.end,
                         icon: const Icon(Icons.play_arrow_rounded),
-                        label: const Text('ابدأ الكورس مجانًا'),
+                        label: const Text('ابدأ مجانًا'),
                         style: FilledButton.styleFrom(
                           backgroundColor: QmColors.deepPurple,
                           foregroundColor: Colors.white,

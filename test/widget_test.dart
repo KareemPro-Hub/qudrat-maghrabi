@@ -235,7 +235,7 @@ void main() {
 
     expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
     expect(find.text('مفاجأة ! كورس تأسيس كامل هدية لك'), findsOneWidget);
-    expect(find.text('ابدأ الكورس مجانًا'), findsOneWidget);
+    expect(find.text('ابدأ مجانًا'), findsOneWidget);
     expect(
       tester
           .widget<AspectRatio>(find.byKey(const Key('free-course-cover-16-9')))
@@ -264,21 +264,21 @@ void main() {
     expect(find.text('الاشتراك والباقات'), findsOneWidget);
     expect(find.textContaining('شهر واحد'), findsWidgets);
     expect(find.textContaining('3 أشهر'), findsWidgets);
-    expect(find.text('49'), findsOneWidget);
+    expect(find.text('79'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.textContaining('3 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('3 أشهر'), findsWidgets);
-    expect(find.text('99'), findsOneWidget);
+    expect(find.text('199'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.textContaining('6 أشهر'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('6 أشهر'), findsWidgets);
-    expect(find.text('179'), findsOneWidget);
+    expect(find.text('299'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.textContaining('كورس التأسيس يظل مجانيًا'),
       260,

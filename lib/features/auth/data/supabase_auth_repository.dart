@@ -74,8 +74,8 @@ class SupabaseAuthRepository implements AuthRepository {
         );
       }
 
-      final profile = await _fetchProfile(user.id);
-      if (!profile.isActive) {
+      final currentProfile = await _fetchProfile(user.id);
+      if (!currentProfile.isActive) {
         await _safeSignOut();
         throw const AuthFailure(
           code: 'account_disabled',
@@ -83,17 +83,26 @@ class SupabaseAuthRepository implements AuthRepository {
         );
       }
 
-      if (profile.role != expectedRole) {
+      final roleAllowed = expectedRole == AccountRole.student
+          ? currentProfile.primaryRole == AccountRole.student
+          : currentProfile.primaryRole == AccountRole.parent ||
+                currentProfile.canUseParentPortal;
+
+      if (!roleAllowed) {
         await _safeSignOut();
         throw AuthFailure(
           code: 'role_mismatch',
           message:
-              'هذا الحساب مسجّل بصفة ${profile.role.arabicLabel}. '
+              'هذا الحساب مسجّل بصفة ${currentProfile.primaryRole.arabicLabel}. '
               'اختر نوع الحساب الصحيح ثم حاول مجددًا',
         );
       }
 
-      return profile;
+      await _client.rpc(
+        'set_my_active_portal',
+        params: {'p_portal': expectedRole.databaseValue},
+      );
+      return _fetchProfile(user.id);
     } on AuthFailure {
       rethrow;
     } on AuthException catch (error) {
@@ -215,9 +224,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   Future<AuthProfile> _fetchProfile(String userId) async {
     final Map<String, dynamic>? data = await _client
-        .from('profiles')
-        .select('id, full_name, email, phone, role, is_active')
-        .eq('id', userId)
+        .rpc('get_my_access_profile')
         .maybeSingle();
 
     if (data == null) {
@@ -228,7 +235,10 @@ class SupabaseAuthRepository implements AuthRepository {
     }
 
     final role = AccountRole.fromDatabase(data['role'] as String?);
-    if (role == null) {
+    final primaryRole = AccountRole.fromDatabase(
+      data['primary_role'] as String?,
+    );
+    if (role == null || primaryRole == null) {
       throw const AuthFailure(
         code: 'unsupported_role',
         message: 'هذا التطبيق مخصص للطالب وولي الأمر فقط',
@@ -241,6 +251,8 @@ class SupabaseAuthRepository implements AuthRepository {
       email: (data['email'] as String?)?.trim() ?? '',
       phone: (data['phone'] as String?)?.trim() ?? '',
       role: role,
+      primaryRole: primaryRole,
+      canUseParentPortal: data['can_use_parent_portal'] as bool? ?? false,
       isActive: data['is_active'] as bool? ?? true,
     );
   }
