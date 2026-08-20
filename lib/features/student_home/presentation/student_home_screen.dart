@@ -266,50 +266,67 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   Widget _buildCoursesContent(StudentHomeSnapshot snapshot) {
+    final isTablet = MediaQuery.sizeOf(context).width >= 700;
+
     return RefreshIndicator(
       color: QmColors.pink,
       onRefresh: _refresh,
-      child: ListView(
+      child: CustomScrollView(
         key: const Key('courses-tab-content'),
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 130),
-        children: [
-          Text(
-            'كل الكورسات',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: QmColors.deepPurple,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'اختر مسارك وابدأ التعلّم بثقة',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: QmColors.textSecondary),
-          ),
-          const SizedBox(height: 24),
-          if (snapshot.availableCourses.isEmpty)
-            const _EmptyCoursesCard()
-          else
-            ...snapshot.availableCourses.map(
-              (course) => Padding(
-                padding: const EdgeInsets.only(bottom: 18),
-                child: Center(
-                  child: SizedBox(
-                    width: 286,
-                    height: 350,
-                    child: _CourseCard(
-                      key: ValueKey('catalog-${course.id}'),
-                      course: course,
-                      onTap: () => course.hasAccess
-                          ? _showCourseDetails(course)
-                          : _showSubscriptions(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'كل الكورسات',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: QmColors.deepPurple,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'اختر مسارك وابدأ التعلّم بثقة',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: QmColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+          if (snapshot.availableCourses.isEmpty)
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, 130),
+              sliver: SliverToBoxAdapter(child: _EmptyCoursesCard()),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 130),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isTablet ? 2 : 1,
+                  mainAxisExtent: isTablet ? 470 : 350,
+                  crossAxisSpacing: isTablet ? 24 : 0,
+                  mainAxisSpacing: 20,
                 ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final course = snapshot.availableCourses[index];
+                  return _CourseCard(
+                    key: ValueKey('catalog-${course.id}'),
+                    course: course,
+                    onTap: () => course.hasAccess
+                        ? _showCourseDetails(course)
+                        : _showSubscriptions(),
+                  );
+                }, childCount: snapshot.availableCourses.length),
               ),
             ),
         ],
@@ -835,137 +852,146 @@ class _CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 286,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(26),
-          child: Container(
-            decoration: BoxDecoration(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 286.0;
+        final imageHeight = cardWidth >= 380 ? cardWidth * 9 / 16 : 155.0;
+
+        return SizedBox(
+          width: 286,
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(26),
+            child: InkWell(
+              onTap: onTap,
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: QmColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x120F0520),
-                  blurRadius: 22,
-                  offset: Offset(0, 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(color: QmColors.border),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x120F0520),
+                      blurRadius: 22,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _CourseImage(
-                  imageUrl: course.thumbnailUrl,
-                  width: double.infinity,
-                  height: 155,
-                  borderRadius: 0,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _CourseTypeLabel(course: course),
-                        const SizedBox(height: 9),
-                        Text(
-                          course.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                height: 1.3,
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _CourseImage(
+                      imageUrl: course.thumbnailUrl,
+                      width: double.infinity,
+                      height: imageHeight,
+                      borderRadius: 0,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.menu_book_rounded,
-                              color: QmColors.purple,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 5),
+                            _CourseTypeLabel(course: course),
+                            const SizedBox(height: 9),
                             Text(
-                              '${course.lessonsCount} دروس',
-                              style: const TextStyle(
-                                color: QmColors.textSecondary,
-                                fontSize: 13,
-                              ),
+                              course.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    height: 1.3,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.menu_book_rounded,
+                                  color: QmColors.purple,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '${course.lessonsCount} دروس',
+                                  style: const TextStyle(
+                                    color: QmColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  course.isFree
+                                      ? Icons.card_giftcard_rounded
+                                      : Icons.workspace_premium_rounded,
+                                  color: course.isFree
+                                      ? QmColors.success
+                                      : QmColors.pink,
+                                  size: 17,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  course.isFree ? 'مجاني' : 'مدفوع',
+                                  style: TextStyle(
+                                    color: course.isFree
+                                        ? QmColors.success
+                                        : QmColors.pink,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                             const Spacer(),
-                            Icon(
-                              course.isFree
-                                  ? Icons.card_giftcard_rounded
-                                  : Icons.workspace_premium_rounded,
-                              color: course.isFree
-                                  ? QmColors.success
-                                  : QmColors.pink,
-                              size: 17,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              course.isFree ? 'مجاني' : 'مدفوع',
-                              style: TextStyle(
-                                color: course.isFree
-                                    ? QmColors.success
-                                    : QmColors.pink,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                course.hasAccess
-                                    ? 'ابدأ التعلّم'
-                                    : _priceLabel(course),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  color: course.hasAccess
-                                      ? QmColors.success
-                                      : QmColors.textPrimary,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 15,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    course.hasAccess
+                                        ? 'ابدأ التعلّم'
+                                        : _priceLabel(course),
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      color: course.hasAccess
+                                          ? QmColors.success
+                                          : QmColors.textPrimary,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: const BoxDecoration(
-                                gradient: QmGradients.brand,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                course.hasAccess
-                                    ? Icons.play_arrow_rounded
-                                    : Icons.arrow_back_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: const BoxDecoration(
+                                    gradient: QmGradients.brand,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    course.hasAccess
+                                        ? Icons.play_arrow_rounded
+                                        : Icons.arrow_back_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
