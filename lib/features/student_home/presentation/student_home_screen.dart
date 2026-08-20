@@ -626,7 +626,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'مفاجأة ! كورس تأسيس كامل هدية لك',
+                      'أول 3 حصص هدية لك',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: QmColors.deepPurple,
                         fontWeight: FontWeight.w900,
@@ -635,7 +635,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'ابدأ الآن، وابنِ أساسًا قويًا يقربك من الدرجة التي تحلم بها.',
+                      'ابدأ رحلتك مجانًا، واكتشف أسلوب الشرح قبل الاشتراك.',
                       style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 15,
