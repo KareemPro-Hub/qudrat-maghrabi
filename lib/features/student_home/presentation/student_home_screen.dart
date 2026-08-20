@@ -953,7 +953,7 @@ class _CourseCard extends StatelessWidget {
                                   child: Text(
                                     course.hasAccess
                                         ? 'ابدأ التعلّم'
-                                        : _priceLabel(course),
+                                        : 'ضمن الباقات',
                                     maxLines: 1,
                                     style: TextStyle(
                                       color: course.hasAccess
@@ -1265,22 +1265,5 @@ class _EmptyCoursesCard extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-String _priceLabel(StudentCourse course) {
-  if (course.isFree) return 'مجاني';
-  final decimals = course.price == course.price.roundToDouble() ? 0 : 2;
-  return '${course.price.toStringAsFixed(decimals)} ${_currencyLabel(course.currency)}';
-}
-
-String _currencyLabel(String currency) {
-  switch (currency.toUpperCase()) {
-    case 'EGP':
-      return 'ج.م';
-    case 'SAR':
-      return 'ر.س';
-    default:
-      return currency;
   }
 }
