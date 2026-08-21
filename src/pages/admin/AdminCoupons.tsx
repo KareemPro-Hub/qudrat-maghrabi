@@ -58,8 +58,8 @@ export default function AdminCoupons() {
       return toast.error('اكتب اسم كود من 3 إلى 32 حرفًا عربيًا أو إنجليزيًا أو رقمًا')
     }
     const allowedEmail = form.allowed_email.trim().toLowerCase()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(allowedEmail)) {
-      return toast.error('اكتب البريد الإلكتروني الصحيح للطالب المسموح له باستخدام الكود')
+    if (allowedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(allowedEmail)) {
+      return toast.error('اكتب بريدًا إلكترونيًا صحيحًا أو اترك الحقل فارغًا للكود العام')
     }
     const discountPercent = Number(form.discount_percent)
     if (![25, 50, 75, 100].includes(discountPercent)) {
@@ -86,7 +86,7 @@ export default function AdminCoupons() {
       const { error } = await supabase.from('discount_codes').insert({
         code: normalizedCode,
         discount_percent: discountPercent,
-        allowed_email: allowedEmail,
+        allowed_email: allowedEmail || null,
         note: form.note.trim() || null,
         max_uses: maxUses,
         expires_at: form.expires_at ? expiryAtEndOfDay(form.expires_at) : null,
@@ -137,7 +137,7 @@ export default function AdminCoupons() {
     <>
       <SectionToolbar
         title="أكواد الخصم"
-        subtitle="أنشئ أكوادًا مخصصة بنسبة خصم تختارها لكل طالب."
+        subtitle="أنشئ أكواد خصم عامة أو مخصصة بنسبة الخصم التي تختارها."
         action={<button className="primary-admin" onClick={openCreate}><Plus size={16} /> إنشاء كود جديد</button>}
       />
 
@@ -151,7 +151,7 @@ export default function AdminCoupons() {
         <EmptyState text="لا توجد أكواد خصم بعد" action={<button className="primary-admin" onClick={openCreate}>إنشاء أول كود</button>} />
       ) : (
         <article className="admin-card data-card" data-searchable>
-          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>كل كود مرتبط ببريد الطالب ونسبة الخصم المحددة له</p></div></header>
+          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>يمكن أن يكون الكود عامًا أو مرتبطًا ببريد طالب محدد</p></div></header>
           <div className="table-wrap">
             <table>
               <thead><tr><th>الكود</th><th>نسبة الخصم</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
@@ -236,7 +236,7 @@ export default function AdminCoupons() {
               </select>
               <small className="cell-sub">خصم 100% يفعّل الاشتراك مباشرةً دون فتح بوابة الدفع.</small>
             </label>
-            <label htmlFor="coupon-email"><span className="field-label">البريد المسموح له باستخدام الكود</span>
+            <label htmlFor="coupon-email"><span className="field-label">البريد المسموح له باستخدام الكود <span className="optional-label">اختياري</span></span>
               <input
                 id="coupon-email"
                 type="email"
@@ -247,9 +247,8 @@ export default function AdminCoupons() {
                 autoComplete="off"
                 spellCheck={false}
                 maxLength={254}
-                required
               />
-              <small className="cell-sub">لن يعمل الكود إلا بعد تسجيل الدخول بحساب يحمل هذا البريد.</small>
+              <small className="cell-sub">اتركه فارغًا ليكون الكود عامًا، أو أضف بريدًا ليقتصر عليه فقط.</small>
             </label>
             <label htmlFor="coupon-note"><span className="field-label">ملاحظة <span className="optional-label">اختياري</span></span>
               <input
@@ -290,7 +289,7 @@ export default function AdminCoupons() {
             </div>
             <p className="coupon-benefit-note">
               <Info size={18} aria-hidden="true" />
-              <span>يمنح هذا الكود خصمًا بنسبة {form.discount_percent}% للحساب المرتبط بالبريد المحدد فقط.</span>
+              <span>{form.allowed_email.trim() ? `يمنح هذا الكود خصمًا بنسبة ${form.discount_percent}% للحساب المرتبط بالبريد المحدد فقط.` : `يمنح هذا الكود خصمًا عامًا بنسبة ${form.discount_percent}% لجميع الحسابات ضمن حد الاستخدام.`}</span>
             </p>
             <div className="form-row coupon-form-actions">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إنشاء الكود'}</button>

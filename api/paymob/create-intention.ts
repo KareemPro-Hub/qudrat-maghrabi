@@ -135,8 +135,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (
       !coupon
       || !coupon.is_active
-      || !allowedEmail
-      || allowedEmail !== accountEmail
+      || (allowedEmail && allowedEmail !== accountEmail)
       || expired
       || exhausted
       || ![25, 50, 75, 100].includes(discountPercent)
