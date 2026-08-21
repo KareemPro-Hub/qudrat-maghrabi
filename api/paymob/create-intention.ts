@@ -117,7 +117,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (normalizedCouponCode) {
     const { data: coupon, error: couponError } = await supabase
       .from('discount_codes')
-      .select('id, allowed_email, discount_percent, is_active, max_uses, used_count, expires_at')
+      .select('id, allowed_email, discount_percent, is_active, max_uses, used_count, expires_at, applies_to, target_course_id')
       .eq('code', normalizedCouponCode)
       .maybeSingle()
 
@@ -131,11 +131,16 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const discountPercent = Number(coupon?.discount_percent)
     const expired = coupon?.expires_at ? new Date(coupon.expires_at).getTime() < Date.now() : false
     const exhausted = coupon?.max_uses != null && Number(coupon.used_count) >= Number(coupon.max_uses)
+    const appliesTo = coupon?.applies_to === 'course' ? 'course' : 'platform'
+    const wrongTarget = plan
+      ? appliesTo !== 'platform'
+      : appliesTo !== 'course' || coupon?.target_course_id !== course.id
 
     if (
       !coupon
       || !coupon.is_active
       || (allowedEmail && allowedEmail !== accountEmail)
+      || wrongTarget
       || expired
       || exhausted
       || ![25, 50, 75, 100].includes(discountPercent)

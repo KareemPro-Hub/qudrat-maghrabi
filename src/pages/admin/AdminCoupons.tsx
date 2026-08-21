@@ -14,10 +14,28 @@ type Coupon = {
   max_uses: number | null
   used_count: number
   expires_at: string | null
+  applies_to: 'platform' | 'course'
+  target_course_id: string | null
   created_at: string
 }
 
-const emptyForm = { code: '', discount_percent: '25', allowed_email: '', note: '', max_uses: '', expires_at: '' }
+type CourseOption = { id: string; title: string }
+
+type CouponForm = {
+  code: string
+  discount_percent: string
+  allowed_email: string
+  note: string
+  max_uses: string
+  expires_at: string
+  applies_to: 'platform' | 'course'
+  target_course_id: string
+}
+
+const emptyForm: CouponForm = {
+  code: '', discount_percent: '25', allowed_email: '', note: '', max_uses: '', expires_at: '',
+  applies_to: 'platform', target_course_id: '',
+}
 
 function todayDateInputValue() {
   const now = new Date()
@@ -31,6 +49,7 @@ function expiryAtEndOfDay(date: string) {
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
+  const [courses, setCourses] = useState<CourseOption[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(emptyForm)
@@ -40,9 +59,13 @@ export default function AdminCoupons() {
 
   async function fetchAll() {
     setLoading(true)
-    const { data, error } = await supabase.from('discount_codes').select('*').order('created_at', { ascending: false })
-    if (error) toast.error('تعذر تحميل أكواد الخصم، حاول مرة أخرى')
-    setCoupons(data || [])
+    const [couponsResult, coursesResult] = await Promise.all([
+      supabase.from('discount_codes').select('*').order('created_at', { ascending: false }),
+      supabase.from('courses').select('id, title').eq('is_published', true).order('order_index'),
+    ])
+    if (couponsResult.error || coursesResult.error) toast.error('تعذر تحميل أكواد الخصم، حاول مرة أخرى')
+    setCoupons((couponsResult.data || []) as Coupon[])
+    setCourses((coursesResult.data || []) as CourseOption[])
     setLoading(false)
   }
 
@@ -74,6 +97,9 @@ export default function AdminCoupons() {
     if (form.expires_at && form.expires_at < todayDateInputValue()) {
       return toast.error('تاريخ الانتهاء لا يمكن أن يكون في الماضي')
     }
+    if (form.applies_to === 'course' && !form.target_course_id) {
+      return toast.error('اختر الكورس الذي يسري عليه كود الخصم')
+    }
 
     setSaving(true)
     try {
@@ -87,6 +113,8 @@ export default function AdminCoupons() {
         code: normalizedCode,
         discount_percent: discountPercent,
         allowed_email: allowedEmail || null,
+        applies_to: form.applies_to,
+        target_course_id: form.applies_to === 'course' ? form.target_course_id : null,
         note: form.note.trim() || null,
         max_uses: maxUses,
         expires_at: form.expires_at ? expiryAtEndOfDay(form.expires_at) : null,
@@ -151,10 +179,10 @@ export default function AdminCoupons() {
         <EmptyState text="لا توجد أكواد خصم بعد" action={<button className="primary-admin" onClick={openCreate}>إنشاء أول كود</button>} />
       ) : (
         <article className="admin-card data-card" data-searchable>
-          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>يمكن أن يكون الكود عامًا أو مرتبطًا ببريد طالب محدد</p></div></header>
+          <header className="card-head"><div><h3>قائمة الأكواد</h3><p>يمكن أن يكون الكود عامًا أو خاصًّا، وعلى المنصة أو كورس محدد</p></div></header>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>الكود</th><th>نسبة الخصم</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الكود</th><th>نسبة الخصم</th><th>نطاق الخصم</th><th>البريد المسموح</th><th>ملاحظة</th><th>الاستخدام</th><th>تاريخ الانتهاء</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
               <tbody>
                 {coupons.map((c) => {
                   const expired = c.expires_at ? new Date(c.expires_at) < new Date() : false
@@ -169,6 +197,7 @@ export default function AdminCoupons() {
                         </div>
                       </td>
                       <td><StatusBadge variant="success">{c.discount_percent}%</StatusBadge></td>
+                      <td>{c.applies_to === 'course' ? (courses.find((course) => course.id === c.target_course_id)?.title || 'كورس محدد') : 'المنصة بالكامل'}</td>
                       <td dir="ltr" style={{ textAlign: 'right' }}>{c.allowed_email || 'غير مخصص'}</td>
                       <td>{c.note || '—'}</td>
                       <td>{c.used_count}{c.max_uses != null ? ` / ${c.max_uses}` : ' (غير محدود)'}</td>
@@ -236,6 +265,30 @@ export default function AdminCoupons() {
               </select>
               <small className="cell-sub">خصم 100% يفعّل الاشتراك مباشرةً دون فتح بوابة الدفع.</small>
             </label>
+            <label htmlFor="coupon-scope"><span className="field-label">نطاق الخصم</span>
+              <select
+                id="coupon-scope"
+                value={form.applies_to}
+                onChange={(e) => setForm({ ...form, applies_to: e.target.value as 'platform' | 'course', target_course_id: e.target.value === 'course' ? form.target_course_id : '' })}
+              >
+                <option value="platform">المنصة بالكامل</option>
+                <option value="course">كورس محدد</option>
+              </select>
+              <small className="cell-sub">خصم المنصة يسري على أي باقة، وخصم الكورس يسري على الكورس المختار فقط.</small>
+            </label>
+            {form.applies_to === 'course' && (
+              <label htmlFor="coupon-course"><span className="field-label">الكورس المستهدف</span>
+                <select
+                  id="coupon-course"
+                  value={form.target_course_id}
+                  onChange={(e) => setForm({ ...form, target_course_id: e.target.value })}
+                  required
+                >
+                  <option value="">اختر الكورس</option>
+                  {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                </select>
+              </label>
+            )}
             <label htmlFor="coupon-email"><span className="field-label">البريد المسموح له باستخدام الكود <span className="optional-label">اختياري</span></span>
               <input
                 id="coupon-email"
@@ -289,7 +342,9 @@ export default function AdminCoupons() {
             </div>
             <p className="coupon-benefit-note">
               <Info size={18} aria-hidden="true" />
-              <span>{form.allowed_email.trim() ? `يمنح هذا الكود خصمًا بنسبة ${form.discount_percent}% للحساب المرتبط بالبريد المحدد فقط.` : `يمنح هذا الكود خصمًا عامًا بنسبة ${form.discount_percent}% لجميع الحسابات ضمن حد الاستخدام.`}</span>
+              <span>{form.allowed_email.trim()
+                ? `يمنح هذا الكود خصمًا بنسبة ${form.discount_percent}% للحساب المرتبط بالبريد المحدد فقط.`
+                : `يمنح هذا الكود خصمًا عامًا بنسبة ${form.discount_percent}% لجميع الحسابات ضمن حد الاستخدام.`} {form.applies_to === 'course' ? 'ويسري على الكورس المختار فقط.' : 'ويسري على باقات المنصة بالكامل.'}</span>
             </p>
             <div className="form-row coupon-form-actions">
               <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إنشاء الكود'}</button>
