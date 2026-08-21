@@ -66,7 +66,7 @@ export default function ResetPassword() {
 
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
       if (profile && adminRoles.includes(profile.role)) navigate('/admin')
-      else if (profile?.role === 'parent') navigate('/parent')
+      else if (profile?.role === 'parent') navigate('/login')
       else navigate('/dashboard')
     }
     setLoading(false)

@@ -12,8 +12,6 @@ import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentFailed from './pages/PaymentFailed'
 import Dashboard from './pages/Dashboard'
-import ParentDashboard from './pages/ParentDashboard'
-import ParentLink from './pages/ParentLink'
 import Quiz from './pages/Quiz'
 import QuizResult from './pages/QuizResult'
 import Learn from './pages/Learn'
@@ -108,10 +106,6 @@ export default function App() {
         <Route path="/checkout/:courseId" element={<AuthLayout><Checkout /></AuthLayout>} />
         <Route path="/payment/success" element={<AuthLayout><PaymentSuccess /></AuthLayout>} />
         <Route path="/payment/failed" element={<AuthLayout><PaymentFailed /></AuthLayout>} />
-
-        {/* Parent */}
-        <Route path="/parent" element={<ParentDashboard />} />
-        <Route path="/parent/link" element={<AuthLayout><ParentLink /></AuthLayout>} />
 
         {/* Admin (محمّلة كسوليًا) */}
         <Route path="/admin" element={<Suspense fallback={<AdminFallback />}><AdminLayout><AdminOverview /></AdminLayout></Suspense>} />

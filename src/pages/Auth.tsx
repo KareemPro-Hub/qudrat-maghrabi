@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, User, Phone, GraduationCap, Users, LogIn, UserPlus } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Phone, LogIn, UserPlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -43,6 +43,15 @@ function getSafeReturnTo(search: string) {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : null
 }
 
+function normalizeStudentPhone(value: string) {
+  const phone = value.trim().replace(/[\s()-]/g, '')
+  if (/^05\d{8}$/.test(phone)) return `+966${phone.slice(1)}`
+  if (/^5\d{8}$/.test(phone)) return `+966${phone}`
+  if (/^9665\d{8}$/.test(phone)) return `+${phone}`
+  if (/^\+[1-9]\d{7,14}$/.test(phone)) return phone
+  return null
+}
+
 export default function Auth() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -58,7 +67,6 @@ export default function Auth() {
   const [loginLoading, setLoginLoading] = useState(false)
 
   // Signup state
-  const [role, setRole] = useState<'student' | 'parent'>('student')
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm: '' })
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [signupLoading, setSignupLoading] = useState(false)
@@ -122,25 +130,28 @@ export default function Auth() {
         return
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: primaryProfile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user!.id)
         .single()
 
-      if (profileError || !profile) {
+      if (profileError || !primaryProfile) {
         await supabase.auth.signOut()
         toast.error('تم التحقق من الحساب لكن تعذّر تحديد صلاحياته. حاول مجددًا')
         return
       }
 
-      toast.success('مرحبًا بك !')
       const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
-      if (adminRoles.includes(profile.role)) {
+      if (adminRoles.includes(primaryProfile.role)) {
+        toast.success('مرحبًا بك !')
         navigate('/admin')
-      } else if (profile.role === 'parent') {
-        navigate('/parent')
+      } else if (primaryProfile.role !== 'student') {
+        await supabase.auth.signOut()
+        toast.error('هذه المنصة مخصّصة للطلاب فقط')
+        return
       } else {
+        toast.success('مرحبًا بك !')
         navigate(returnTo || '/dashboard')
       }
     } catch {
@@ -152,7 +163,9 @@ export default function Auth() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.full_name || !form.email || !form.password) return toast.error('يرجى تعبئة جميع الحقول المطلوبة')
+    if (!form.full_name.trim() || !form.email.trim() || !form.phone.trim() || !form.password) return toast.error('يرجى تعبئة جميع الحقول المطلوبة')
+    const phone = normalizeStudentPhone(form.phone)
+    if (!phone) return toast.error('أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx')
     if (form.password !== form.confirm) return toast.error('كلمتا المرور غير متطابقتين')
     if (form.password.length < 8) return toast.error('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
     if (!agreeTerms) return toast.error('يرجى الموافقة على الشروط وسياسة الخصوصية')
@@ -162,8 +175,8 @@ export default function Auth() {
       email: form.email.trim().toLowerCase(),
       password: form.password,
       options: {
-        data: { full_name: form.full_name, phone: form.phone, role },
-        emailRedirectTo: `${window.location.origin}${role === 'student' && returnTo ? returnTo : role === 'parent' ? '/parent' : '/dashboard'}`,
+        data: { full_name: form.full_name.trim(), phone, role: 'student' },
+        emailRedirectTo: `${window.location.origin}${returnTo || '/dashboard'}`,
       },
     })
 
@@ -236,46 +249,31 @@ export default function Auth() {
             <div className="auth-panel-inner">
               <Link to="/" className="auth-logo-link"><img src="/logo.png" alt="قدرات المغربي" className="auth-logo-signup" /></Link>
               <div className="auth-head">
-                <h1>أنشئ حسابك</h1>
+                <h1>أنشئ حساب الطالب</h1>
                 <p>ابدأ رحلتك بثقة نحو أعلى الدرجات</p>
-              </div>
-
-              <div className="auth-role-grid">
-                <button type="button" className={`auth-role${role === 'student' ? ' active' : ''}`} onClick={() => setRole('student')}>
-                  <span>
-                    <GraduationCap size={16} color={role === 'student' ? '#fff' : '#898091'} />
-                  </span>
-                  <b>طالب</b>
-                </button>
-                <button type="button" className={`auth-role${role === 'parent' ? ' active' : ''}`} onClick={() => setRole('parent')}>
-                  <span>
-                    <Users size={16} color={role === 'parent' ? '#fff' : '#898091'} />
-                  </span>
-                  <b>ولي أمر</b>
-                </button>
               </div>
 
               <form onSubmit={handleRegister}>
                 <div className="auth-fields">
                   <div className="auth-field full">
                     <User size={17} strokeWidth={1.9} />
-                    <input name="full_name" type="text" value={form.full_name} onChange={handleChange} placeholder="محمد أحمد" />
+                    <input name="full_name" type="text" value={form.full_name} onChange={handleChange} placeholder="اسم الطالب" autoComplete="name" required />
                   </div>
                   <div className="auth-field">
                     <Mail size={17} strokeWidth={1.9} />
-                    <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="name@example.com" dir="ltr" />
+                    <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="name@example.com" dir="ltr" autoComplete="email" required />
                   </div>
                   <div className="auth-field">
                     <Phone size={17} strokeWidth={1.9} />
-                    <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="05xxxxxxxx" dir="ltr" />
+                    <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="رقم الجوال: 05xxxxxxxx" dir="ltr" inputMode="tel" autoComplete="tel" required />
                   </div>
                   <div className="auth-field">
                     <Lock size={17} strokeWidth={1.9} />
-                    <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="8 أحرف على الأقل" dir="ltr" />
+                    <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="8 أحرف على الأقل" dir="ltr" autoComplete="new-password" required />
                   </div>
                   <div className="auth-field">
                     <Lock size={17} strokeWidth={1.9} />
-                    <input name="confirm" type="password" value={form.confirm} onChange={handleChange} placeholder="أعد كتابة كلمة المرور" dir="ltr" />
+                    <input name="confirm" type="password" value={form.confirm} onChange={handleChange} placeholder="أعد كتابة كلمة المرور" dir="ltr" autoComplete="new-password" required />
                   </div>
                 </div>
 
@@ -301,17 +299,6 @@ export default function Auth() {
                 </button>
               </form>
 
-              <div>
-                <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>
-                <div className="auth-socials">
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('google')} disabled={socialLoading !== null} aria-busy={socialLoading === 'google'}><span className="auth-social-g">G</span>Google</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('facebook')} disabled={socialLoading !== null} aria-busy={socialLoading === 'facebook'}><span className="auth-social-f">f</span>Facebook</button>
-                  <button type="button" className="auth-social" onClick={() => handleSocialLogin('apple')} disabled={socialLoading !== null} aria-busy={socialLoading === 'apple'}>
-                      <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#090909" stroke="none" d="M16.7 12.8c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-1-3.3-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.3 1.9 2.7 3.3 2.6 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.5-3 1.5-3.1-.1 0-3.3-1.3-3.3-4.2ZM14.2 5.7c.7-.9 1.2-2.1 1.1-3.2-1.1.1-2.4.7-3.2 1.5-.7.8-1.3 2-1.2 3.1 1.2.1 2.5-.6 3.3-1.4Z" /></svg>
-                      Apple
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 

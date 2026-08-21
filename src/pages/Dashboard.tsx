@@ -205,7 +205,7 @@ export default function Dashboard() {
   )
 
   if (!user) return <Navigate to="/login" />
-  if (profile?.role === 'parent') return <Navigate to="/parent" />
+  if (profile?.role === 'parent') return <Navigate to="/login" />
   if (profile && ['admin', 'teacher', 'content_manager', 'student_manager'].includes(profile.role)) {
     return <Navigate to="/admin" />
   }

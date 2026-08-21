@@ -4,7 +4,7 @@ import { Menu, X, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 function dashboardPath(role?: string) {
-  if (role === 'parent') return '/parent'
+  if (role === 'parent') return '/login'
   if (role && ['admin', 'teacher', 'content_manager', 'student_manager'].includes(role)) return '/admin'
   return '/dashboard'
 }
