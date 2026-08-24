@@ -124,7 +124,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return Scaffold(
       extendBody: true,
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           bottom: false,
           child: FutureBuilder<StudentHomeSnapshot>(
@@ -283,7 +283,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   Text(
                     'كل الكورسات',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: QmColors.deepPurple,
+                      color: QmColors.textPrimary,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -414,7 +414,7 @@ class _SubscriptionStatusCard extends StatelessWidget {
                   children: [
                     Text(
                       active ? 'اشتراكك فعّال' : 'افتح كل الكورسات',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textPrimary,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
@@ -423,7 +423,7 @@ class _SubscriptionStatusCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 12.5,
                       ),
@@ -509,12 +509,12 @@ class _HomeHeader extends StatelessWidget {
             IconButton(
               onPressed: onNotificationTap,
               icon: const Icon(Icons.notifications_none_rounded),
-              color: QmColors.deepPurple,
+              color: QmColors.textPrimary,
               iconSize: 28,
               style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: .9),
+                backgroundColor: QmColors.surface.withValues(alpha: .94),
                 minimumSize: const Size.square(52),
-                side: const BorderSide(color: QmColors.border),
+                side: BorderSide(color: QmColors.border),
               ),
             ),
             if (unreadNotifications > 0)
@@ -560,7 +560,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: QmColors.surface,
       borderRadius: BorderRadius.circular(30),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -642,13 +642,13 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                     Text(
                       'أول 3 حصص هدية لك',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: QmColors.deepPurple,
+                        color: QmColors.textPrimary,
                         fontWeight: FontWeight.w900,
                         height: 1.35,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'ابدأ رحلتك مجانًا، واكتشف أسلوب الشرح قبل الاشتراك.',
                       style: TextStyle(
                         color: QmColors.textSecondary,
@@ -756,7 +756,7 @@ class _ContinueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: QmColors.surface,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         onTap: onTap,
@@ -801,7 +801,7 @@ class _ContinueCard extends StatelessWidget {
                           '${course.lessonsCount} دروس جاهزة',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 13,
                       ),
@@ -859,7 +859,7 @@ class _CourseCard extends StatelessWidget {
         return SizedBox(
           width: 286,
           child: Material(
-            color: Colors.white,
+            color: QmColors.surface,
             borderRadius: BorderRadius.circular(26),
             child: InkWell(
               onTap: onTap,
@@ -915,7 +915,7 @@ class _CourseCard extends StatelessWidget {
                                 const SizedBox(width: 5),
                                 Text(
                                   '${course.lessonsCount} دروس',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: QmColors.textSecondary,
                                     fontSize: 13,
                                   ),
@@ -1112,9 +1112,9 @@ class _GlassNavigationBar extends StatelessWidget {
             height: 76,
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .84),
+              color: QmColors.surface.withValues(alpha: .88),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: .92)),
+              border: Border.all(color: QmColors.border.withValues(alpha: .92)),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x281B0A33),
@@ -1181,7 +1181,7 @@ class _HomeLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1222,7 +1222,7 @@ class _HomeErrorView extends StatelessWidget {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 7),
-            const Text(
+            Text(
               'تحقق من اتصالك ثم حاول مرة أخرى.',
               style: TextStyle(color: QmColors.textSecondary),
             ),
@@ -1247,7 +1247,7 @@ class _EmptyCoursesCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),

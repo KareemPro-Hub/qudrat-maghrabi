@@ -20,7 +20,7 @@ class AuthFlowScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

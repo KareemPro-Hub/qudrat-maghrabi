@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
+import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
@@ -53,17 +54,14 @@ class _AccountScreenState extends State<AccountScreen> {
       backgroundColor: QmColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text(
-          'حسابي',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
+        title: Text('حسابي', style: TextStyle(fontWeight: FontWeight.w900)),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(Icons.arrow_back_rounded),
         ),
       ),
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: ListView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 42),
@@ -77,6 +75,14 @@ class _AccountScreenState extends State<AccountScreen> {
             const SizedBox(height: 12),
             _SettingsCard(
               children: [
+                _SettingTile(
+                  key: const Key('appearance-tile'),
+                  icon: Icons.dark_mode_rounded,
+                  title: 'مظهر التطبيق',
+                  subtitle: QmThemeModeScope.of(context).preference.label,
+                  onTap: () => _showThemeModePicker(context),
+                ),
+                const _TileDivider(),
                 _SettingTile(
                   key: const Key('edit-profile-tile'),
                   icon: Icons.manage_accounts_rounded,
@@ -191,9 +197,9 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: const Icon(Icons.logout_rounded),
               label: const Text('تسجيل الخروج'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: QmColors.deepPurple,
+                foregroundColor: QmColors.purple,
                 minimumSize: const Size.fromHeight(56),
-                side: const BorderSide(color: QmColors.border),
+                side: BorderSide(color: QmColors.border),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -218,7 +224,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
+                  Text(
                     'يمكنك حذف حسابك وكل بياناتك المرتبطة به نهائيًا.',
                     style: TextStyle(
                       color: QmColors.textSecondary,
@@ -251,6 +257,49 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showThemeModePicker(BuildContext context) async {
+    final controller = QmThemeModeScope.of(context);
+    final selected = await showModalBottomSheet<QmThemePreference>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'اختر مظهر التطبيق',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              for (final preference in QmThemePreference.values)
+                ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Text(preference.label),
+                  leading: Icon(switch (preference) {
+                    QmThemePreference.system => Icons.brightness_auto_rounded,
+                    QmThemePreference.light => Icons.light_mode_rounded,
+                    QmThemePreference.dark => Icons.dark_mode_rounded,
+                  }),
+                  trailing: controller.preference == preference
+                      ? const Icon(Icons.check_circle_rounded)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(preference),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null) await controller.update(selected);
   }
 }
 
@@ -379,7 +428,7 @@ class _SectionHeading extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           subtitle,
-          style: const TextStyle(color: QmColors.textSecondary, fontSize: 12),
+          style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
         ),
       ],
     );
@@ -405,11 +454,11 @@ class _SettingsCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: QmColors.surface,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: QmColors.border),
+          side: BorderSide(color: QmColors.border),
         ),
         child: Column(children: children),
       ),
@@ -447,16 +496,16 @@ class _SettingTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           color: QmColors.textPrimary,
           fontWeight: FontWeight.w900,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(color: QmColors.textSecondary, fontSize: 12),
+        style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.arrow_back_ios_new_rounded,
         size: 16,
         color: QmColors.textMuted,
@@ -470,7 +519,7 @@ class _TileDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       indent: 76,
       endIndent: 16,
@@ -817,7 +866,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               color: const Color(0xFFFFF5DF),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Text(
+            child: Text(
               'حذف الحساب لا يلغي اشتراك App Store أو Google Play تلقائيًا. ألغِ الاشتراك من المتجر أولًا لتجنّب أي تجديد لاحق.',
               style: TextStyle(
                 color: QmColors.textPrimary,
@@ -916,7 +965,7 @@ class _DeletionItem extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: QmColors.textSecondary,
                 fontWeight: FontWeight.w700,
               ),
@@ -1012,7 +1061,7 @@ class LegalDocumentScreen extends StatelessWidget {
                 children: [
                   Text(
                     '${index + 1}. ${sections[index].title}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textPrimary,
                       fontWeight: FontWeight.w900,
                     ),
@@ -1020,7 +1069,7 @@ class LegalDocumentScreen extends StatelessWidget {
                   const SizedBox(height: 7),
                   Text(
                     sections[index].body,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textSecondary,
                       height: 1.7,
                     ),
@@ -1165,7 +1214,7 @@ class SupportScreen extends StatelessWidget {
                 _launch(context, 'https://www.qudratmaghrabi.com/contact'),
           ),
           const SizedBox(height: 18),
-          const Text(
+          Text(
             'ساعات الدعم: السبت – الخميس، من 9 صباحًا إلى 10 مساءً.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -1231,7 +1280,7 @@ class _SupportOption extends StatelessWidget {
                       value,
                       textDirection: TextDirection.ltr,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 12,
                       ),
@@ -1298,13 +1347,13 @@ class AboutApplicationScreen extends StatelessWidget {
             style: TextStyle(color: QmColors.pink, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'تطبيق تعليمي يساعد طلاب القدرات على مشاهدة الدروس، متابعة التقدم، التدريب، ومعرفة النتائج في تجربة عربية واضحة وآمنة.',
             textAlign: TextAlign.center,
             style: TextStyle(color: QmColors.textSecondary, height: 1.8),
           ),
           const SizedBox(height: 20),
-          const Center(
+          Center(
             child: Text(
               'الإصدار 1.0.0 (1)',
               style: TextStyle(color: QmColors.textMuted, fontSize: 12),
@@ -1402,11 +1451,11 @@ InputDecoration _inputDecoration({
     fillColor: Colors.white,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: QmColors.border),
+      borderSide: BorderSide(color: QmColors.border),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: QmColors.border),
+      borderSide: BorderSide(color: QmColors.border),
     ),
   );
 }

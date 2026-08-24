@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -186,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         Checkbox(
                                           value: _rememberMe,
                                           activeColor: QmColors.pink,
-                                          side: const BorderSide(
+                                          side: BorderSide(
                                             color: QmColors.border,
                                           ),
                                           onChanged: (value) {

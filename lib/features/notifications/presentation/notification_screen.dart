@@ -43,7 +43,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('الإشعارات')),
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: FutureBuilder<List<AppNotification>>(
           future: _notificationsFuture,
           builder: (context, snapshot) {
@@ -107,7 +107,7 @@ class _NotificationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .9),
+        color: QmColors.surface.withValues(alpha: .94),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: notification.isRead
@@ -134,7 +134,7 @@ class _NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   notification.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: QmColors.textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
@@ -143,10 +143,7 @@ class _NotificationCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   _bodyLabel(notification),
-                  style: const TextStyle(
-                    color: QmColors.textSecondary,
-                    height: 1.45,
-                  ),
+                  style: TextStyle(color: QmColors.textSecondary, height: 1.45),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -217,7 +214,7 @@ class _MessageView extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: QmColors.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.w900,

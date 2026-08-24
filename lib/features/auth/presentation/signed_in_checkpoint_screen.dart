@@ -35,7 +35,7 @@ class _SignedInCheckpointScreenState extends State<SignedInCheckpointScreen> {
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(

@@ -106,7 +106,7 @@ class _StudentParentLinkCodeScreenState
         ),
       ),
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           top: false,
           child: ListView(
@@ -155,7 +155,7 @@ class _StudentParentLinkCodeScreenState
                           ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'أعطِ الرمز لولي أمرك فقط. سيستخدمه مرة واحدة لربط حسابك ومتابعة تقدّمك.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -222,7 +222,7 @@ class _StudentParentLinkCodeScreenState
                         style: OutlinedButton.styleFrom(
                           foregroundColor: QmColors.purple,
                           minimumSize: const Size.fromHeight(52),
-                          side: const BorderSide(color: QmColors.border),
+                          side: BorderSide(color: QmColors.border),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(17),
                           ),
@@ -254,7 +254,7 @@ class _StudentParentLinkCodeScreenState
                 ),
               ),
               const SizedBox(height: 18),
-              const Row(
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(

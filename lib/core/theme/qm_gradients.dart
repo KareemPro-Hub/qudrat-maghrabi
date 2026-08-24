@@ -8,9 +8,11 @@ abstract final class QmGradients {
     colors: [QmColors.coral, QmColors.pink, QmColors.purple],
   );
 
-  static const LinearGradient softBackground = LinearGradient(
+  static LinearGradient get softBackground => LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFFFFFF), QmColors.background],
+    colors: QmColors.useDarkPalette
+        ? const [Color(0xFF181120), Color(0xFF100B18)]
+        : const [Color(0xFFFFFFFF), Color(0xFFF9F7FF)],
   );
 }

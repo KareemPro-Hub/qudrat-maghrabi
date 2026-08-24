@@ -142,9 +142,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
         return Scaffold(
           extendBody: true,
           body: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: QmGradients.softBackground,
-            ),
+            decoration: BoxDecoration(gradient: QmGradients.softBackground),
             child: SafeArea(
               bottom: false,
               child: RefreshIndicator(
@@ -272,7 +270,7 @@ class _ParentLinkStudentScreenState extends State<ParentLinkStudentScreen> {
         ),
       ),
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
@@ -424,7 +422,7 @@ class _ParentHeader extends StatelessWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 2),
-              const Text(
+              Text(
                 'تابع تقدّم أبنائك بثقة',
                 style: TextStyle(color: QmColors.textSecondary),
               ),
@@ -474,7 +472,7 @@ class _StudentSwitcher extends StatelessWidget {
               onPressed: onAddStudent,
               avatar: const Icon(Icons.add_rounded, size: 19),
               label: const Text('طالب آخر'),
-              side: const BorderSide(color: QmColors.border),
+              side: BorderSide(color: QmColors.border),
               backgroundColor: Colors.white.withValues(alpha: 0.75),
             );
           }
@@ -790,7 +788,7 @@ class _StatCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: QmColors.textSecondary, fontSize: 11),
+            style: TextStyle(color: QmColors.textSecondary, fontSize: 11),
           ),
         ],
       ),
@@ -813,14 +811,14 @@ class _CurrentCourseSummary extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'الكورس الحالي',
                 style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
               ),
               const SizedBox(height: 2),
               Text(
                 course.title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: QmColors.textPrimary,
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
@@ -832,7 +830,7 @@ class _CurrentCourseSummary extends StatelessWidget {
                   'التالي: ${course.currentLessonTitle}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: QmColors.textSecondary),
+                  style: TextStyle(color: QmColors.textSecondary),
                 ),
               ],
             ],
@@ -871,7 +869,7 @@ class _LastQuizSummary extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'آخر اختبار',
                 style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
               ),
@@ -880,7 +878,7 @@ class _LastQuizSummary extends StatelessWidget {
                 result.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: QmColors.textPrimary,
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
@@ -946,7 +944,7 @@ class _CourseProgressCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '${course.completedLessons} من ${course.totalLessons} درس مكتمل',
-            style: const TextStyle(color: QmColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
           ),
         ],
       ),
@@ -999,7 +997,7 @@ class _QuizResultCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   result.passed ? 'اجتاز الاختبار' : 'يحتاج إلى مراجعة',
-                  style: const TextStyle(color: QmColors.textSecondary),
+                  style: TextStyle(color: QmColors.textSecondary),
                 ),
               ],
             ),
@@ -1027,7 +1025,7 @@ class _ParentEmptyView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: Stack(
             children: [
@@ -1113,7 +1111,7 @@ class _ParentLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: DecoratedBox(
         decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: Center(child: CircularProgressIndicator(color: QmColors.pink)),
@@ -1131,14 +1129,14 @@ class _ParentErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(28),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.cloud_off_rounded,
                   size: 58,
                   color: QmColors.textMuted,
@@ -1316,10 +1314,7 @@ class _SectionTitle extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(color: QmColors.textSecondary),
-              ),
+              Text(subtitle, style: TextStyle(color: QmColors.textSecondary)),
             ],
           ),
         ),
@@ -1365,7 +1360,7 @@ class _EmptyInlineMessage extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: QmColors.textSecondary,
               fontWeight: FontWeight.w700,
             ),
@@ -1381,7 +1376,7 @@ class _PrivacyNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(Icons.shield_outlined, color: QmColors.textMuted, size: 18),

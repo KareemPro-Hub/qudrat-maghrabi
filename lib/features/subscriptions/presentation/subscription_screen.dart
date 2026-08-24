@@ -47,7 +47,7 @@ class SubscriptionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -76,7 +76,7 @@ class SubscriptionScreen extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'اشتراك واحد يفتح لك كل كورسات المنصة المدفوعة.',
                       style: TextStyle(color: QmColors.textSecondary),
                     ),
@@ -135,7 +135,7 @@ class SubscriptionScreen extends StatelessWidget {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'سيُفعّل زر الشراء فور إضافة منتجات الاشتراك في App Store وGoogle Play، حتى يتم الدفع والتجديد بأمان وفق سياسات المتاجر.',
               textAlign: TextAlign.center,
               style: TextStyle(color: QmColors.textSecondary, height: 1.55),
@@ -264,7 +264,7 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: plan.popular
@@ -421,7 +421,7 @@ class _FreeCourseNote extends StatelessWidget {
         color: const Color(0xFFEAF9F3),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.volunteer_activism_rounded, color: QmColors.success),
           SizedBox(width: 11),

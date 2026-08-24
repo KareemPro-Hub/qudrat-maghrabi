@@ -132,7 +132,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'نتيجة فورية لتحديد مستواك',
             style: TextStyle(color: QmColors.textSecondary),
           ),
@@ -295,7 +295,7 @@ class _QuizCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = quiz.lastResult;
     return Material(
-      color: Colors.white,
+      color: QmColors.surface,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         onTap: onTap,
@@ -336,7 +336,7 @@ class _QuizCard extends StatelessWidget {
                           quiz.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: QmColors.textPrimary,
                             fontWeight: FontWeight.w900,
                           ),
@@ -346,7 +346,7 @@ class _QuizCard extends StatelessWidget {
                           quiz.lessonTitle ?? quiz.courseTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: QmColors.textSecondary,
                             fontSize: 12,
                           ),
@@ -448,7 +448,7 @@ class _QuizMeta extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(color: QmColors.textSecondary, fontSize: 12),
+          style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
         ),
       ],
     );
@@ -463,7 +463,7 @@ class _EmptyQuizzesCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 34, 24, 34),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: QmColors.border),
       ),
@@ -472,7 +472,7 @@ class _EmptyQuizzesCard extends StatelessWidget {
           Container(
             width: 74,
             height: 74,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: QmColors.lavender,
               shape: BoxShape.circle,
             ),
@@ -483,7 +483,7 @@ class _EmptyQuizzesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'لا توجد اختبارات منشورة بعد',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -493,7 +493,7 @@ class _EmptyQuizzesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'ستظهر اختبارات دروسك هنا فور إضافتها من المنصة.',
             textAlign: TextAlign.center,
             style: TextStyle(color: QmColors.textSecondary, height: 1.6),

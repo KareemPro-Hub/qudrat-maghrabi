@@ -297,7 +297,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                           _lesson.durationMinutes == null
                               ? 'درس فيديو'
                               : '${_lesson.durationMinutes} دقيقة',
-                          style: const TextStyle(color: QmColors.textSecondary),
+                          style: TextStyle(color: QmColors.textSecondary),
                         ),
                       ],
                     ),
@@ -363,7 +363,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
               const SizedBox(height: 12),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: QmColors.surface,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: QmColors.border),
                 ),
@@ -395,7 +395,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: QmColors.surface,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: QmColors.border),
                 ),
@@ -403,10 +403,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                   _lesson.description.isEmpty
                       ? 'لم يُضف ملخص لهذا الدرس بعد.'
                       : _lesson.description,
-                  style: const TextStyle(
-                    color: QmColors.textSecondary,
-                    height: 1.7,
-                  ),
+                  style: TextStyle(color: QmColors.textSecondary, height: 1.7),
                 ),
               ),
               const SizedBox(height: 28),
@@ -825,7 +822,7 @@ class _PlayerLessonTile extends StatelessWidget {
                       lesson.durationMinutes == null
                           ? 'الدرس $number'
                           : 'الدرس $number • ${lesson.durationMinutes} دقيقة',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 12,
                       ),

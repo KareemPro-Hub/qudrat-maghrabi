@@ -108,7 +108,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
           child: RefreshIndicator(
             color: QmColors.pink,
@@ -149,7 +149,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                             ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'اشتراك متجدد تلقائيًا يفتح كل كورسات المنصة المدفوعة، ويمكن إلغاؤه من المتجر في أي وقت.',
                         style: TextStyle(
                           color: QmColors.textSecondary,
@@ -167,7 +167,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                             children: [
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting)
-                                const Padding(
+                                Padding(
                                   padding: EdgeInsets.only(bottom: 16),
                                   child: LinearProgressIndicator(
                                     color: QmColors.pink,
@@ -371,7 +371,7 @@ class _CatalogNotice extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: QmColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 height: 1.4,
@@ -432,7 +432,7 @@ class _PlanCard extends StatelessWidget {
     return Container(
       key: ValueKey('plan-card-${plan.id}'),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: QmColors.border.withValues(alpha: .75)),
         boxShadow: [
@@ -526,7 +526,7 @@ class _PlanCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'دفع آمن عبر متجر التطبيقات',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -856,7 +856,7 @@ class _RenewalNote extends StatelessWidget {
         color: QmColors.lavender.withValues(alpha: .65),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.notifications_active_outlined, color: QmColors.purple),
           SizedBox(width: 11),
@@ -887,7 +887,7 @@ class _FreeCourseNote extends StatelessWidget {
         color: const Color(0xFFEAF9F3),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.volunteer_activism_rounded, color: QmColors.success),
           SizedBox(width: 11),

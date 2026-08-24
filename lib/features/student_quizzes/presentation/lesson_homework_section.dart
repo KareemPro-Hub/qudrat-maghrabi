@@ -32,7 +32,7 @@ class LessonHomeworkSection extends StatelessWidget {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'طبّق ما تعلّمته، وتعرّف على مستواك فورًا.',
           style: TextStyle(color: QmColors.textSecondary),
         ),
@@ -78,7 +78,7 @@ class _HomeworkCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
         boxShadow: const [
@@ -113,7 +113,7 @@ class _HomeworkCard extends StatelessWidget {
                   children: [
                     Text(
                       quiz.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textPrimary,
                         fontWeight: FontWeight.w900,
                       ),
@@ -121,7 +121,7 @@ class _HomeworkCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${quiz.questionCount} أسئلة${quiz.hasTimer ? ' • ${quiz.timeLimitMinutes} دقيقة' : ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 12,
                       ),
@@ -144,10 +144,7 @@ class _HomeworkCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               quiz.description,
-              style: const TextStyle(
-                color: QmColors.textSecondary,
-                height: 1.6,
-              ),
+              style: TextStyle(color: QmColors.textSecondary, height: 1.6),
             ),
           ],
           const SizedBox(height: 16),
@@ -182,7 +179,7 @@ class _HomeworkLoadingCard extends StatelessWidget {
       height: 112,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),
@@ -210,7 +207,7 @@ class _HomeworkMessageCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),
@@ -221,7 +218,7 @@ class _HomeworkMessageCard extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: QmColors.textSecondary),
+            style: TextStyle(color: QmColors.textSecondary),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 10),

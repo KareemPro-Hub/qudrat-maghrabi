@@ -2,44 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 
 abstract final class QmTheme {
-  static ThemeData get light {
+  static ThemeData get light => _build(Brightness.light);
+  static ThemeData get dark => _build(Brightness.dark);
+
+  static ThemeData _build(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
     final colorScheme = ColorScheme.fromSeed(
       seedColor: QmColors.purple,
-      brightness: Brightness.light,
+      brightness: brightness,
       primary: QmColors.purple,
       secondary: QmColors.pink,
-      surface: QmColors.surface,
+      surface: isDark ? const Color(0xFF1B1426) : const Color(0xFFFFFFFF),
       error: QmColors.error,
     );
 
     final baseTheme = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: brightness,
       colorScheme: colorScheme,
       fontFamily: 'FrutigerArabic',
-      scaffoldBackgroundColor: QmColors.background,
+      scaffoldBackgroundColor: isDark
+          ? const Color(0xFF100B18)
+          : const Color(0xFFF9F7FF),
     );
 
     return baseTheme.copyWith(
       textTheme: baseTheme.textTheme.apply(
-        bodyColor: QmColors.textPrimary,
-        displayColor: QmColors.textPrimary,
+        bodyColor: isDark ? const Color(0xFFF8F2FF) : const Color(0xFF211038),
+        displayColor: isDark
+            ? const Color(0xFFF8F2FF)
+            : const Color(0xFF211038),
         fontFamily: 'FrutigerArabic',
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: QmColors.surfaceSoft,
+        fillColor: isDark ? const Color(0xFF241B31) : const Color(0xFFFCFAFF),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 18,
         ),
-        hintStyle: const TextStyle(
-          color: QmColors.textMuted,
+        hintStyle: TextStyle(
+          color: isDark ? Color(0xFF9B8EA8) : Color(0xFFA69EAF),
           fontWeight: FontWeight.w400,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: QmColors.border),
+          borderSide: BorderSide(
+            color: isDark ? const Color(0xFF463653) : const Color(0xFFE8E0F1),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -51,16 +61,18 @@ abstract final class QmTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: QmColors.surface,
+        color: isDark ? const Color(0xFF1B1426) : const Color(0xFFFFFFFF),
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: QmColors.border),
+          side: BorderSide(
+            color: isDark ? const Color(0xFF463653) : const Color(0xFFE8E0F1),
+          ),
         ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: QmColors.border,
+      dividerTheme: DividerThemeData(
+        color: isDark ? const Color(0xFF463653) : const Color(0xFFE8E0F1),
         thickness: 1,
         space: 1,
       ),

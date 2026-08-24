@@ -166,7 +166,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                     const SizedBox(width: 6),
                     Text(
                       '${content.allLessons.length} دروس',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontWeight: FontWeight.w700,
                       ),
@@ -186,7 +186,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                   const SizedBox(height: 10),
                   Text(
                     content.description,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textSecondary,
                       height: 1.65,
                     ),
@@ -203,7 +203,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'دروس مرتّبة في مسار واضح من البداية للنهاية',
                   style: TextStyle(color: QmColors.textSecondary),
                 ),
@@ -317,7 +317,7 @@ class _ProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
         boxShadow: const [
@@ -349,7 +349,7 @@ class _ProgressCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'تقدّمك في الكورس',
                       style: TextStyle(
                         color: QmColors.textPrimary,
@@ -359,7 +359,7 @@ class _ProgressCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       '${content.completedLessons} من ${content.allLessons.length} دروس مكتملة',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 13,
                       ),
@@ -419,7 +419,7 @@ class _ChapterCardState extends State<_ChapterCard> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),
@@ -455,7 +455,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                       children: [
                         Text(
                           chapter.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: QmColors.textPrimary,
                             fontWeight: FontWeight.w900,
                           ),
@@ -465,7 +465,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                           chapter.lessons.isEmpty
                               ? 'قريبًا'
                               : '${chapter.lessons.length} دروس • ${chapter.progressPercent}% مكتمل',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: QmColors.textSecondary,
                             fontSize: 12,
                           ),
@@ -476,7 +476,7 @@ class _ChapterCardState extends State<_ChapterCard> {
                   AnimatedRotation(
                     turns: _expanded ? .5 : 0,
                     duration: const Duration(milliseconds: 220),
-                    child: const Icon(
+                    child: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: QmColors.textSecondary,
                     ),
@@ -554,7 +554,7 @@ class _LessonTile extends StatelessWidget {
                     lesson.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textPrimary,
                       fontWeight: FontWeight.w800,
                     ),
@@ -562,7 +562,7 @@ class _LessonTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     _lessonMeta(lesson),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textSecondary,
                       fontSize: 12,
                     ),
@@ -630,7 +630,7 @@ class _CourseErrorView extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: QmColors.textPrimary,
                   fontWeight: FontWeight.w800,
                 ),
@@ -657,11 +657,11 @@ class _NoLessonsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(Icons.auto_stories_rounded, color: QmColors.purple, size: 44),
           SizedBox(height: 12),

@@ -255,7 +255,7 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
                 children: [
                   Text(
                     '${_answers.length}/${questions.length} أُجيب عليها',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textSecondary,
                       fontSize: 12,
                     ),
@@ -263,7 +263,7 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
                   const Spacer(),
                   Text(
                     'السؤال ${_currentIndex + 1} من ${questions.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: QmColors.textPrimary,
                       fontWeight: FontWeight.w800,
                     ),
@@ -336,7 +336,7 @@ class _QuestionView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: QmColors.surface,
           borderRadius: BorderRadius.circular(26),
           border: Border.all(color: QmColors.border),
           boxShadow: const [
@@ -496,8 +496,8 @@ class _QuestionNavigator extends StatelessWidget {
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: QmColors.surface,
           border: Border(top: BorderSide(color: QmColors.border)),
         ),
         child: Column(

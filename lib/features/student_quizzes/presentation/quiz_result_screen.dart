@@ -134,7 +134,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         const SizedBox(height: 4),
         Text(
           '${review.correctAnswers} إجابات صحيحة من ${review.questions.length}',
-          style: const TextStyle(color: QmColors.textSecondary),
+          style: TextStyle(color: QmColors.textSecondary),
         ),
         const SizedBox(height: 14),
         for (var index = 0; index < review.questions.length; index++)
@@ -201,7 +201,7 @@ class _ResultHero extends StatelessWidget {
           Text(
             review.quiz.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: QmColors.textSecondary),
+            style: TextStyle(color: QmColors.textSecondary),
           ),
           const SizedBox(height: 22),
           Row(
@@ -212,7 +212,7 @@ class _ResultHero extends StatelessWidget {
                 label: 'درجتك',
                 color: QmColors.purple,
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 18),
                 child: Text(
                   '/',
@@ -245,7 +245,7 @@ class _ResultHero extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'درجة النجاح: ${review.quiz.passMarks} من ${review.quiz.totalMarks}',
-            style: const TextStyle(color: QmColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
           ),
         ],
       ),
@@ -278,7 +278,7 @@ class _ScoreValue extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(color: QmColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: QmColors.textSecondary, fontSize: 11),
         ),
       ],
     );
@@ -303,7 +303,7 @@ class _ReviewQuestionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QmColors.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: correct ? const Color(0xFFBCEAD6) : const Color(0xFFFFC5CF),
@@ -323,7 +323,7 @@ class _ReviewQuestionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   '$number. ${question.text}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: QmColors.textPrimary,
                     height: 1.5,
                     fontWeight: FontWeight.w900,
@@ -376,10 +376,7 @@ class _ReviewQuestionCard extends StatelessWidget {
               ),
               child: Text(
                 '💡 ${question.explanation}',
-                style: const TextStyle(
-                  color: QmColors.textSecondary,
-                  height: 1.55,
-                ),
+                style: TextStyle(color: QmColors.textSecondary, height: 1.55),
               ),
             ),
           ],
