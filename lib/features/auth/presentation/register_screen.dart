@@ -248,11 +248,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   const Text('أوافق على '),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
                     onPressed: () => _openLegalPage('terms'),
                     child: const Text('الشروط'),
                   ),
-                  const Text(' و'),
+                  const Text(' و '),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
                     onPressed: () => _openLegalPage('privacy'),
                     child: const Text('سياسة الخصوصية'),
                   ),
