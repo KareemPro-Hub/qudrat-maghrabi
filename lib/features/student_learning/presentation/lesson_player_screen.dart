@@ -335,7 +335,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                           : () => _selectLesson(
                               _lessons[_previousPlayableIndex!],
                             ),
-                      icon: const Icon(Icons.arrow_forward_rounded),
+                      icon: const Icon(Icons.arrow_back_rounded),
                       label: const Text('الدرس السابق'),
                     ),
                   ),
@@ -345,7 +345,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                       onPressed: _nextPlayableIndex == null
                           ? null
                           : () => _selectLesson(_lessons[_nextPlayableIndex!]),
-                      icon: const Icon(Icons.arrow_back_rounded),
+                      icon: const Icon(Icons.arrow_forward_rounded),
                       label: Text(
                         _nextPlayableIndex == null ? 'آخر درس' : 'الدرس التالي',
                       ),

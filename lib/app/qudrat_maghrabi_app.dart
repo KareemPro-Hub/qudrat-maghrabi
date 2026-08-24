@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:qudrat_maghrabi_app/core/presentation/brand_launch_gate.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme.dart';
@@ -72,11 +73,27 @@ class _QudratMaghrabiAppState extends State<QudratMaghrabiApp> {
           darkTheme: QmTheme.dark,
           themeMode: _themeController.themeMode,
           builder: (context, child) {
-            QmColors.useDarkPalette =
-                Theme.of(context).brightness == Brightness.dark;
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: child ?? const SizedBox.shrink(),
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            QmColors.useDarkPalette = isDark;
+            final overlayStyle =
+                (isDark
+                        ? SystemUiOverlayStyle.light
+                        : SystemUiOverlayStyle.dark)
+                    .copyWith(
+                      statusBarColor: Colors.transparent,
+                      systemNavigationBarColor: isDark
+                          ? const Color(0xFF100B18)
+                          : const Color(0xFFF9F7FF),
+                      systemNavigationBarIconBrightness: isDark
+                          ? Brightness.light
+                          : Brightness.dark,
+                    );
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: overlayStyle,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
           home: BrandLaunchGate(

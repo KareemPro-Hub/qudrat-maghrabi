@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 
 abstract final class QmTheme {
@@ -27,6 +28,13 @@ abstract final class QmTheme {
     );
 
     return baseTheme.copyWith(
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
+      ),
       textTheme: baseTheme.textTheme.apply(
         bodyColor: isDark ? const Color(0xFFF8F2FF) : const Color(0xFF211038),
         displayColor: isDark

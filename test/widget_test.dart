@@ -462,6 +462,17 @@ void main() {
 
     expect(find.textContaining('ما الصورة العشرية للنصف ؟'), findsOneWidget);
     await tester.tap(find.text('0.5'));
+    final nextButton = find.ancestor(
+      of: find.text('التالي'),
+      matching: find.byType(FilledButton),
+    );
+    expect(
+      find.descendant(
+        of: nextButton,
+        matching: find.byIcon(Icons.arrow_forward_rounded),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('التالي'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('0.9'));
@@ -523,6 +534,30 @@ void main() {
 
     expect(accountRepository.updateCalls, 1);
     expect(find.text('أحمد محمد'), findsOneWidget);
+  });
+
+  testWidgets('profile update requires a valid phone number', (tester) async {
+    final authRepository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    final accountRepository = FakeAccountRepository();
+    await tester.pumpWidget(
+      createTestApp(authRepository, null, null, null, accountRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('حسابي'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('edit-profile-tile')));
+    await tester.pumpAndSettle();
+    expect(find.text('رقم الجوال'), findsOneWidget);
+    expect(find.textContaining('اختياري'), findsNothing);
+    await tester.enterText(find.byKey(const Key('profile-phone-input')), '');
+    await tester.tap(find.byKey(const Key('save-profile-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('أدخل رقم جوال صحيحًا'), findsOneWidget);
+    expect(accountRepository.updateCalls, 0);
   });
 
   testWidgets('account deletion requires confirmation and returns to login', (

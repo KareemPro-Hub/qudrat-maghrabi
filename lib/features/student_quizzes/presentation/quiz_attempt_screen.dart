@@ -589,7 +589,7 @@ class _QuestionNavigator extends StatelessWidget {
                           : Icon(
                               last
                                   ? Icons.send_rounded
-                                  : Icons.arrow_back_rounded,
+                                  : Icons.arrow_forward_rounded,
                             ),
                       label: Text(
                         submitting

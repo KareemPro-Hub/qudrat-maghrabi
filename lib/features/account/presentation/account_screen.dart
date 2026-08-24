@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:qudrat_maghrabi_app/core/config/app_metadata.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
@@ -163,7 +164,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 _SettingTile(
                   icon: Icons.info_outline_rounded,
                   title: 'عن قدرات المغربي',
-                  subtitle: 'الإصدار 1.0.0',
+                  subtitle: 'الإصدار ${AppMetadata.versionName}',
                   onTap: () => Navigator.of(context).push<void>(
                     MaterialPageRoute(
                       builder: (_) => const AboutApplicationScreen(),
@@ -178,7 +179,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   onTap: () => showLicensePage(
                     context: context,
                     applicationName: 'قدرات المغربي',
-                    applicationVersion: '1.0.0',
+                    applicationVersion: AppMetadata.versionLabel,
                     applicationIcon: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Image.asset(
@@ -620,9 +621,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               textDirection: TextDirection.ltr,
               textAlign: TextAlign.right,
               decoration: _inputDecoration(
-                label: 'رقم الجوال (اختياري)',
+                label: 'رقم الجوال',
                 icon: Icons.phone_outlined,
               ),
+              validator: _validatePhone,
             ),
             const SizedBox(height: 14),
             TextFormField(
@@ -647,6 +649,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
+  }
+
+  String? _validatePhone(String? value) {
+    final compact = (value ?? '').replaceAll(RegExp(r'[\s()-]'), '');
+    final normalized = compact.startsWith('+')
+        ? compact
+        : compact.startsWith('05') && compact.length == 10
+        ? '+966${compact.substring(1)}'
+        : compact.startsWith('9665') && compact.length == 12
+        ? '+$compact'
+        : compact.startsWith('01') && compact.length == 11
+        ? '+20${compact.substring(1)}'
+        : compact.startsWith('20') && compact.length == 12
+        ? '+$compact'
+        : compact;
+    if (!RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(normalized)) {
+      return 'أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx';
+    }
+    return null;
   }
 }
 
@@ -1128,7 +1149,7 @@ const privacySections = <LegalSection>[
   ),
   LegalSection(
     'التواصل معنا',
-    'لأي سؤال متعلق بالخصوصية تواصل عبر البريد Qudrat.Maghrabi.Pro@gmail.com أو من صفحة الدعم داخل التطبيق.',
+    'لأي سؤال متعلق بالخصوصية تواصل عبر البريد ${AppMetadata.supportEmail} أو من صفحة الدعم داخل التطبيق.',
   ),
 ];
 
@@ -1189,10 +1210,10 @@ class SupportScreen extends StatelessWidget {
           _SupportOption(
             icon: Icons.email_outlined,
             title: 'البريد الإلكتروني',
-            value: 'Qudrat.Maghrabi.Pro@gmail.com',
+            value: AppMetadata.supportEmail,
             onTap: () => _launch(
               context,
-              'mailto:Qudrat.Maghrabi.Pro@gmail.com?subject=دعم تطبيق قدرات المغربي',
+              'mailto:${AppMetadata.supportEmail}?subject=دعم تطبيق قدرات المغربي',
             ),
           ),
           const SizedBox(height: 12),
@@ -1355,7 +1376,7 @@ class AboutApplicationScreen extends StatelessWidget {
           const SizedBox(height: 20),
           Center(
             child: Text(
-              'الإصدار 1.0.0 (1)',
+              'الإصدار ${AppMetadata.versionLabel}',
               style: TextStyle(color: QmColors.textMuted, fontSize: 12),
             ),
           ),
