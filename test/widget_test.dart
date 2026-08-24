@@ -214,7 +214,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
-    expect(find.text('أول 3 دروس هدية لك'), findsOneWidget);
+    expect(find.text('أول 3 حصص هدية لك'), findsOneWidget);
     expect(
       find.text('ابدأ رحلتك مجانًا، واكتشف أسلوب الشرح قبل الاشتراك.'),
       findsOneWidget,

@@ -640,7 +640,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'أول 3 دروس هدية لك',
+                      'أول 3 حصص هدية لك',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: QmColors.deepPurple,
                         fontWeight: FontWeight.w900,
