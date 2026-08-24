@@ -45,6 +45,6 @@ void main() {
       find.text('يمكنك الآن الوصول لجميع دروس الكورس والبدء في التعلم'),
       findsNothing,
     );
-    expect(find.text('12 / 08 / 2020'), findsOneWidget);
+    expect(find.text('2020 / 08 / 12'), findsOneWidget);
   });
 }

@@ -182,7 +182,9 @@ class _NotificationCard extends StatelessWidget {
     if (difference.inDays == 1) return 'أمس';
     final day = local.day.toString().padLeft(2, '0');
     final month = local.month.toString().padLeft(2, '0');
-    return '$day / $month / ${local.year}';
+    // The label is rendered LTR to keep the digits stable. Putting the year
+    // first makes the visual RTL reading order: day, month, then year.
+    return '${local.year} / $month / $day';
   }
 
   String _bodyLabel(AppNotification notification) {
