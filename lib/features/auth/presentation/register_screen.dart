@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
-import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/auth_flow_scaffold.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
@@ -24,7 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
-  AccountRole _role = AccountRole.student;
   bool _agreeToTerms = false;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
@@ -70,7 +68,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text,
         phone: _phoneController.text,
         password: _passwordController.text,
-        role: _role,
       );
       if (!mounted) return;
       await showDialog<void>(
@@ -121,34 +118,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthFlowScaffold(
-      title: 'أنشئ حسابك',
+      title: 'أنشئ حساب الطالب',
       subtitle: 'ابدأ رحلتك نحو التفوق مع قدرات المغربي.',
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SegmentedButton<AccountRole>(
-              key: const Key('register-role-selector'),
-              segments: const [
-                ButtonSegment(
-                  value: AccountRole.student,
-                  label: Text('طالب'),
-                  icon: Icon(Icons.school_rounded),
-                ),
-                ButtonSegment(
-                  value: AccountRole.parent,
-                  label: Text('ولي أمر'),
-                  icon: Icon(Icons.group_rounded),
-                ),
-              ],
-              selected: {_role},
-              showSelectedIcon: false,
-              onSelectionChanged: (selection) {
-                setState(() => _role = selection.first);
-              },
-            ),
-            const SizedBox(height: 18),
             TextFormField(
               key: const Key('register-name-input'),
               controller: _nameController,
@@ -195,11 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hintText: '05xxxxxxxx',
                 prefixIcon: Icon(Icons.phone_outlined),
               ),
-              validator: (value) {
-                final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
-                if (digits.length < 8) return 'أدخل رقم جوال صحيحًا';
-                return null;
-              },
+              validator: _validatePhone,
             ),
             const SizedBox(height: 14),
             TextFormField(
@@ -305,6 +277,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final email = (value ?? '').trim();
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       return 'أدخل بريدًا إلكترونيًا صحيحًا';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    final compact = (value ?? '').replaceAll(RegExp(r'[\s()-]'), '');
+    final normalized = compact.startsWith('+')
+        ? compact
+        : compact.startsWith('05') && compact.length == 10
+        ? '+966${compact.substring(1)}'
+        : compact.startsWith('9665') && compact.length == 12
+        ? '+$compact'
+        : compact.startsWith('01') && compact.length == 11
+        ? '+20${compact.substring(1)}'
+        : compact.startsWith('20') && compact.length == 12
+        ? '+$compact'
+        : compact;
+    if (!RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(normalized)) {
+      return 'أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx';
     }
     return null;
   }

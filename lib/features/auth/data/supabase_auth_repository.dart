@@ -34,7 +34,13 @@ class SupabaseAuthRepository implements AuthRepository {
     if (user == null) return null;
 
     try {
-      return await _fetchProfile(user.id);
+      final profile = await _fetchProfile(user.id);
+      if (profile.role != AccountRole.student ||
+          profile.primaryRole != AccountRole.student) {
+        await _safeSignOut();
+        return null;
+      }
+      return profile;
     } on AuthFailure {
       await _safeSignOut();
       return null;
@@ -48,7 +54,6 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<AuthProfile> signIn({
     required String identifier,
     required String password,
-    required AccountRole expectedRole,
   }) async {
     final normalizedIdentifier = identifier.trim();
 
@@ -83,24 +88,18 @@ class SupabaseAuthRepository implements AuthRepository {
         );
       }
 
-      final roleAllowed = expectedRole == AccountRole.student
-          ? currentProfile.primaryRole == AccountRole.student
-          : currentProfile.primaryRole == AccountRole.parent ||
-                currentProfile.canUseParentPortal;
-
-      if (!roleAllowed) {
+      if (currentProfile.role != AccountRole.student ||
+          currentProfile.primaryRole != AccountRole.student) {
         await _safeSignOut();
-        throw AuthFailure(
-          code: 'role_mismatch',
-          message:
-              'هذا الحساب مسجّل بصفة ${currentProfile.primaryRole.arabicLabel}. '
-              'اختر نوع الحساب الصحيح ثم حاول مجددًا',
+        throw const AuthFailure(
+          code: 'student_only',
+          message: 'هذه المنصة مخصّصة لحسابات الطلاب فقط',
         );
       }
 
       await _client.rpc(
         'set_my_active_portal',
-        params: {'p_portal': expectedRole.databaseValue},
+        params: {'p_portal': AccountRole.student.databaseValue},
       );
       return _fetchProfile(user.id);
     } on AuthFailure {
@@ -130,7 +129,6 @@ class SupabaseAuthRepository implements AuthRepository {
     required String email,
     required String phone,
     required String password,
-    required AccountRole role,
   }) async {
     try {
       final response = await _client.auth.signUp(
@@ -139,8 +137,8 @@ class SupabaseAuthRepository implements AuthRepository {
         emailRedirectTo: 'https://www.qudratmaghrabi.com/login',
         data: {
           'full_name': fullName.trim(),
-          'phone': phone.trim(),
-          'role': role.databaseValue,
+          'phone': _normalizePhone(phone),
+          'role': AccountRole.student.databaseValue,
         },
       );
 
@@ -241,7 +239,7 @@ class SupabaseAuthRepository implements AuthRepository {
     if (role == null || primaryRole == null) {
       throw const AuthFailure(
         code: 'unsupported_role',
-        message: 'هذا التطبيق مخصص للطالب وولي الأمر فقط',
+        message: 'هذا التطبيق مخصّص لحسابات الطلاب فقط',
       );
     }
 
@@ -268,6 +266,12 @@ class SupabaseAuthRepository implements AuthRepository {
   String _normalizePhone(String value) {
     final compact = value.replaceAll(RegExp(r'[\s()-]'), '');
     if (compact.startsWith('+')) return compact;
+    if (compact.startsWith('9665') && compact.length == 12) {
+      return '+$compact';
+    }
+    if (compact.startsWith('20') && compact.length == 12) {
+      return '+$compact';
+    }
     if (compact.startsWith('05') && compact.length == 10) {
       return '+966${compact.substring(1)}';
     }

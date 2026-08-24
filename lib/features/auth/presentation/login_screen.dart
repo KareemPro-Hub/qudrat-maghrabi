@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
-import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/forgot_password_screen.dart';
@@ -28,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  AccountRole _selectedRole = AccountRole.student;
   bool _rememberMe = true;
   bool _obscurePassword = true;
   bool _isSubmitting = false;
@@ -61,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final profile = await widget.authRepository.signIn(
         identifier: _emailController.text,
         password: _passwordController.text,
-        expectedRole: _selectedRole,
       );
       if (!mounted) return;
       widget.onSignedIn(profile);
@@ -114,46 +111,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               logoWidth: constraints.maxWidth < 380 ? 138 : 154,
                             ),
                             const SizedBox(height: 28),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _RoleCard(
-                                    key: const Key('student-role'),
-                                    selectionKey: const Key(
-                                      'student-role-check',
-                                    ),
-                                    label: 'طالب',
-                                    icon: Icons.school_rounded,
-                                    selected:
-                                        _selectedRole == AccountRole.student,
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedRole = AccountRole.student;
-                                      });
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _RoleCard(
-                                    key: const Key('parent-role'),
-                                    selectionKey: const Key(
-                                      'parent-role-check',
-                                    ),
-                                    label: 'ولي أمر',
-                                    icon: Icons.group_rounded,
-                                    selected:
-                                        _selectedRole == AccountRole.parent,
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedRole = AccountRole.parent;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 22),
                             TextFormField(
                               key: const Key('email-input'),
                               controller: _emailController,
@@ -352,102 +309,6 @@ class _BrandHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _RoleCard extends StatelessWidget {
-  const _RoleCard({
-    required this.selectionKey,
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-    super.key,
-  });
-
-  final Key selectionKey;
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            height: 112,
-            decoration: BoxDecoration(
-              color: selected
-                  ? QmColors.pink.withValues(alpha: 0.035)
-                  : QmColors.surfaceSoft,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? QmColors.pink : QmColors.border,
-                width: selected ? 1.5 : 1,
-              ),
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ShaderMask(
-                        shaderCallback: (bounds) =>
-                            QmGradients.brand.createShader(bounds),
-                        child: Icon(icon, color: Colors.white, size: 36),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        label,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: selected
-                                  ? QmColors.pink
-                                  : QmColors.textSecondary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (selected)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: KeyedSubtree(
-                      key: selectionKey,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: QmColors.pink,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(3),
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

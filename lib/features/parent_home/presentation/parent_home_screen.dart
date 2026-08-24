@@ -74,7 +74,6 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
         builder: (_) => AccountScreen(
           profile: widget.profile,
           repository: widget.accountRepository,
-          familyRepository: widget.repository,
           onProfileUpdated: widget.onProfileUpdated,
           onSignOut: widget.onSignOut,
           onAccountDeleted: widget.onAccountDeleted,

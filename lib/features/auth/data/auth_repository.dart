@@ -1,4 +1,3 @@
-import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 
 abstract interface class AuthRepository {
@@ -9,7 +8,6 @@ abstract interface class AuthRepository {
   Future<AuthProfile> signIn({
     required String identifier,
     required String password,
-    required AccountRole expectedRole,
   });
 
   Future<void> signUp({
@@ -17,7 +15,6 @@ abstract interface class AuthRepository {
     required String email,
     required String phone,
     required String password,
-    required AccountRole role,
   });
 
   Future<void> sendPasswordReset({required String email});

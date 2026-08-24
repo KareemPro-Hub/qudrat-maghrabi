@@ -43,8 +43,6 @@ class FakeAuthRepository implements AuthRepository {
   AuthFailure? signUpFailure;
   AuthFailure? passwordResetFailure;
   AuthFailure? passwordUpdateFailure;
-  AccountRole? lastExpectedRole;
-  AccountRole? lastSignUpRole;
   String? lastSignUpName;
   String? lastSignUpEmail;
   String? lastSignUpPhone;
@@ -72,10 +70,8 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthProfile> signIn({
     required String identifier,
     required String password,
-    required AccountRole expectedRole,
   }) async {
     signInCalls += 1;
-    lastExpectedRole = expectedRole;
     final failure = signInFailure;
     if (failure != null) throw failure;
     return signInProfile;
@@ -87,13 +83,11 @@ class FakeAuthRepository implements AuthRepository {
     required String email,
     required String phone,
     required String password,
-    required AccountRole role,
   }) async {
     signUpCalls += 1;
     lastSignUpName = fullName;
     lastSignUpEmail = email;
     lastSignUpPhone = phone;
-    lastSignUpRole = role;
     final failure = signUpFailure;
     if (failure != null) throw failure;
   }

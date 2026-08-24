@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qudrat_maghrabi_app/app/qudrat_maghrabi_app.dart';
-import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 
 import 'fakes/fake_account_repository.dart';
 import 'fakes/fake_auth_repository.dart';
-import 'fakes/fake_parent_home_repository.dart';
 import 'fakes/fake_student_home_repository.dart';
 import 'fakes/fake_student_learning_repository.dart';
 import 'fakes/fake_student_quiz_repository.dart';
@@ -14,7 +12,6 @@ QudratMaghrabiApp _createApp(FakeAuthRepository repository) {
   return QudratMaghrabiApp(
     authRepository: repository,
     accountRepository: FakeAccountRepository(),
-    parentHomeRepository: FakeParentHomeRepository(),
     studentHomeRepository: FakeStudentHomeRepository(),
     studentLearningRepository: FakeStudentLearningRepository(),
     studentQuizRepository: FakeStudentQuizRepository(),
@@ -34,17 +31,15 @@ void main() {
     await tester.tap(createButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('أنشئ حسابك'), findsOneWidget);
+    expect(find.text('أنشئ حساب الطالب'), findsOneWidget);
 
-    await tester.tap(find.text('ولي أمر'));
-    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('register-name-input')),
       'محمد أحمد',
     );
     await tester.enterText(
       find.byKey(const Key('register-email-input')),
-      'parent@example.com',
+      'student@example.com',
     );
     await tester.enterText(
       find.byKey(const Key('register-phone-input')),
@@ -75,12 +70,12 @@ void main() {
 
     expect(repository.signUpCalls, 1);
     expect(repository.lastSignUpName, 'محمد أحمد');
-    expect(repository.lastSignUpEmail, 'parent@example.com');
+    expect(repository.lastSignUpEmail, 'student@example.com');
     expect(repository.lastSignUpPhone, '0500000000');
-    expect(repository.lastSignUpRole, AccountRole.parent);
+    expect(find.text('ولي أمر'), findsNothing);
     expect(find.text('تم إنشاء الحساب'), findsOneWidget);
     expect(
-      find.textContaining('أرسلنا رسالة تأكيد إلى parent@example.com'),
+      find.textContaining('أرسلنا رسالة تأكيد إلى student@example.com'),
       findsOneWidget,
     );
   });
@@ -160,7 +155,10 @@ void main() {
     expect(repository.signUpCalls, 0);
     expect(find.text('أدخل الاسم الأول والثاني'), findsOneWidget);
     expect(find.text('أدخل بريدًا إلكترونيًا صحيحًا'), findsOneWidget);
-    expect(find.text('أدخل رقم جوال صحيحًا'), findsOneWidget);
+    expect(
+      find.text('أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx'),
+      findsOneWidget,
+    );
     expect(
       find.text('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
       findsOneWidget,

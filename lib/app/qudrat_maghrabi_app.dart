@@ -6,7 +6,6 @@ import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dar
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/auth_gate.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
-import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
@@ -16,7 +15,6 @@ class QudratMaghrabiApp extends StatelessWidget {
   const QudratMaghrabiApp({
     required this.authRepository,
     required this.accountRepository,
-    required this.parentHomeRepository,
     required this.studentHomeRepository,
     required this.studentLearningRepository,
     required this.studentQuizRepository,
@@ -27,7 +25,6 @@ class QudratMaghrabiApp extends StatelessWidget {
 
   final AuthRepository authRepository;
   final AccountRepository accountRepository;
-  final ParentHomeRepository parentHomeRepository;
   final StudentHomeRepository studentHomeRepository;
   final StudentLearningRepository studentLearningRepository;
   final StudentQuizRepository studentQuizRepository;
@@ -57,7 +54,6 @@ class QudratMaghrabiApp extends StatelessWidget {
         child: AuthGate(
           authRepository: authRepository,
           accountRepository: accountRepository,
-          parentHomeRepository: parentHomeRepository,
           studentHomeRepository: studentHomeRepository,
           studentLearningRepository: studentLearningRepository,
           studentQuizRepository: studentQuizRepository,

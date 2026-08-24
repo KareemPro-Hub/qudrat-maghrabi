@@ -4,7 +4,6 @@ import 'package:qudrat_maghrabi_app/core/config/app_environment.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/supabase_account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/supabase_auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/supabase_notification_repository.dart';
-import 'package:qudrat_maghrabi_app/features/parent_home/data/supabase_parent_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/supabase_student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/supabase_student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/supabase_student_quiz_repository.dart';
@@ -25,7 +24,6 @@ Future<void> main() async {
     QudratMaghrabiApp(
       authRepository: SupabaseAuthRepository(client),
       accountRepository: SupabaseAccountRepository(client),
-      parentHomeRepository: SupabaseParentHomeRepository(client),
       studentHomeRepository: SupabaseStudentHomeRepository(client),
       studentLearningRepository: SupabaseStudentLearningRepository(client),
       studentQuizRepository: SupabaseStudentQuizRepository(client),

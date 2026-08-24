@@ -8,10 +8,7 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/login_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/reset_password_screen.dart';
-import 'package:qudrat_maghrabi_app/features/auth/presentation/signed_in_checkpoint_screen.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
-import 'package:qudrat_maghrabi_app/features/parent_home/data/parent_home_repository.dart';
-import 'package:qudrat_maghrabi_app/features/parent_home/presentation/parent_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/presentation/student_home_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
@@ -22,7 +19,6 @@ class AuthGate extends StatefulWidget {
   const AuthGate({
     required this.authRepository,
     required this.accountRepository,
-    required this.parentHomeRepository,
     required this.studentHomeRepository,
     required this.studentLearningRepository,
     required this.studentQuizRepository,
@@ -33,7 +29,6 @@ class AuthGate extends StatefulWidget {
 
   final AuthRepository authRepository;
   final AccountRepository accountRepository;
-  final ParentHomeRepository parentHomeRepository;
   final StudentHomeRepository studentHomeRepository;
   final StudentLearningRepository studentLearningRepository;
   final StudentQuizRepository studentQuizRepository;
@@ -134,7 +129,6 @@ class _AuthGateState extends State<AuthGate> {
         subscriptionRepository: widget.subscriptionRepository,
         notificationRepository: widget.notificationRepository,
         accountRepository: widget.accountRepository,
-        parentHomeRepository: widget.parentHomeRepository,
         onProfileUpdated: (updatedProfile) {
           setState(() => _profile = updatedProfile);
         },
@@ -146,23 +140,40 @@ class _AuthGateState extends State<AuthGate> {
       );
     }
 
-    if (profile.role == AccountRole.parent) {
-      return ParentHomeScreen(
-        profile: profile,
-        repository: widget.parentHomeRepository,
-        accountRepository: widget.accountRepository,
-        onProfileUpdated: (updatedProfile) {
-          setState(() => _profile = updatedProfile);
-        },
-        onAccountDeleted: () async {
-          if (!mounted) return;
-          setState(() => _profile = null);
-        },
-        onSignOut: _signOut,
-      );
-    }
+    return _StudentOnlyScreen(onSignOut: _signOut);
+  }
+}
 
-    return SignedInCheckpointScreen(profile: profile, onSignOut: _signOut);
+class _StudentOnlyScreen extends StatelessWidget {
+  const _StudentOnlyScreen({required this.onSignOut});
+
+  final Future<void> Function() onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.school_rounded, color: QmColors.pink, size: 52),
+              const SizedBox(height: 16),
+              const Text(
+                'هذه المنصة مخصّصة لحسابات الطلاب فقط',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: onSignOut,
+                child: const Text('تسجيل الخروج'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
