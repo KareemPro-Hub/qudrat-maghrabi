@@ -10,6 +10,20 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscr
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_plan.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+@visibleForTesting
+String storePriceLabelForDisplay(String priceLabel) {
+  var value = priceLabel.replaceAll(RegExp(r'[\u061C\u200E\u200F]'), '').trim();
+  final upperValue = value.toUpperCase();
+
+  if (upperValue.startsWith(r'US$') || upperValue.startsWith(r'$US')) {
+    value = '\$${value.substring(3).trimLeft()}';
+  } else if (upperValue.startsWith('USD')) {
+    value = '\$${value.substring(3).trimLeft()}';
+  }
+
+  return value.replaceFirst(RegExp(r'^\$\s+'), r'$');
+}
+
 class StoreSubscriptionScreen extends StatefulWidget {
   const StoreSubscriptionScreen({required this.repository, super.key});
 
@@ -712,11 +726,11 @@ class _PlanPrice extends StatelessWidget {
       return FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
-          offer.priceLabel,
+          storePriceLabelForDisplay(offer.priceLabel),
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 52,
-            fontWeight: FontWeight.w500,
+            fontSize: 48,
+            fontWeight: FontWeight.w800,
             height: .9,
           ),
         ),

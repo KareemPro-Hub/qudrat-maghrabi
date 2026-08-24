@@ -88,6 +88,13 @@ Widget _app(_FakeStoreRepository repository) {
 }
 
 void main() {
+  test('US dollar prices use only the dollar symbol', () {
+    expect(storePriceLabelForDisplay(r'US$ 19.99'), r'$19.99');
+    expect(storePriceLabelForDisplay(r'$US 19,99'), r'$19,99');
+    expect(storePriceLabelForDisplay('USD 19.99'), r'$19.99');
+    expect(storePriceLabelForDisplay(r'$19.99'), r'$19.99');
+  });
+
   testWidgets('store plans start a real purchase through the repository', (
     tester,
   ) async {
