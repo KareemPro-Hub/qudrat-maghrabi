@@ -142,7 +142,7 @@ class _NotificationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  notification.body,
+                  _bodyLabel(notification),
                   style: const TextStyle(
                     color: QmColors.textSecondary,
                     height: 1.45,
@@ -182,7 +182,16 @@ class _NotificationCard extends StatelessWidget {
     if (difference.inDays == 1) return 'أمس';
     final day = local.day.toString().padLeft(2, '0');
     final month = local.month.toString().padLeft(2, '0');
-    return '$day/$month/${local.year}';
+    return '$day / $month / ${local.year}';
+  }
+
+  String _bodyLabel(AppNotification notification) {
+    if (notification.type == 'enrollment' &&
+        notification.body ==
+            'يمكنك الآن الوصول لجميع دروس الكورس والبدء في التعلم') {
+      return 'يمكنك الآن الوصول إلى المحتوى المتاح ضمن باقتك والبدء في التعلّم.';
+    }
+    return notification.body;
   }
 }
 
