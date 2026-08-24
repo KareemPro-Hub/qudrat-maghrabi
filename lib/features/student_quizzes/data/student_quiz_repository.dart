@@ -3,6 +3,8 @@ import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz
 abstract interface class StudentQuizRepository {
   Future<List<StudentQuiz>> loadAvailableQuizzes();
 
+  Future<List<QuizAttemptHistoryEntry>> loadAttemptHistory();
+
   Future<List<QuizQuestion>> loadQuestions({required String quizId});
 
   Future<QuizAttemptResult> submitAttempt({

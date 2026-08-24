@@ -6,6 +6,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_screen.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_history_screen.dart';
 
 class QuizListScreen extends StatefulWidget {
   const QuizListScreen({required this.repository, super.key});
@@ -57,6 +58,14 @@ class _QuizListScreenState extends State<QuizListScreen> {
       ),
     );
     if (mounted) await _refresh();
+  }
+
+  Future<void> _openHistory() {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => QuizAttemptHistoryScreen(repository: widget.repository),
+      ),
+    );
   }
 
   @override
@@ -123,6 +132,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
             quizzesCount: quizzes.length,
             attemptsCount: attempts,
             average: average,
+            onTap: _openHistory,
           ),
           const SizedBox(height: 28),
           Text(
@@ -156,91 +166,132 @@ class _QuizHero extends StatelessWidget {
     required this.quizzesCount,
     required this.attemptsCount,
     required this.average,
+    required this.onTap,
   });
 
   final int quizzesCount;
   final int attemptsCount;
   final int average;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [QmColors.deepPurple, QmColors.purple, QmColors.pink],
-        ),
+    return Semantics(
+      button: true,
+      label: 'فتح سجل الدرجات',
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x387A2DD6),
-            blurRadius: 28,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: .25),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.fact_check_rounded,
-                  color: Colors.white,
-                  size: 30,
-                ),
+        child: InkWell(
+          key: const Key('quiz-history-button'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [QmColors.deepPurple, QmColors.purple, QmColors.pink],
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    'اختبر قدراتك .. واصنع تفوقك.',
-                    key: const Key('quiz-hero-title'),
-                    maxLines: 1,
-                    softWrap: false,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x387A2DD6),
+                  blurRadius: 28,
+                  offset: Offset(0, 16),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .18),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: .25),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.fact_check_rounded,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          'اختبر قدراتك .. واصنع تفوقك.',
+                          key: const Key('quiz-hero-title'),
+                          maxLines: 1,
+                          softWrap: false,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'تابع نتائجك فورًا، وتعرّف على نقاط القوة والضعف لديك !',
+                      style: TextStyle(color: Color(0xE6FFFFFF)),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        _HeroStat(
+                          label: 'اختبار',
+                          value: quizzesCount.toString(),
+                        ),
+                        const SizedBox(width: 10),
+                        _HeroStat(
+                          label: 'محاولة',
+                          value: attemptsCount.toString(),
+                        ),
+                        const SizedBox(width: 10),
+                        _HeroStat(
+                          label: 'متوسطك',
+                          value: attemptsCount == 0 ? '—' : '$average%',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'عرض سجل الدرجات',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'تابع نتائجك فورًا، وتعرّف على نقاط القوة والضعف لديك !',
-                style: TextStyle(color: Color(0xE6FFFFFF)),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  _HeroStat(label: 'اختبار', value: quizzesCount.toString()),
-                  const SizedBox(width: 10),
-                  _HeroStat(label: 'محاولة', value: attemptsCount.toString()),
-                  const SizedBox(width: 10),
-                  _HeroStat(
-                    label: 'متوسطك',
-                    value: attemptsCount == 0 ? '—' : '$average%',
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

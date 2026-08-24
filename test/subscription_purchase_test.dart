@@ -140,12 +140,7 @@ void main() {
     await tester.tap(find.byKey(const Key('manage-subscription-button')));
     await tester.pump();
     expect(repository.manageCalls, 1);
-    await tester.scrollUntilVisible(
-      find.textContaining('قبل موعد التجديد بثلاثة أيام'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsOneWidget);
+    expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsNothing);
   });
 
   testWidgets('Saudi price uses the official Riyal symbol', (tester) async {

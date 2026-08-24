@@ -39,11 +39,31 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
   int loadCalls = 0;
   int submitCalls = 0;
 
+  List<QuizAttemptHistoryEntry> history = [
+    QuizAttemptHistoryEntry(
+      result: QuizAttemptResult(
+        id: 'history-result-1',
+        quizId: 'quiz-1',
+        score: 2,
+        totalMarks: 2,
+        passed: true,
+        answers: const {},
+        takenAt: DateTime(2026, 8, 24, 12, 30),
+      ),
+      quizTitle: 'اختبار الأعداد العشرية',
+      courseTitle: 'دورة تأسيس 2027',
+      lessonTitle: 'الأعداد العشرية',
+    ),
+  ];
+
   @override
   Future<List<StudentQuiz>> loadAvailableQuizzes() async {
     loadCalls += 1;
     return quizzes;
   }
+
+  @override
+  Future<List<QuizAttemptHistoryEntry>> loadAttemptHistory() async => history;
 
   @override
   Future<List<QuizQuestion>> loadQuestions({required String quizId}) async {

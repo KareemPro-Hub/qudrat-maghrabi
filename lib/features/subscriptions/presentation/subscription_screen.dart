@@ -427,7 +427,7 @@ class _FreeCourseNote extends StatelessWidget {
           SizedBox(width: 11),
           Expanded(
             child: Text(
-              'أول 3 دروس من كورس التأسيس متاحة مجانًا لتجربة أسلوب الشرح قبل الاشتراك.',
+              'ابدأ بثلاث حصص مجانية من دورة التأسيس، واكتشف أسلوب الشرح قبل اختيار باقتك.',
               style: TextStyle(
                 color: QmColors.textPrimary,
                 fontWeight: FontWeight.w700,

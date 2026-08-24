@@ -18,6 +18,18 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
   }
 
   @override
+  Future<List<QuizAttemptHistoryEntry>> loadAttemptHistory() async {
+    try {
+      final response = await _client.rpc(
+        'get_quiz_attempt_history_for_student',
+      );
+      return _rows(response).map(_historyEntryFromRow).toList();
+    } on PostgrestException catch (error) {
+      throw QuizFailure(_messageFor(error));
+    }
+  }
+
+  @override
   Future<List<QuizQuestion>> loadQuestions({required String quizId}) async {
     try {
       final response = await _client.rpc(
@@ -152,6 +164,15 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
       takenAt:
           DateTime.tryParse(row['taken_at']?.toString() ?? '') ??
           DateTime.now(),
+    );
+  }
+
+  QuizAttemptHistoryEntry _historyEntryFromRow(Map<String, dynamic> row) {
+    return QuizAttemptHistoryEntry(
+      result: _resultFromRow(row),
+      quizTitle: _text(row['quiz_title']) ?? 'اختبار',
+      courseTitle: _text(row['course_title']) ?? '',
+      lessonTitle: _text(row['lesson_title']),
     );
   }
 

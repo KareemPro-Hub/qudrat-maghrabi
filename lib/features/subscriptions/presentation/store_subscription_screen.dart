@@ -192,8 +192,6 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                           );
                         },
                       ),
-                      const _RenewalNote(),
-                      const SizedBox(height: 12),
                       const _FreeCourseNote(),
                       const SizedBox(height: 18),
                       const _PurchaseLegalLinks(),
@@ -845,37 +843,6 @@ class _PlanPalette {
   final Color ink;
 }
 
-class _RenewalNote extends StatelessWidget {
-  const _RenewalNote();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: QmColors.lavender.withValues(alpha: .65),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.notifications_active_outlined, color: QmColors.purple),
-          SizedBox(width: 11),
-          Expanded(
-            child: Text(
-              'سنرسل لك إشعارًا داخل التطبيق قبل موعد التجديد بثلاثة أيام. التجديد والإلغاء تتم إدارتهما بأمان من المتجر.',
-              style: TextStyle(
-                color: QmColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _FreeCourseNote extends StatelessWidget {
   const _FreeCourseNote();
 
@@ -893,7 +860,7 @@ class _FreeCourseNote extends StatelessWidget {
           SizedBox(width: 11),
           Expanded(
             child: Text(
-              'أول 3 دروس من كورس التأسيس متاحة مجانًا لتجربة أسلوب الشرح قبل الاشتراك.',
+              'ابدأ بثلاث حصص مجانية من دورة التأسيس، واكتشف أسلوب الشرح قبل اختيار باقتك.',
               style: TextStyle(
                 color: QmColors.textPrimary,
                 fontWeight: FontWeight.w700,

@@ -264,11 +264,12 @@ void main() {
     expect(find.textContaining('6 أشهر'), findsWidgets);
     expect(find.text('299'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.textContaining('أول 3 دروس من كورس التأسيس'),
+      find.textContaining('ابدأ بثلاث حصص مجانية'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.textContaining('أول 3 دروس من كورس التأسيس'), findsOneWidget);
+    expect(find.textContaining('ابدأ بثلاث حصص مجانية'), findsOneWidget);
+    expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsNothing);
     await tester.scrollUntilVisible(
       find.text('سياسة الخصوصية'),
       260,
@@ -402,6 +403,27 @@ void main() {
     );
     expect(find.text('اختبار الأعداد العشرية'), findsOneWidget);
     expect(find.text('ابدأ الاختبار'), findsOneWidget);
+  });
+
+  testWidgets('quiz grade history is permanent and read only', (tester) async {
+    final repository = FakeAuthRepository(
+      restoredProfile: FakeAuthRepository.studentProfile,
+    );
+    await tester.pumpWidget(createTestApp(repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('التدريب'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quiz-history-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('سجل الدرجات'), findsOneWidget);
+    expect(find.text('سجل دائم لجميع محاولاتك ودرجاتك.'), findsOneWidget);
+    expect(find.text('اختبار الأعداد العشرية'), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('24/8/2026'), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline), findsNothing);
+    expect(find.textContaining('حذف'), findsNothing);
   });
 
   testWidgets('student can open the courses tab from bottom navigation', (

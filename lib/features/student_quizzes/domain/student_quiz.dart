@@ -84,6 +84,20 @@ class QuizAttemptResult {
   }
 }
 
+class QuizAttemptHistoryEntry {
+  const QuizAttemptHistoryEntry({
+    required this.result,
+    required this.quizTitle,
+    required this.courseTitle,
+    this.lessonTitle,
+  });
+
+  final QuizAttemptResult result;
+  final String quizTitle;
+  final String courseTitle;
+  final String? lessonTitle;
+}
+
 class QuizReviewQuestion {
   const QuizReviewQuestion({
     required this.id,

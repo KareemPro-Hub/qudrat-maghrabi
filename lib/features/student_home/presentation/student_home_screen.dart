@@ -289,7 +289,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'اختر مسارك وابدأ التعلّم بثقة',
+                    'ابدأ خطتك اليوم، وتقدّم بثبات نحو الـ 100٪',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: QmColors.textSecondary,
                     ),
@@ -310,7 +310,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isTablet ? 2 : 1,
-                  mainAxisExtent: isTablet ? 470 : 350,
+                  mainAxisExtent: isTablet ? 500 : 410,
                   crossAxisSpacing: isTablet ? 24 : 0,
                   mainAxisSpacing: 20,
                 ),
