@@ -9,6 +9,7 @@ class StudentCourse {
     required this.lessonsCount,
     required this.enrolledCount,
     required this.childCoursesCount,
+    this.freePreviewLessonsCount = 0,
     required this.hasAccess,
     required this.progressPercent,
     required this.completedLessons,
@@ -30,11 +31,14 @@ class StudentCourse {
   final int lessonsCount;
   final int enrolledCount;
   final int childCoursesCount;
+  final int freePreviewLessonsCount;
   final bool hasAccess;
   final int progressPercent;
   final int completedLessons;
   final String? currentLessonTitle;
 
-  bool get isFree => price <= 0 && childCoursesCount == 0;
+  bool get hasFreePreview => freePreviewLessonsCount > 0;
+  bool get isFree =>
+      lessonsCount > 0 && freePreviewLessonsCount >= lessonsCount;
   bool get isBundle => childCoursesCount > 0;
 }

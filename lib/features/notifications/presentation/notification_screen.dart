@@ -151,6 +151,7 @@ class _NotificationCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   _dateLabel(notification.createdAt),
+                  textDirection: TextDirection.ltr,
                   style: TextStyle(
                     color: color,
                     fontSize: 12,
@@ -179,7 +180,9 @@ class _NotificationCard extends StatelessWidget {
     if (difference.inHours < 1) return 'منذ ${difference.inMinutes} دقيقة';
     if (difference.inDays < 1) return 'منذ ${difference.inHours} ساعة';
     if (difference.inDays == 1) return 'أمس';
-    return '${local.day}/${local.month}/${local.year}';
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    return '$day/$month/${local.year}';
   }
 }
 

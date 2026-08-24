@@ -148,8 +148,14 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                 Row(
                   children: [
                     _StatusPill(
-                      label: content.price <= 0 ? 'كورس مجاني' : 'كورس مدفوع',
-                      isFree: content.price <= 0,
+                      label: content.isFullyFree
+                          ? 'كورس مجاني'
+                          : content.freePreviewLessonsCount > 0
+                          ? 'أول ${content.freePreviewLessonsCount} دروس مجانًا'
+                          : 'كورس مدفوع',
+                      isFree:
+                          content.isFullyFree ||
+                          content.freePreviewLessonsCount > 0,
                     ),
                     const Spacer(),
                     const Icon(

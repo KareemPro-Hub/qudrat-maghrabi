@@ -156,15 +156,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         .split(RegExp(r'\s+'))
         .first;
     final nextCourse = snapshot.continueCourse ?? snapshot.recommendedCourse;
-    StudentCourse? freeCourse;
+    StudentCourse? previewCourse;
     for (final course in snapshot.availableCourses) {
-      if (course.isFree) {
-        freeCourse = course;
+      if (course.hasFreePreview) {
+        previewCourse = course;
         break;
       }
     }
     final otherCourses = snapshot.availableCourses
-        .where((course) => course.id != freeCourse?.id)
+        .where((course) => course.id != previewCourse?.id)
         .toList(growable: false);
 
     return RefreshIndicator(
@@ -196,19 +196,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                if (freeCourse != null)
+                if (previewCourse != null)
                   _FreeCourseSurpriseCard(
-                    course: freeCourse,
-                    onTap: () => _showCourseDetails(freeCourse!),
+                    course: previewCourse,
+                    onTap: () => _showCourseDetails(previewCourse!),
                   ),
-                if (nextCourse != null && nextCourse.id != freeCourse?.id) ...[
+                if (nextCourse != null &&
+                    nextCourse.id != previewCourse?.id) ...[
                   const SizedBox(height: 30),
                   _SectionTitle(
                     title: snapshot.continueCourse == null
                         ? 'ابدأ رحلتك'
                         : 'تابع من حيث توقفت',
                     subtitle: snapshot.continueCourse == null
-                        ? 'الكورس المجاني جاهز لك بالكامل'
+                        ? 'ابدأ بأول 3 دروس مجانية'
                         : 'أكمل خطوتك التالية نحو هدفك',
                   ),
                   const SizedBox(height: 14),
@@ -639,7 +640,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'أول 3 حصص هدية لك',
+                      'أول 3 دروس هدية لك',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: QmColors.deepPurple,
                         fontWeight: FontWeight.w900,

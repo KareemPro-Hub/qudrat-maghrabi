@@ -11,7 +11,7 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
     videoId: 'video-1',
     durationMinutes: 36,
     orderIndex: 1,
-    isFreePreview: false,
+    isFreePreview: true,
     progress: LessonProgress.empty,
   );
 
@@ -20,7 +20,7 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
     title: 'دورة تأسيس 2027',
     description: 'تأسيس قوي ومبسّط في القدرات الكمية.',
     price: 0,
-    hasAccess: true,
+    hasAccess: false,
     chapters: [
       CourseChapter(
         id: 'chapter-1',

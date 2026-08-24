@@ -27,7 +27,7 @@ class StudentHomeSnapshot {
 
   StudentCourse? get recommendedCourse {
     for (final course in availableCourses) {
-      if (course.isFree) return course;
+      if (course.hasFreePreview) return course;
     }
     return availableCourses.isEmpty ? null : availableCourses.first;
   }

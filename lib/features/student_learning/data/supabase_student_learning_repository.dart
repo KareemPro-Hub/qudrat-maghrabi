@@ -123,7 +123,7 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       description: (course['description'] as String?)?.trim() ?? '',
       thumbnailUrl: _cleanText(course['thumbnail_url']),
       price: price,
-      hasAccess: price <= 0 || hasActiveEnrollment,
+      hasAccess: hasActiveEnrollment,
       chapters: chapters,
       ungroupedLessons: ungroupedLessons,
     );

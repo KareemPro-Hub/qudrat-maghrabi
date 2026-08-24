@@ -6,7 +6,7 @@ class FakeStudentHomeRepository implements StudentHomeRepository {
   FakeStudentHomeRepository({StudentHomeSnapshot? snapshot})
     : snapshot = snapshot ?? sampleSnapshot;
 
-  static const freeCourse = StudentCourse(
+  static const previewCourse = StudentCourse(
     id: 'foundation-course',
     title: 'دورة تأسيس 2027',
     description: '',
@@ -16,7 +16,8 @@ class FakeStudentHomeRepository implements StudentHomeRepository {
     lessonsCount: 5,
     enrolledCount: 0,
     childCoursesCount: 0,
-    hasAccess: true,
+    freePreviewLessonsCount: 3,
+    hasAccess: false,
     progressPercent: 0,
     completedLessons: 0,
   );
@@ -53,8 +54,8 @@ class FakeStudentHomeRepository implements StudentHomeRepository {
 
   static const sampleSnapshot = StudentHomeSnapshot(
     bundles: [bundle],
-    availableCourses: [freeCourse, paidCourse],
-    myCourses: [freeCourse],
+    availableCourses: [previewCourse, paidCourse],
+    myCourses: [],
     unreadNotifications: 0,
     subscription: null,
   );

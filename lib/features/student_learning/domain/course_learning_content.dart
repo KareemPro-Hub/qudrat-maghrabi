@@ -24,6 +24,12 @@ class CourseLearningContent {
     ...ungroupedLessons,
   ];
 
+  int get freePreviewLessonsCount =>
+      allLessons.where((lesson) => lesson.isFreePreview).length;
+
+  bool get isFullyFree =>
+      allLessons.isNotEmpty && freePreviewLessonsCount >= allLessons.length;
+
   int get completedLessons =>
       allLessons.where((lesson) => lesson.progress.completed).length;
 

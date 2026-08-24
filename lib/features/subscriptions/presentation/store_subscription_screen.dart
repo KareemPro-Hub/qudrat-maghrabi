@@ -119,9 +119,12 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
               ),
               slivers: [
                 SliverAppBar(
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: const Color(0xFFFCFAFF),
                   surfaceTintColor: Colors.transparent,
                   pinned: true,
+                  toolbarHeight: 72,
+                  scrolledUnderElevation: 0,
+                  centerTitle: true,
                   title: const Text('الاشتراك والباقات'),
                 ),
                 SliverPadding(
@@ -276,7 +279,7 @@ class _SubscriptionHero extends StatelessWidget {
                     Text(
                       active
                           ? _activeSubtitle(subscription!)
-                          : 'تعلّم بلا قيود واختر المدة المناسبة لك.',
+                          : 'تعلّم بلا قيود واختر الباقة المناسبة لك.',
                       style: TextStyle(
                         color: active
                             ? Colors.white.withValues(alpha: .82)
@@ -890,7 +893,7 @@ class _FreeCourseNote extends StatelessWidget {
           SizedBox(width: 11),
           Expanded(
             child: Text(
-              'كورس التأسيس يظل مجانيًا بالكامل بعد إنشاء الحساب، بدون اشتراك.',
+              'أول 3 دروس من كورس التأسيس متاحة مجانًا لتجربة أسلوب الشرح قبل الاشتراك.',
               style: TextStyle(
                 color: QmColors.textPrimary,
                 fontWeight: FontWeight.w700,

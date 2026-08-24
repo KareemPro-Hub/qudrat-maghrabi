@@ -40,7 +40,10 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
           .eq('is_read', false),
       _client
           .from('lessons')
-          .select('id, course_id, title, order_index, is_published')
+          .select(
+            'id, course_id, title, order_index, is_published, '
+            'is_free_preview',
+          )
           .eq('is_published', true)
           .order('order_index', ascending: true),
       _client
@@ -74,6 +77,17 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       for (final row in progressRows) row['lesson_id'] as String: row,
     };
     final childCountByParent = <String, int>{};
+    final freePreviewCountByCourse = <String, int>{};
+    for (final lesson in lessonRows) {
+      if (lesson['is_free_preview'] as bool? ?? false) {
+        final courseId = lesson['course_id'] as String;
+        freePreviewCountByCourse.update(
+          courseId,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+    }
     for (final row in courseRows) {
       final parentId = row['parent_course_id'] as String?;
       if (parentId != null) {
@@ -107,9 +121,7 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       final parentCourseId = row['parent_course_id'] as String?;
       final hasAccess =
           activeCourseIds.contains(id) ||
-          (parentCourseId != null &&
-              activeBundleIds.contains(parentCourseId)) ||
-          (price <= 0 && childCoursesCount == 0);
+          (parentCourseId != null && activeBundleIds.contains(parentCourseId));
       final accessibleLessons = lessonRows
           .where((lesson) => lesson['course_id'] == id)
           .toList();
@@ -150,6 +162,7 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
         lessonsCount: lessonsCount,
         enrolledCount: _asInt(stats?['enrolled_count']),
         childCoursesCount: childCoursesCount,
+        freePreviewLessonsCount: freePreviewCountByCourse[id] ?? 0,
         hasAccess: hasAccess,
         progressPercent: progressPercent,
         completedLessons: completedLessons,

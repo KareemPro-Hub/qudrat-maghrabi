@@ -214,7 +214,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('free-course-surprise-card')), findsOneWidget);
-    expect(find.text('أول 3 حصص هدية لك'), findsOneWidget);
+    expect(find.text('أول 3 دروس هدية لك'), findsOneWidget);
     expect(
       find.text('ابدأ رحلتك مجانًا، واكتشف أسلوب الشرح قبل الاشتراك.'),
       findsOneWidget,
@@ -264,11 +264,11 @@ void main() {
     expect(find.textContaining('6 أشهر'), findsWidgets);
     expect(find.text('299'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.textContaining('كورس التأسيس يظل مجانيًا'),
+      find.textContaining('أول 3 دروس من كورس التأسيس'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.textContaining('كورس التأسيس يظل مجانيًا'), findsOneWidget);
+    expect(find.textContaining('أول 3 دروس من كورس التأسيس'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('سياسة الخصوصية'),
       260,
@@ -299,11 +299,11 @@ void main() {
         snapshot: StudentHomeSnapshot(
           bundles: const [FakeStudentHomeRepository.bundle],
           availableCourses: const [
-            FakeStudentHomeRepository.freeCourse,
+            FakeStudentHomeRepository.previewCourse,
             unlockedPaidCourse,
           ],
           myCourses: const [
-            FakeStudentHomeRepository.freeCourse,
+            FakeStudentHomeRepository.previewCourse,
             unlockedPaidCourse,
           ],
           unreadNotifications: 0,
