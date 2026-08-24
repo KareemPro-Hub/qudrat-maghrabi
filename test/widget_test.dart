@@ -56,12 +56,13 @@ void main() {
     expect(find.text('أهلًا بعودتك'), findsOneWidget);
   });
 
-  testWidgets('returning from the background replays the branded launch', (
+  testWidgets('returning from the background preserves the current screen', (
     tester,
   ) async {
     await tester.pumpWidget(createTestApp());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('app-content')), findsOneWidget);
+    expect(find.text('أهلًا بعودتك'), findsOneWidget);
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
@@ -69,12 +70,9 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
 
-    expect(find.byKey(const Key('brand-launch-scene')), findsOneWidget);
-    expect(find.byKey(const Key('brand-launch-mark')), findsOneWidget);
-
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('brand-launch-scene')), findsNothing);
     expect(find.byKey(const Key('app-content')), findsOneWidget);
+    expect(find.text('أهلًا بعودتك'), findsOneWidget);
   });
 
   testWidgets('login screen is Arabic RTL and student-only', (tester) async {
