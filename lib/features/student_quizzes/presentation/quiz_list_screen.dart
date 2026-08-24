@@ -9,9 +9,10 @@ import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_a
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_history_screen.dart';
 
 class QuizListScreen extends StatefulWidget {
-  const QuizListScreen({required this.repository, super.key});
+  const QuizListScreen({required this.repository, this.onBack, super.key});
 
   final StudentQuizRepository repository;
+  final VoidCallback? onBack;
 
   @override
   State<QuizListScreen> createState() => _QuizListScreenState();
@@ -79,7 +80,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),

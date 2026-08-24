@@ -78,38 +78,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     await next;
   }
 
-  Future<void> _onNavigationTap(int index) async {
-    if (index == 1) {
-      setState(() => _selectedNavigationIndex = index);
-      return;
-    }
-    if (index == 2) {
-      setState(() => _selectedNavigationIndex = index);
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => QuizListScreen(repository: widget.quizRepository),
-        ),
-      );
-      if (mounted) setState(() => _selectedNavigationIndex = 0);
-      return;
-    }
-    if (index == 3) {
-      setState(() => _selectedNavigationIndex = index);
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => AccountScreen(
-            profile: widget.profile,
-            repository: widget.accountRepository,
-            onProfileUpdated: widget.onProfileUpdated,
-            onSignOut: widget.onSignOut,
-            onAccountDeleted: widget.onAccountDeleted,
-          ),
-        ),
-      );
-      if (mounted) setState(() => _selectedNavigationIndex = 0);
-      return;
-    }
-    setState(() => _selectedNavigationIndex = 0);
+  void _onNavigationTap(int index) {
+    setState(() => _selectedNavigationIndex = index);
+    if (index != 0) return;
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         0,
@@ -122,30 +93,51 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      body: DecoratedBox(
-        decoration: BoxDecoration(gradient: QmGradients.softBackground),
-        child: SafeArea(
-          bottom: false,
-          child: FutureBuilder<StudentHomeSnapshot>(
-            future: _snapshotFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const _HomeLoadingView();
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return _HomeErrorView(onRetry: _refresh);
-              }
-              return _selectedNavigationIndex == 1
-                  ? _buildCoursesContent(snapshot.data!)
-                  : _buildContent(snapshot.data!);
-            },
-          ),
-        ),
-      ),
+      extendBody: false,
+      body: _buildSelectedSection(),
       bottomNavigationBar: _GlassNavigationBar(
         selectedIndex: _selectedNavigationIndex,
         onTap: _onNavigationTap,
+      ),
+    );
+  }
+
+  Widget _buildSelectedSection() {
+    if (_selectedNavigationIndex == 2) {
+      return QuizListScreen(
+        repository: widget.quizRepository,
+        onBack: () => _onNavigationTap(0),
+      );
+    }
+    if (_selectedNavigationIndex == 3) {
+      return AccountScreen(
+        profile: widget.profile,
+        repository: widget.accountRepository,
+        onProfileUpdated: widget.onProfileUpdated,
+        onSignOut: widget.onSignOut,
+        onAccountDeleted: widget.onAccountDeleted,
+        onBack: () => _onNavigationTap(0),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(gradient: QmGradients.softBackground),
+      child: SafeArea(
+        bottom: false,
+        child: FutureBuilder<StudentHomeSnapshot>(
+          future: _snapshotFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const _HomeLoadingView();
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return _HomeErrorView(onRetry: _refresh);
+            }
+            return _selectedNavigationIndex == 1
+                ? _buildCoursesContent(snapshot.data!)
+                : _buildContent(snapshot.data!);
+          },
+        ),
       ),
     );
   }

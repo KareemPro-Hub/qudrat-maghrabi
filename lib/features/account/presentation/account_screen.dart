@@ -16,6 +16,7 @@ class AccountScreen extends StatefulWidget {
     required this.onProfileUpdated,
     required this.onSignOut,
     required this.onAccountDeleted,
+    this.onBack,
     super.key,
   });
 
@@ -24,6 +25,7 @@ class AccountScreen extends StatefulWidget {
   final ValueChanged<AuthProfile> onProfileUpdated;
   final Future<void> Function() onSignOut;
   final Future<void> Function() onAccountDeleted;
+  final VoidCallback? onBack;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -45,7 +47,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _signOut() async {
-    Navigator.of(context).pop();
+    if (widget.onBack == null) Navigator.of(context).pop();
     await widget.onSignOut();
   }
 
@@ -57,7 +59,7 @@ class _AccountScreenState extends State<AccountScreen> {
         backgroundColor: Colors.transparent,
         title: Text('حسابي', style: TextStyle(fontWeight: FontWeight.w900)),
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
           icon: Icon(Icons.arrow_back_rounded),
         ),
       ),

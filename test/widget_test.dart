@@ -403,6 +403,10 @@ void main() {
     );
     expect(find.text('اختبار الأعداد العشرية'), findsOneWidget);
     expect(find.text('ابدأ الاختبار'), findsOneWidget);
+    expect(find.text('الرئيسية'), findsOneWidget);
+    expect(find.text('الكورسات'), findsOneWidget);
+    expect(find.text('التدريب'), findsOneWidget);
+    expect(find.text('حسابي'), findsOneWidget);
   });
 
   testWidgets('quiz grade history is permanent and read only', (tester) async {
@@ -457,6 +461,8 @@ void main() {
 
     await tester.tap(find.text('التدريب'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('اختبار الأعداد العشرية'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('اختبار الأعداد العشرية'));
     await tester.pumpAndSettle();
 
@@ -497,6 +503,10 @@ void main() {
     await tester.tap(find.text('حسابي'));
     await tester.pumpAndSettle();
 
+    expect(find.text('الرئيسية'), findsOneWidget);
+    expect(find.text('الكورسات'), findsOneWidget);
+    expect(find.text('التدريب'), findsOneWidget);
+    expect(find.text('حسابي'), findsWidgets);
     expect(find.byKey(const Key('account-brand-logo')), findsOneWidget);
     expect(find.text('إدارة الحساب'), findsOneWidget);
     await tester.scrollUntilVisible(find.byKey(const Key('privacy-tile')), 250);
