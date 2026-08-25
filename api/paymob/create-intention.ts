@@ -372,7 +372,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         enrollment_id: enrollmentId,
         course_id: course.id,
         plan_code: plan?.plan_code || null,
-        subscription_duration_months: plan?.duration_months || null,
         discount_percent: discountCode?.discount_percent || 0,
         display_amount_minor: displayAmountMinor,
         display_currency: currency,
