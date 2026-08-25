@@ -33,10 +33,10 @@ export default function Footer() {
           </div>
 
           <div className="qm-store-badges">
-            <a href="#" aria-label="حمّل من App Store">
+            <a href="https://apps.apple.com/app/id6799747012" target="_blank" rel="noopener noreferrer" aria-label="حمّل من App Store">
               <img src="/app-badges/app-store.png" alt="Available on the App Store" loading="lazy" />
             </a>
-            <a href="#" aria-label="حمّل من Google Play">
+            <a href="https://play.google.com/store/apps/details?id=com.qudratmaghrabi.app" target="_blank" rel="noopener noreferrer" aria-label="حمّل من Google Play">
               <img src="/app-badges/google-play.png" alt="Get it on Google Play" loading="lazy" />
             </a>
           </div>

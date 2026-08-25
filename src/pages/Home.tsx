@@ -276,9 +276,13 @@ export default function Home() {
               <span>انضم لدفعة </span><strong>التميز</strong><span> واكتشف أسرار وتكنيكات </span><strong>«المغربي»</strong>
               <span> التي حوّلت أعقد مسائل الرياضيات إلى </span><strong>خطوات سهلة ومضمونة لفوق الـ 95 بالكمي !</strong>
             </p>
-            <div className="qm-hero-actions">
-              <a className="qm-primary" href="#qm-courses">استكشف الكورسات</a>
-              <button className="qm-watch" type="button"><i>▶</i> شاهد الفيديو</button>
+            <div className="qm-store-badges qm-hero-store-badges" aria-label="تحميل تطبيق قدرات المغربي">
+              <a href="https://apps.apple.com/app/id6799747012" target="_blank" rel="noopener noreferrer" aria-label="حمّل تطبيق قدرات المغربي من App Store">
+                <img src="/app-badges/app-store.png" alt="حمّل التطبيق من App Store" />
+              </a>
+              <a href="https://play.google.com/store/apps/details?id=com.qudratmaghrabi.app" target="_blank" rel="noopener noreferrer" aria-label="حمّل تطبيق قدرات المغربي من Google Play">
+                <img src="/app-badges/google-play.png" alt="حمّل التطبيق من Google Play" />
+              </a>
             </div>
           </div>
           <div className="qm-hero-art">
