@@ -56,3 +56,6 @@ app.*.map.json
 # Local compile-time configuration (never commit real values)
 /config/supabase.*.json
 !/config/supabase.example.json
+
+# Generated locally from the ignored release configuration.
+/ios/Flutter/Secrets.xcconfig
