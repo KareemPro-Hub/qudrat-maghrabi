@@ -65,6 +65,8 @@ export default function Auth() {
   const [showLoginPass, setShowLoginPass] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loginLoading, setLoginLoading] = useState(false)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
 
   // Signup state
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm: '' })
@@ -115,6 +117,7 @@ export default function Auth() {
     const email = loginEmail.trim().toLowerCase()
     if (!email || !loginPassword) return toast.error('يرجى تعبئة جميع الحقول')
 
+    setUnconfirmedEmail(null)
     setLoginLoading(true)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -126,6 +129,7 @@ export default function Auth() {
         if (import.meta.env.DEV) {
           console.error('Login failed', { code: error.code, status: error.status })
         }
+        if (error.code === 'email_not_confirmed') setUnconfirmedEmail(email)
         toast.error(getLoginErrorMessage(error))
         return
       }
@@ -176,7 +180,7 @@ export default function Auth() {
       password: form.password,
       options: {
         data: { full_name: form.full_name.trim(), phone, role: 'student' },
-        emailRedirectTo: `${window.location.origin}${returnTo || '/dashboard'}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`,
       },
     })
 
@@ -187,6 +191,34 @@ export default function Auth() {
       navigate(`/login${returnQuery}`)
     }
     setSignupLoading(false)
+  }
+
+  async function handleResendConfirmation() {
+    if (!unconfirmedEmail || resendLoading) return
+    setResendLoading(true)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: unconfirmedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`,
+        },
+      })
+      if (error) {
+        if (import.meta.env.DEV) console.error('Resend confirmation failed', { code: error.code, status: error.status })
+        toast.error(
+          error.code === 'over_email_send_rate_limit' || error.code === 'over_request_rate_limit'
+            ? 'محاولات كثيرة، انتظر قليلًا ثم حاول مجددًا'
+            : 'تعذّر إرسال رابط التأكيد الآن. حاول لاحقًا'
+        )
+      } else {
+        toast.success('تم إرسال رابط تأكيد جديد إلى بريدك !')
+      }
+    } catch {
+      toast.error('تعذّر الاتصال بخدمة البريد. تحقق من الإنترنت وحاول مجددًا')
+    } finally {
+      setResendLoading(false)
+    }
   }
 
   async function handleSocialLogin(provider: SocialProvider) {
@@ -350,6 +382,14 @@ export default function Auth() {
                     {loginLoading ? 'جاري الدخول...' : 'تسجيل دخول'}
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#321b42" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M14 7 9 12l5 5" /></svg>
                   </button>
+                  {unconfirmedEmail && (
+                    <div className="auth-resend-confirm">
+                      <span>لم تصلك رسالة التأكيد أو انتهت صلاحيتها ؟</span>
+                      <button type="button" onClick={handleResendConfirmation} disabled={resendLoading}>
+                        {resendLoading ? 'جاري الإرسال...' : 'إعادة إرسال رابط التأكيد'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </form>
 

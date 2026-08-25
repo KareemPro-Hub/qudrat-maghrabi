@@ -112,6 +112,19 @@
 .auth-panel-signup .auth-submit{height:48px;margin-top:12px;font-size:14px;}
 .auth-panel-login .auth-submit{height:55px;border-radius:16px;font-size:16px;}
 
+/* Resend confirmation prompt */
+.auth-resend-confirm{
+  margin-top:12px;padding:12px 14px;border-radius:12px;
+  background:#f7f2fc;border:1px solid #e6dbf3;
+  display:flex;flex-direction:column;gap:6px;text-align:center;
+  font-size:12px;color:#695e71;
+}
+.auth-resend-confirm button{
+  background:none;border:none;padding:0;font-weight:800;font-size:12.5px;
+  color:#7030cf;cursor:pointer;text-decoration:underline;
+}
+.auth-resend-confirm button:disabled{opacity:.6;cursor:not-allowed;}
+
 /* Divider + socials */
 .auth-divider{display:flex;align-items:center;color:#857a8f;}
 .auth-divider span{flex:1;height:1px;background:#ddd5e3;}

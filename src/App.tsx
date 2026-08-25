@@ -20,6 +20,7 @@ import LearnChapterLessons from './pages/LearnChapterLessons'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import AuthCallback from './pages/AuthCallback'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Privacy from './pages/Privacy'
@@ -94,6 +95,7 @@ export default function App() {
         <Route path="/register" element={<Auth />} />
         <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
         <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
+        <Route path="/auth/callback" element={<AuthLayout><AuthCallback /></AuthLayout>} />
 
         {/* Student */}
         <Route path="/dashboard" element={<Dashboard />} />
