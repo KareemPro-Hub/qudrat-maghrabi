@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { SectionToolbar, Spinner, EmptyState } from '../../components/admin/lightKit'
 
 type LogItem = { key: string; title: string; body: string; type: string; created_at: string; recipients: number }
+type WhatsAppPreview = { configured: boolean; eligible: number; total: number; missingPhone: number; duplicates: number }
 
 const TYPE_ICON: Record<string, { cls: string; glyph: string }> = {
   info: { cls: 'purple', glyph: '↗' },
@@ -19,6 +20,10 @@ export default function AdminNotifications() {
   const [audience, setAudience] = useState<'students' | 'team' | 'course'>('students')
   const [type, setType] = useState('info')
   const [sendEmail, setSendEmail] = useState(true)
+  const [sendInApp, setSendInApp] = useState(true)
+  const [sendWhatsApp, setSendWhatsApp] = useState(false)
+  const [whatsAppPreview, setWhatsAppPreview] = useState<WhatsAppPreview | null>(null)
+  const [previewingWhatsApp, setPreviewingWhatsApp] = useState(false)
   const [courses, setCourses] = useState<any[]>([])
   const [courseId, setCourseId] = useState('')
   const [sending, setSending] = useState(false)
@@ -29,6 +34,42 @@ export default function AdminNotifications() {
     supabase.from('courses').select('id, title').order('title').then(({ data }) => setCourses(data || []))
     fetchLog()
   }, [])
+
+  useEffect(() => {
+    if (!sendWhatsApp || (audience === 'course' && !courseId) || audience === 'team') {
+      setWhatsAppPreview(null)
+      return
+    }
+    const timer = window.setTimeout(() => previewWhatsAppRecipients(), 250)
+    return () => window.clearTimeout(timer)
+  }, [sendWhatsApp, audience, courseId])
+
+  async function whatsappRequest(payload: Record<string, unknown>) {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (!token) throw new Error('انتهت جلسة الدخول. سجّل الدخول مرة أخرى.')
+    const response = await fetch('/api/send-whatsapp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    })
+    const result = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(result.error || 'تعذّر الاتصال بخدمة واتساب.')
+    return result
+  }
+
+  async function previewWhatsAppRecipients() {
+    setPreviewingWhatsApp(true)
+    try {
+      const result = await whatsappRequest({ action: 'preview', audience, courseId: courseId || undefined })
+      setWhatsAppPreview(result as WhatsAppPreview)
+    } catch (error) {
+      setWhatsAppPreview(null)
+      toast.error(error instanceof Error ? error.message : 'تعذّرت معاينة أرقام الطلاب')
+    } finally {
+      setPreviewingWhatsApp(false)
+    }
+  }
 
   async function fetchLog() {
     setLoading(true)
@@ -66,6 +107,10 @@ export default function AdminNotifications() {
     e.preventDefault()
     if (!title || !body) return toast.error('العنوان والرسالة مطلوبان')
     if (audience === 'course' && !courseId) return toast.error('اختر الكورس المستهدف')
+    if (!sendInApp && !sendEmail && !sendWhatsApp) return toast.error('اختر وسيلة إرسال واحدة على الأقل')
+    if (sendWhatsApp && audience === 'team') return toast.error('إرسال واتساب متاح للطلاب فقط')
+    if (sendWhatsApp && !whatsAppPreview?.configured) return toast.error('أكمل ربط واتساب للأعمال أولًا')
+    if (sendWhatsApp && !window.confirm(`سيتم إرسال الرسالة عبر واتساب إلى ${whatsAppPreview?.eligible || 0} طالب. هل تؤكد أن هؤلاء الطلاب وافقوا على استقبال الرسائل ؟`)) return
     setSending(true)
     const recipients = await resolveRecipients()
     if (recipients.length === 0) {
@@ -73,15 +118,16 @@ export default function AdminNotifications() {
       setSending(false)
       return
     }
-    const rows = recipients.map((r) => ({ user_id: r.id, title, body, type }))
-    const { error } = await supabase.from('notifications').insert(rows)
-    if (error) {
-      toast.error('حدث خطأ أثناء الإرسال')
-      setSending(false)
-      return
+    if (sendInApp) {
+      const rows = recipients.map((r) => ({ user_id: r.id, title, body, type }))
+      const { error } = await supabase.from('notifications').insert(rows)
+      if (error) {
+        toast.error('حدث خطأ أثناء إرسال إشعارات المنصة')
+        setSending(false)
+        return
+      }
+      toast.success(`تم إرسال الإشعار إلى ${recipients.length} مستخدم ✅`)
     }
-
-    toast.success(`تم إرسال الإشعار إلى ${recipients.length} مستخدم ✅`)
 
     // إرسال إيميل حقيقي لكل مستلم كمان (غير معطّل لإتمام العملية لو فشل بريد واحد)
     if (sendEmail) {
@@ -90,18 +136,30 @@ export default function AdminNotifications() {
         recipients
           .filter((r) => r.email)
           .map((r) =>
-            fetch('/api/send-email', {
+            supabase.auth.getSession().then(({ data: sessionData }) => fetch('/api/send-email', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...(sessionData.session?.access_token ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {}) },
               body: JSON.stringify({
                 to: r.email,
                 type: 'admin_broadcast',
                 data: { studentName: r.full_name, title, body },
               }),
-            }).then((res) => { if (res.ok) emailsOk++ }).catch(() => {})
+            })).then((res) => { if (res.ok) emailsOk++ }).catch(() => {})
           )
       )
       if (emailsOk > 0) toast.success(`تم إرسال إيميل فعلي لـ ${emailsOk} مستلم ✅`)
+    }
+
+    if (sendWhatsApp) {
+      try {
+        const result = await whatsappRequest({
+          action: 'send', audience, courseId: courseId || undefined, title, body, confirmedOptIn: true,
+        })
+        toast.success(`تم إرسال واتساب إلى ${result.sent} طالب ✅`)
+        if (result.failed > 0) toast.error(`تعذّر الإرسال إلى ${result.failed} رقم`)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'تعذّر إرسال رسائل واتساب')
+      }
     }
 
     setTitle(''); setBody('')
@@ -143,12 +201,32 @@ export default function AdminNotifications() {
               </select>
             </label>
             <label>نص الرسالة<textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder="اكتب رسالتك هنا..." /></label>
+            <div style={{ display: 'grid', gap: 9 }}>
+              <strong style={{ fontSize: 13, color: '#75687d' }}>وسائل الإرسال</strong>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: '#faf8fd', border: '1px solid #e9e2ef' }}>
+                <input type="checkbox" checked={sendInApp} onChange={(e) => setSendInApp(e.target.checked)} style={{ width: 16, height: 16 }} />
+                <span><b style={{ display: 'block', fontSize: 12 }}>داخل المنصة</b><small style={{ color: '#8a7d91', fontSize: 10 }}>يظهر في مركز إشعارات الطالب</small></span>
+              </label>
             <div className="form-row" style={{ padding: '10px 12px', borderRadius: 12, background: '#f2fbf6', border: '1px solid #d9f1e7' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} style={{ width: 16, height: 16 }} />
                 <span>
                   <b style={{ display: 'block', fontSize: 12 }}>إرسال إيميل حقيقي كمان</b>
                   <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>يوصل لصندوق بريد المستلم مش داخل المنصة بس</small>
+                </span>
+              </label>
+            </div>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px', borderRadius: 12, background: '#f2fff7', border: '1px solid #ccebd7' }}>
+                <input type="checkbox" checked={sendWhatsApp} onChange={(e) => setSendWhatsApp(e.target.checked)} disabled={audience === 'team'} style={{ width: 16, height: 16, marginTop: 2 }} />
+                <span style={{ flex: 1 }}>
+                  <b style={{ display: 'block', fontSize: 12, color: '#18794e' }}>إرسال جماعي عبر واتساب</b>
+                  {!sendWhatsApp ? <small style={{ color: '#668577', fontSize: 10 }}>إرسال آمن عبر حساب واتساب للأعمال الرسمي</small> : previewingWhatsApp ? <small style={{ color: '#668577', fontSize: 10 }}>جاري فحص أرقام الطلاب...</small> : whatsAppPreview ? (
+                    <small style={{ display: 'block', color: whatsAppPreview.configured ? '#39715b' : '#a15c20', fontSize: 10, lineHeight: 1.7 }}>
+                      {whatsAppPreview.eligible} رقم صالح من أصل {whatsAppPreview.total}
+                      {whatsAppPreview.missingPhone > 0 ? ` · ${whatsAppPreview.missingPhone} بدون رقم صالح` : ''}
+                      {!whatsAppPreview.configured ? ' · يلزم ربط واتساب للأعمال مرة واحدة' : ''}
+                    </small>
+                  ) : <small style={{ color: '#a15c20', fontSize: 10 }}>تعذّرت معاينة الأرقام</small>}
                 </span>
               </label>
             </div>
