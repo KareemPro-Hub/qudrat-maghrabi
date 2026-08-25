@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { avatarClass, initials } from '../../components/admin/lightKit'
 import CurrencySymbol from '../../components/CurrencySymbol'
+import { formatMoney } from '../../utils/formatMoney'
 
 type MonthPoint = { label: string; short: string; value: number }
 type CourseProgressRow = { title: string; students: number; pct: number; colorClass: string }
@@ -16,7 +17,7 @@ const PROGRESS_COLORS = ['purple', 'pink', 'orange', 'green']
 const SLICE_COLORS = ['#7d37df', '#e83f91', '#f0a72a', '#31b979', '#3ea0e8']
 
 function fmtMoney(n: number) {
-  return Math.round(n).toLocaleString('en')
+  return formatMoney(n)
 }
 
 // "نايس" أرقام لمحور Y بدل تقريب عشوائي يطلع قيم مكررة

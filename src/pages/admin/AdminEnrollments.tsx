@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, avatarClass, initials } from '../../components/admin/lightKit'
 import CurrencySymbol from '../../components/CurrencySymbol'
+import { formatMoney } from '../../utils/formatMoney'
 
 const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = { paid: 'success', pending: 'warning', failed: 'danger', refunded: 'neutral' }
 const statusLabels: Record<string, string> = { paid: 'مدفوع', pending: 'بانتظار الدفع', failed: 'فشل', refunded: 'مسترجع' }
@@ -58,7 +59,7 @@ export default function AdminEnrollments() {
       <div className="revenue-hero">
         <div>
           <small>إجمالي الإيرادات (كل الوقت)</small>
-          <strong>{Math.round(totalRevenue).toLocaleString('en')} <b><CurrencySymbol /></b></strong>
+          <strong>{formatMoney(totalRevenue)} <b><CurrencySymbol /></b></strong>
           <p><span>{growth >= 0 ? '↑' : '↓'} {Math.abs(growth)}%</span> مقارنة بالشهر الماضي</p>
         </div>
         <div className="revenue-spark">
@@ -96,7 +97,7 @@ export default function AdminEnrollments() {
                       <td><span className={`person-avatar ${avatarClass(i)}`}>{initials(e.profiles?.full_name)}</span><b>{e.profiles?.full_name || '—'}</b></td>
                       <td>{e.courses?.title || '—'}</td>
                       <td>{new Date(e.enrolled_at).toLocaleDateString('ar-SA')}</td>
-                      <td><strong>{(e.amount_paid || e.courses?.price || 0).toLocaleString('en')} <CurrencySymbol /></strong></td>
+                      <td><strong>{formatMoney(e.amount_paid || e.courses?.price || 0)} <CurrencySymbol /></strong></td>
                       <td>{e.payment_method || '—'}</td>
                       <td><StatusBadge variant={statusVariant[e.payment_status] || 'neutral'}>{statusLabels[e.payment_status] || e.payment_status}</StatusBadge></td>
                     </tr>

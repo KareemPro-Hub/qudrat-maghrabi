@@ -288,14 +288,16 @@ export async function createPaymobIntention(
       signal: controller.signal,
     })
 
-    const result = await response.json().catch(() => null) as Record<string, unknown> | null
+    const result = await response.json().catch(() => null) as Record<string, unknown> | unknown[] | null
     if (!response.ok || !result) {
       console.error('Paymob intention rejected', {
         status: response.status,
-        detail: result?.detail || result?.message || 'Unknown Paymob error',
+        response: result || 'Empty Paymob response',
       })
       throw new Error('Paymob rejected the payment intention')
     }
+
+    if (Array.isArray(result)) throw new Error('Paymob returned an invalid intention response')
 
     const clientSecret = asString(result.client_secret)
     if (!clientSecret) throw new Error('Paymob response did not include a client secret')

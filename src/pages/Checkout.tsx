@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { ShieldCheck, Lock, TicketPercent } from 'lucide-react'
 import CurrencySymbol from '../components/CurrencySymbol'
+import { formatMoney } from '../utils/formatMoney'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Course } from '../types'
@@ -277,10 +278,7 @@ export default function Checkout() {
   const currency = plan?.web_currency || course?.currency || 'EGP'
   const discountAmount = appliedCoupon ? originalPrice * appliedCoupon.percent / 100 : 0
   const totalPrice = Math.max(0, originalPrice - discountAmount)
-  const formatPrice = (value: number) => value.toLocaleString('ar-EG', {
-    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
+  const formatPrice = formatMoney
   const processingPrice = paymentQuote ? paymentQuote.processingAmountMinor / 100 : null
   const processingCurrencyLabel = paymentQuote?.processingCurrency === 'EGP'
     ? 'ج.م'
