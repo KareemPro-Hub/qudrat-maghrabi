@@ -2,6 +2,7 @@ import {
   ApiRequest,
   ApiResponse,
   ConfigurationError,
+  convertPaymentAmount,
   createPaymobIntention,
   getBearerToken,
   getPaymobConfig,
@@ -192,19 +193,34 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     throw error
   }
 
-  if (currency !== paymob.currency) {
-    console.error('Subscription currency does not match the configured Paymob integration', {
-      planCode: plan?.plan_code,
-      courseId: course.id,
-      subscriptionCurrency: currency,
-      paymobCurrency: paymob.currency,
-    })
-    return res.status(409).json({ error: 'PAYMENT_CURRENCY_MISMATCH' })
-  }
-
-  const amountMinor = discountCode
+  const displayAmountMinor = discountCode
     ? Math.max(1, Math.round(originalAmountMinor * (100 - discountCode.discount_percent) / 100))
     : originalAmountMinor
+  let conversion
+  try {
+    conversion = convertPaymentAmount(displayAmountMinor, currency, paymob.currency)
+  } catch (error) {
+    if (error instanceof ConfigurationError) {
+      console.error(error.message)
+      return res.status(409).json({ error: 'PAYMENT_CURRENCY_MISMATCH' })
+    }
+    throw error
+  }
+
+  const amountMinor = conversion.processingAmountMinor
+  const processingCurrency = conversion.processingCurrency
+  const convertedOriginalAmountMinor = discountCode
+    ? convertPaymentAmount(originalAmountMinor, currency, paymob.currency).processingAmountMinor
+    : null
+  const paymentMetadata = {
+    ...(plan ? { plan_code: plan.plan_code, plan_name: plan.name_ar } : {}),
+    display_amount_minor: displayAmountMinor,
+    display_original_amount_minor: originalAmountMinor,
+    display_currency: currency,
+    processing_amount_minor: amountMinor,
+    processing_currency: processingCurrency,
+    sar_to_egp_rate: conversion.exchangeRate,
+  }
 
   const { data: existingEnrollment, error: enrollmentReadError } = await supabase
     .from('enrollments')
@@ -261,14 +277,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       enrollment_id: enrollmentId,
       provider: 'paymob',
       status: 'pending',
-      amount_minor: amountMinor,
+      // Discount reservation validates the amount against the SAR catalogue
+      // snapshot first. Immediately afterwards the attempt is converted to the
+      // EGP amount that Paymob will actually charge.
+      amount_minor: discountCode ? displayAmountMinor : amountMinor,
       original_amount_minor: discountCode ? originalAmountMinor : null,
       discount_code_id: discountCode?.id || null,
       discount_percent: discountCode?.discount_percent || null,
-      currency,
+      currency: discountCode ? currency : processingCurrency,
       subscription_product_id: plan?.product_id || null,
       subscription_duration_months: plan?.duration_months || null,
-      metadata: plan ? { plan_code: plan.plan_code, plan_name: plan.name_ar } : {},
+      metadata: paymentMetadata,
     })
     .select('id')
     .single()
@@ -291,6 +310,26 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         .eq('id', attempt.id)
       return res.status(409).json({ error: 'COUPON_INVALID' })
     }
+
+    const { error: conversionUpdateError } = await supabase
+      .from('payment_attempts')
+      .update({
+        amount_minor: amountMinor,
+        original_amount_minor: convertedOriginalAmountMinor,
+        currency: processingCurrency,
+        metadata: paymentMetadata,
+      })
+      .eq('id', attempt.id)
+
+    if (conversionUpdateError) {
+      console.error('Payment conversion snapshot update failed', conversionUpdateError)
+      await supabase.rpc('release_discount_code_reservation', { p_attempt_id: attempt.id })
+      await supabase
+        .from('payment_attempts')
+        .update({ status: 'failed', failure_reason: 'currency_conversion_failed' })
+        .eq('id', attempt.id)
+      return res.status(500).json({ error: 'PAYMENT_SETUP_FAILED' })
+    }
   }
 
   const { firstName, lastName } = splitCustomerName(profile.full_name)
@@ -299,7 +338,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const intention = await createPaymobIntention(paymob, {
       amount: amountMinor,
-      currency,
+      currency: processingCurrency,
       payment_methods: paymob.integrationIds,
       items: [{
         name: itemName,
@@ -335,6 +374,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         plan_code: plan?.plan_code || null,
         subscription_duration_months: plan?.duration_months || null,
         discount_percent: discountCode?.discount_percent || 0,
+        display_amount_minor: displayAmountMinor,
+        display_currency: currency,
+        processing_amount_minor: amountMinor,
+        processing_currency: processingCurrency,
+        sar_to_egp_rate: conversion.exchangeRate,
       },
     })
 
@@ -353,6 +397,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       checkoutUrl: intention.checkoutUrl,
       courseId: course.id,
       planCode: plan?.plan_code || null,
+      displayAmountMinor,
+      displayCurrency: currency,
+      processingAmountMinor: amountMinor,
+      processingCurrency,
     })
   } catch (error) {
     console.error('Paymob intention creation failed', error)

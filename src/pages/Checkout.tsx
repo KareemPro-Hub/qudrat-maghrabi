@@ -17,6 +17,14 @@ type SubscriptionPlan = {
   web_currency: string
 }
 
+type PaymentQuote = {
+  displayAmountMinor: number
+  displayCurrency: string
+  processingAmountMinor: number
+  processingCurrency: string
+  exchangeRate: number
+}
+
 const PLAN_CODES = new Set(['monthly', 'quarterly', 'semiannual'])
 
 export default function Checkout() {
@@ -34,6 +42,9 @@ export default function Checkout() {
   const [currentExpiry, setCurrentExpiry] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [paymentLoading, setPaymentLoading] = useState(false)
+  const [paymentQuote, setPaymentQuote] = useState<PaymentQuote | null>(null)
+  const [quoteLoading, setQuoteLoading] = useState(false)
+  const [quoteError, setQuoteError] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [redeeming, setRedeeming] = useState(false)
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent: number } | null>(null)
@@ -50,6 +61,50 @@ export default function Checkout() {
     }
     void fetchPurchaseDetails()
   }, [user, authLoading, planCode, legacyCourseId, returnPath])
+
+  useEffect(() => {
+    if (!user || !course) {
+      setPaymentQuote(null)
+      return
+    }
+
+    const controller = new AbortController()
+    const selectedCourseId = course.id
+    const selectedPlanCode = plan?.plan_code
+
+    async function fetchPaymentQuote() {
+      setQuoteLoading(true)
+      setQuoteError(false)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+
+        const response = await fetch('/api/paymob/quote', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          signal: controller.signal,
+          body: JSON.stringify(selectedPlanCode
+            ? { planCode: selectedPlanCode, discountPercent: appliedCoupon?.percent || 0 }
+            : { courseId: selectedCourseId, discountPercent: appliedCoupon?.percent || 0 }),
+        })
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(String(result.error || 'QUOTE_FAILED'))
+        setPaymentQuote(result as PaymentQuote)
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        setPaymentQuote(null)
+        setQuoteError(true)
+      } finally {
+        if (!controller.signal.aborted) setQuoteLoading(false)
+      }
+    }
+
+    void fetchPaymentQuote()
+    return () => controller.abort()
+  }, [user, course?.id, plan?.plan_code, appliedCoupon?.percent])
 
   async function fetchPurchaseDetails() {
     setLoading(true)
@@ -149,6 +204,10 @@ export default function Checkout() {
 
   async function handleStartPayment() {
     if (!course || paymentLoading) return
+    if (totalPrice > 0 && (!paymentQuote || quoteLoading)) {
+      toast.error('انتظر لحظة حتى يظهر المبلغ الذي سيُخصم بالجنيه المصري')
+      return
+    }
     setPaymentLoading(true)
 
     try {
@@ -222,6 +281,10 @@ export default function Checkout() {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   })
+  const processingPrice = paymentQuote ? paymentQuote.processingAmountMinor / 100 : null
+  const processingCurrencyLabel = paymentQuote?.processingCurrency === 'EGP'
+    ? 'ج.م'
+    : paymentQuote?.processingCurrency || ''
 
   if (loading || authLoading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -294,9 +357,18 @@ export default function Checkout() {
                 {appliedCoupon && <p className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-center text-xs font-black text-green-700">تم تطبيق خصم {appliedCoupon.percent}% على هذه الباقة</p>}
               </div>
 
-              <button type="button" onClick={() => void handleStartPayment()} disabled={paymentLoading} className="qm-primary w-full mt-6 py-4 text-lg disabled:opacity-60 disabled:cursor-not-allowed">
+              <button type="button" onClick={() => void handleStartPayment()} disabled={paymentLoading || quoteLoading || (totalPrice > 0 && !paymentQuote)} className="qm-primary w-full mt-6 py-4 text-lg disabled:opacity-60 disabled:cursor-not-allowed">
                 {paymentLoading ? 'جاري تجهيز الدفع...' : <>ادفع الآن {formatPrice(totalPrice)} <CurrencySymbol currency={currency} /></>}
               </button>
+              <div className="mt-3 min-h-6 text-center text-sm font-bold">
+                {quoteLoading && <span className="text-gray-500">جاري حساب المبلغ بالجنيه المصري...</span>}
+                {!quoteLoading && paymentQuote && processingPrice !== null && (
+                  <span className="text-brand-navy">
+                    سيُخصم عبر Paymob مبلغ <b className="text-brand-purple">{formatPrice(processingPrice)} {processingCurrencyLabel}</b>، بما يعادل {formatPrice(paymentQuote.displayAmountMinor / 100)} <CurrencySymbol currency={paymentQuote.displayCurrency} />.
+                  </span>
+                )}
+                {!quoteLoading && quoteError && <span className="text-red-600">تعذّر حساب المبلغ بالجنيه المصري. حدّث الصفحة ثم حاول مرة أخرى.</span>}
+              </div>
             </div>
             <p className="mt-5 text-xs text-gray-400 leading-6 text-right">لا تحفظ المنصة بيانات بطاقتك. تتم معالجة بيانات الدفع بالكامل داخل بوابة Paymob الآمنة.</p>
           </div>
@@ -315,6 +387,12 @@ export default function Checkout() {
                 {appliedCoupon && <div className="flex justify-between items-center text-green-600"><span className="font-bold">− {formatPrice(discountAmount)} <CurrencySymbol currency={currency} /></span><span>خصم الكود ({appliedCoupon.percent}%)</span></div>}
                 <div className="flex justify-between items-center text-green-600"><span className="font-bold">مجانًا</span><span>ضريبة القيمة المضافة</span></div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center"><span className="font-black text-xl gradient-text">{formatPrice(totalPrice)} <CurrencySymbol currency={currency} /></span><span className="font-black text-brand-navy">الإجمالي</span></div>
+                {paymentQuote && processingPrice !== null && (
+                  <div className="rounded-xl bg-purple-50 px-3 py-3 flex justify-between items-center gap-3">
+                    <span className="font-black text-brand-purple whitespace-nowrap">{formatPrice(processingPrice)} {processingCurrencyLabel}</span>
+                    <span className="text-xs font-bold text-brand-navy">المبلغ الفعلي الذي سيُخصم عبر Paymob</span>
+                  </div>
+                )}
               </div>
               <div className="mt-5 flex items-center gap-2 text-gray-400 text-xs justify-center"><ShieldCheck size={14} /><span>مدفوعات آمنة عبر Paymob</span></div>
               <div className="mt-4 pt-4 border-t border-gray-100">

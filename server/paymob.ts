@@ -23,7 +23,68 @@ export type PaymobConfig = {
   countryCode: string
 }
 
+export type PaymentConversion = {
+  displayAmountMinor: number
+  displayCurrency: string
+  processingAmountMinor: number
+  processingCurrency: string
+  exchangeRate: number
+}
+
 export class ConfigurationError extends Error {}
+
+// The default follows the Central Bank of Egypt SAR selling rate published on
+// 24 Aug 2026, rounded to two decimals. It can be updated without a code change
+// through PAYMOB_SAR_TO_EGP_RATE in the deployment environment.
+const DEFAULT_SAR_TO_EGP_RATE = 13.55
+
+export function convertPaymentAmount(
+  displayAmountMinor: number,
+  displayCurrency: string,
+  processingCurrency: string,
+): PaymentConversion {
+  const normalizedDisplayCurrency = displayCurrency.trim().toUpperCase()
+  const normalizedProcessingCurrency = processingCurrency.trim().toUpperCase()
+
+  if (!Number.isSafeInteger(displayAmountMinor) || displayAmountMinor < 0) {
+    throw new ConfigurationError('Payment display amount is invalid')
+  }
+
+  if (normalizedDisplayCurrency === normalizedProcessingCurrency) {
+    return {
+      displayAmountMinor,
+      displayCurrency: normalizedDisplayCurrency,
+      processingAmountMinor: displayAmountMinor,
+      processingCurrency: normalizedProcessingCurrency,
+      exchangeRate: 1,
+    }
+  }
+
+  if (normalizedDisplayCurrency !== 'SAR' || normalizedProcessingCurrency !== 'EGP') {
+    throw new ConfigurationError('The configured payment currency conversion is not supported')
+  }
+
+  const configuredRate = Number(process.env.PAYMOB_SAR_TO_EGP_RATE || DEFAULT_SAR_TO_EGP_RATE)
+  if (!Number.isFinite(configuredRate) || configuredRate <= 0) {
+    throw new ConfigurationError('PAYMOB_SAR_TO_EGP_RATE is invalid')
+  }
+
+  const processingAmountMinor = displayAmountMinor === 0
+    ? 0
+    : Math.max(1, Math.round(displayAmountMinor * configuredRate))
+
+  if (!Number.isSafeInteger(processingAmountMinor)) {
+    throw new ConfigurationError('Converted payment amount is invalid')
+  }
+
+  return {
+    displayAmountMinor,
+    displayCurrency: normalizedDisplayCurrency,
+    processingAmountMinor,
+    processingCurrency: normalizedProcessingCurrency,
+    exchangeRate: configuredRate,
+  }
+}
 
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
