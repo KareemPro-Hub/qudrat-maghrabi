@@ -275,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             QmGradientButton(
               key: const Key('register-submit-button'),
               label: 'إنشاء الحساب',
-              icon: Icons.person_add_alt_1_rounded,
+              icon: Icons.school_rounded,
               isLoading: _submitting,
               onPressed: _submitting ? null : _submit,
             ),

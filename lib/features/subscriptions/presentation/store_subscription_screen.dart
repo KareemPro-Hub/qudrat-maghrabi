@@ -120,9 +120,20 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(gradient: QmGradients.softBackground),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF100B18), Color(0xFF171021)],
+                )
+              : QmGradients.softBackground,
+        ),
         child: SafeArea(
           child: RefreshIndicator(
             color: QmColors.pink,
@@ -133,7 +144,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
               ),
               slivers: [
                 SliverAppBar(
-                  backgroundColor: const Color(0xFFFCFAFF),
+                  backgroundColor: scheme.surface.withValues(alpha: .96),
                   surfaceTintColor: Colors.transparent,
                   pinned: true,
                   toolbarHeight: 72,
@@ -158,7 +169,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                         'اختر الباقة المناسبة',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
-                              color: QmColors.textPrimary,
+                              color: scheme.onSurface,
                               fontWeight: FontWeight.w900,
                             ),
                       ),
@@ -166,7 +177,7 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
                       Text(
                         'اشتراك متجدد تلقائيًا يفتح كل كورسات المنصة المدفوعة، ويمكن إلغاؤه من المتجر في أي وقت.',
                         style: TextStyle(
-                          color: QmColors.textSecondary,
+                          color: scheme.onSurfaceVariant,
                           height: 1.45,
                         ),
                       ),
@@ -229,6 +240,7 @@ class _SubscriptionHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = subscription != null;
+    final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
@@ -241,13 +253,14 @@ class _SubscriptionHero extends StatelessWidget {
                     colors: [QmColors.deepPurple, QmColors.purple],
                   )
                 : LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: .92),
-                      Colors.white.withValues(alpha: .68),
-                    ],
+                    colors: [scheme.surface, scheme.surfaceContainerHighest],
                   ),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withValues(alpha: .8)),
+            border: Border.all(
+              color: active
+                  ? Colors.white.withValues(alpha: .8)
+                  : scheme.outlineVariant,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x227A2DD6),
@@ -264,7 +277,7 @@ class _SubscriptionHero extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: active
                       ? Colors.white.withValues(alpha: .16)
-                      : QmColors.lavender,
+                      : scheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(19),
                 ),
                 child: Icon(
@@ -283,7 +296,7 @@ class _SubscriptionHero extends StatelessWidget {
                     Text(
                       active ? 'اشتراكك فعّال' : 'افتح كل الكورسات',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: active ? Colors.white : QmColors.textPrimary,
+                        color: active ? Colors.white : scheme.onSurface,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -295,7 +308,7 @@ class _SubscriptionHero extends StatelessWidget {
                       style: TextStyle(
                         color: active
                             ? Colors.white.withValues(alpha: .82)
-                            : QmColors.textSecondary,
+                            : scheme.onSurfaceVariant,
                         height: 1.35,
                       ),
                     ),
@@ -369,22 +382,23 @@ class _CatalogNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5DF),
+        color: scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: Color(0xFFB97800)),
+          Icon(Icons.info_outline_rounded, color: scheme.onSecondaryContainer),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
-                color: QmColors.textPrimary,
+                color: scheme.onSecondaryContainer,
                 fontWeight: FontWeight.w700,
                 height: 1.4,
               ),
@@ -441,12 +455,13 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = palette;
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       key: ValueKey('plan-card-${plan.id}'),
       decoration: BoxDecoration(
-        color: QmColors.surface,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: QmColors.border.withValues(alpha: .75)),
+        border: Border.all(color: scheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: colors.accent.withValues(alpha: .16),
@@ -472,7 +487,7 @@ class _PlanCard extends StatelessWidget {
                 Text(
                   sectionTitle,
                   style: TextStyle(
-                    color: colors.ink,
+                    color: scheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
@@ -488,7 +503,7 @@ class _PlanCard extends StatelessWidget {
                         : null,
                     color: offer.canPurchase && !purchaseBlocked
                         ? null
-                        : QmColors.lavender,
+                        : scheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: offer.canPurchase && !purchaseBlocked
                         ? [
@@ -510,9 +525,7 @@ class _PlanCard extends StatelessWidget {
                       backgroundColor: Colors.transparent,
                       disabledBackgroundColor: Colors.transparent,
                       foregroundColor: Colors.white,
-                      disabledForegroundColor: colors.ink.withValues(
-                        alpha: .42,
-                      ),
+                      disabledForegroundColor: scheme.onSurfaceVariant,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
@@ -542,7 +555,7 @@ class _PlanCard extends StatelessWidget {
                   'دفع آمن عبر متجر التطبيقات',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: QmColors.textSecondary,
+                    color: scheme.onSurfaceVariant,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -786,6 +799,7 @@ class _BenefitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final included = benefit.included;
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 13),
       child: Row(
@@ -797,14 +811,12 @@ class _BenefitRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: included
                   ? const Color(0xFF19B889)
-                  : QmColors.lavender.withValues(alpha: .72),
+                  : scheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Icon(
               included ? Icons.check_rounded : Icons.remove_rounded,
-              color: included
-                  ? Colors.white
-                  : palette.ink.withValues(alpha: .42),
+              color: included ? Colors.white : scheme.onSurfaceVariant,
               size: 18,
             ),
           ),
@@ -813,9 +825,7 @@ class _BenefitRow extends StatelessWidget {
             child: Text(
               benefit.text,
               style: TextStyle(
-                color: included
-                    ? palette.ink
-                    : QmColors.textSecondary.withValues(alpha: .68),
+                color: included ? scheme.onSurface : scheme.onSurfaceVariant,
                 fontWeight: included ? FontWeight.w800 : FontWeight.w500,
                 height: 1.45,
               ),
@@ -862,21 +872,25 @@ class _FreeCourseNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF9F3),
+        color: scheme.tertiaryContainer,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          Icon(Icons.volunteer_activism_rounded, color: QmColors.success),
+          Icon(
+            Icons.volunteer_activism_rounded,
+            color: scheme.onTertiaryContainer,
+          ),
           SizedBox(width: 11),
           Expanded(
             child: Text(
               'ابدأ بثلاث حصص مجانية من دورة التأسيس، واكتشف أسلوب الشرح قبل اختيار باقتك.',
               style: TextStyle(
-                color: QmColors.textPrimary,
+                color: scheme.onTertiaryContainer,
                 fontWeight: FontWeight.w700,
                 height: 1.4,
               ),

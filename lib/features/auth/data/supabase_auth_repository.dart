@@ -284,7 +284,7 @@ class SupabaseAuthRepository implements AuthRepository {
   String _arabicAuthMessage(AuthException error) {
     switch (error.code) {
       case 'invalid_credentials':
-        return 'البريد الإلكتروني أو رقم الجوال أو كلمة المرور غير صحيحة';
+        return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
       case 'email_not_confirmed':
         return 'فعّل بريدك الإلكتروني أولًا ثم حاول تسجيل الدخول';
       case 'phone_not_confirmed':

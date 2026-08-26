@@ -116,17 +116,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
-                              autofillHints: const [
-                                AutofillHints.email,
-                                AutofillHints.telephoneNumber,
-                              ],
+                              autofillHints: const [AutofillHints.email],
                               decoration: const InputDecoration(
-                                hintText: 'البريد الإلكتروني أو رقم الجوال',
+                                hintText: 'البريد الإلكتروني',
                                 prefixIcon: Icon(Icons.mail_outline_rounded),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'أدخل البريد الإلكتروني أو رقم الجوال';
+                                  return 'أدخل البريد الإلكتروني';
                                 }
                                 return null;
                               },

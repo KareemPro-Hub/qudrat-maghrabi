@@ -116,7 +116,7 @@ void main() {
     await tester.tap(loginButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('أدخل البريد الإلكتروني أو رقم الجوال'), findsOneWidget);
+    expect(find.text('أدخل البريد الإلكتروني'), findsOneWidget);
     expect(find.text('أدخل كلمة المرور'), findsOneWidget);
     expect(repository.signInCalls, 0);
   });
