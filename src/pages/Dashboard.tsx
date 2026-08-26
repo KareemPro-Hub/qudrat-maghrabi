@@ -81,17 +81,41 @@ export default function Dashboard() {
     setLatestNotification((notifs || [])[0] || null)
 
     const courseIds = enrollments.map((e: any) => e.course_id)
+
+    // بعض الاشتراكات تكون على "باقة" (كورس أب) والدروس الفعلية منشورة تحت
+    // الكورسات الفرعية المرتبطة بها (parent_course_id)، فلازم نجيب أبناء كل
+    // كورس مشترك فيه الطالب عشان نعرف منين نجيب الدروس والاختبارات فعليًا.
+    const { data: childCourses } = courseIds.length
+      ? await supabase.from('courses').select('id, title, parent_course_id').in('parent_course_id', courseIds)
+      : { data: [] as any[] }
+
+    const childrenByParent: Record<string, any[]> = {}
+    ;(childCourses || []).forEach((c: any) => {
+      if (!childrenByParent[c.parent_course_id]) childrenByParent[c.parent_course_id] = []
+      childrenByParent[c.parent_course_id].push(c)
+    })
+
+    const contentCourseIdsByEnrollment: Record<string, string[]> = {}
+    enrollments.forEach((e: any) => {
+      const children = childrenByParent[e.course_id]
+      contentCourseIdsByEnrollment[e.course_id] = children && children.length > 0
+        ? children.map((c: any) => c.id)
+        : [e.course_id]
+    })
+    const contentCourseIds = Array.from(new Set(Object.values(contentCourseIdsByEnrollment).flat()))
+
     const [{ data: allLessons }, { data: allProgress }, { data: allQuizzes }] = await Promise.all([
-      courseIds.length ? supabase.from('lessons').select('*').in('course_id', courseIds).order('order_index') : Promise.resolve({ data: [] as any[] }),
+      contentCourseIds.length ? supabase.from('lessons').select('*').in('course_id', contentCourseIds).order('order_index') : Promise.resolve({ data: [] as any[] }),
       supabase.from('lesson_progress').select('*').eq('student_id', user!.id),
-      courseIds.length ? supabase.from('quizzes').select('*').in('course_id', courseIds).eq('is_published', true) : Promise.resolve({ data: [] as any[] }),
+      contentCourseIds.length ? supabase.from('quizzes').select('*').in('course_id', contentCourseIds).eq('is_published', true) : Promise.resolve({ data: [] as any[] }),
     ])
 
     const progressByLesson: Record<string, any> = {}
     ;(allProgress || []).forEach((p: any) => { progressByLesson[p.lesson_id] = p })
 
     const courseRows = enrollments.map((e: any) => {
-      const lessons = (allLessons || []).filter((l: any) => l.course_id === e.course_id)
+      const contentIds = contentCourseIdsByEnrollment[e.course_id] || [e.course_id]
+      const lessons = (allLessons || []).filter((l: any) => contentIds.includes(l.course_id))
       const completedIds = new Set(lessons.filter((l: any) => progressByLesson[l.id]?.completed).map((l: any) => l.id))
       const completedCount = completedIds.size
       const pct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0
@@ -101,7 +125,7 @@ export default function Dashboard() {
         const t = progressByLesson[l.id]?.last_watched_at ? new Date(progressByLesson[l.id].last_watched_at).getTime() : 0
         return t > max ? t : max
       }, 0)
-      return { enrollment: e, course: e.courses, lessons, completedIds, completedCount, pct, currentLesson, lastActivity }
+      return { enrollment: e, course: e.courses, lessons, completedIds, completedCount, pct, currentLesson, lastActivity, contentCourseId: contentIds[0] }
     })
     courseRows.sort((a: any, b: any) => b.lastActivity - a.lastActivity)
     setCourses(courseRows)
@@ -110,6 +134,7 @@ export default function Dashboard() {
     const passedQuizIds = new Set(results.filter((r: any) => r.passed).map((r: any) => r.quiz_id))
     const courseTitleById: Record<string, string> = {}
     enrollments.forEach((e: any) => { courseTitleById[e.course_id] = e.courses?.title })
+    ;(childCourses || []).forEach((c: any) => { courseTitleById[c.id] = c.title })
     const nextQuiz = (allQuizzes || []).find((q: any) => !passedQuizIds.has(q.id))
     setUpcomingQuiz(nextQuiz ? { ...nextQuiz, courseTitle: courseTitleById[nextQuiz.course_id] } : null)
 
@@ -216,7 +241,8 @@ export default function Dashboard() {
   async function handleContinue() {
     if (!primary) return
     showToast(`رائع يا ${firstName}!`, 'خطوة جديدة تقترب بها من هدفك.')
-    setTimeout(() => navigate(`/learn/${primary.course.id}`), 550)
+    const targetCourseId = primary.currentLesson?.course_id || primary.contentCourseId || primary.course.id
+    setTimeout(() => navigate(`/learn/${targetCourseId}`), 550)
   }
 
   return (
@@ -328,7 +354,7 @@ export default function Dashboard() {
                         <Link
                           key={lesson.id}
                           className={`plan-item${done ? ' done' : ''}${isCurrent && !done ? ' current' : ''}`}
-                          to={`/learn/${primary.course.id}`}
+                          to={`/learn/${lesson.course_id || primary.contentCourseId || primary.course.id}`}
                         >
                           <span className="plan-state">{done && <svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7" /></svg>}</span>
                           <span className="plan-copy"><b>{lesson.title}</b><small>{lesson.chapter || primary.course?.title}</small></span>
@@ -385,7 +411,7 @@ export default function Dashboard() {
                     <small>مسارك الحالي</small>
                     <h3>{c.course?.title}</h3>
                     <p>{c.completedCount} من {c.lessons.length} درسًا مكتملًا</p>
-                    <Link to={`/learn/${c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
+                    <Link to={`/learn/${c.currentLesson?.course_id || c.contentCourseId || c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
                   </div>
                 </article>
               ))}
