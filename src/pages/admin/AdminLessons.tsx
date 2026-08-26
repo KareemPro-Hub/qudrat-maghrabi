@@ -576,8 +576,8 @@ export default function AdminLessons() {
               <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <input type="checkbox" checked={form.is_free_preview} onChange={e => setForm({ ...form, is_free_preview: e.target.checked })} style={{ width: 16, height: 16 }} />
                 <span>
-                  <b style={{ display: 'block', fontSize: 12 }}>درس مجاني (Preview)</b>
-                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>يظهر للطلاب قبل الاشتراك كعينة مجانية</small>
+                  <b style={{ display: 'block', fontSize: 12 }}>إتاحة الدرس مجانًا</b>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>عند التفعيل، يمكن لأي طالب مشاهدة هذا الدرس دون اشتراك.</small>
                 </span>
               </label>
             </div>
