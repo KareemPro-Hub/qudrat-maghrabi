@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X, ExternalLink, Clock, CheckCircle2, PlayCircle } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X, ExternalLink, Clock, CheckCircle2, PlayCircle, Pencil } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
@@ -163,6 +163,8 @@ export default function AdminQuizzes() {
   const [previewQuestion, setPreviewQuestion] = useState<typeof emptyQ | null>(null)
   const [previewQuiz, setPreviewQuiz] = useState<{ quiz: any; questions: any[] } | null>(null)
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null)
+  const [editQuizId, setEditQuizId] = useState<string | null>(null)
+  const [editQuestion, setEditQuestion] = useState<any | null>(null)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -226,6 +228,36 @@ export default function AdminQuizzes() {
     setSaving(false)
   }
 
+  function openEditQuiz(quiz: any) {
+    setQuizForm({
+      title: quiz.title || '',
+      course_id: quiz.course_id || '',
+      lesson_id: quiz.lesson_id || '',
+      description: quiz.description || '',
+      total_marks: quiz.total_marks ?? 10,
+      pass_marks: quiz.pass_marks ?? 6,
+      time_limit_minutes: quiz.time_limit_minutes ?? '',
+    })
+    if (quiz.course_id) fetchLessons(quiz.course_id)
+    setEditQuizId(quiz.id)
+  }
+
+  async function handleUpdateQuiz(e: React.FormEvent) {
+    e.preventDefault()
+    if (!quizForm.title || !quizForm.course_id) return toast.error('عنوان الاختبار والكورس مطلوبان')
+    setSaving(true)
+    const { error } = await supabase
+      .from('quizzes')
+      .update({ ...quizForm, lesson_id: quizForm.lesson_id || null, time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null })
+      .eq('id', editQuizId)
+    if (error) toast.error('حدث خطأ أثناء تعديل الاختبار')
+    else toast.success('تم تعديل الاختبار ✅')
+    setEditQuizId(null)
+    setQuizForm(emptyQuiz)
+    fetchAll()
+    setSaving(false)
+  }
+
   async function handleQuestionImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -255,6 +287,36 @@ export default function AdminQuizzes() {
     if (!confirm('حذف السؤال ؟')) return
     await supabase.from('quiz_questions').delete().eq('id', id)
     fetchQuestions(quizId)
+  }
+
+  function openEditQuestion(q: any) {
+    setQForm({
+      question_text: q.question_text || '',
+      option_a: q.option_a || 'أ',
+      option_b: q.option_b || 'ب',
+      option_c: q.option_c || 'ج',
+      option_d: q.option_d || 'د',
+      correct_answer: q.correct_answer || 'a',
+      marks: q.marks ?? 1,
+      explanation: q.explanation || '',
+      explanation_video_id: q.explanation_video_id || '',
+      question_image_url: q.question_image_url || '',
+      question_link_url: q.question_link_url || '',
+      question_link_text: q.question_link_text || '',
+    })
+    setEditQuestion(q)
+  }
+
+  async function handleUpdateQuestion(e: React.FormEvent) {
+    e.preventDefault()
+    if (!qForm.question_text) return toast.error('يرجى تعبئة نص السؤال')
+    setSaving(true)
+    const { error } = await supabase.from('quiz_questions').update({ ...qForm }).eq('id', editQuestion.id)
+    if (error) toast.error('حدث خطأ أثناء تعديل السؤال')
+    else { toast.success('تم تعديل السؤال ✅'); fetchQuestions(editQuestion.quiz_id) }
+    setEditQuestion(null)
+    setQForm(emptyQ)
+    setSaving(false)
   }
 
   async function togglePublish(quiz: any) {
@@ -348,6 +410,7 @@ export default function AdminQuizzes() {
                             <PlayCircle size={13} /> {previewLoadingId === quiz.id ? 'جاري التحميل' : 'معاينة الاختبار'}
                           </button>
                           <button className="row-action" onClick={() => togglePublish(quiz)}>{quiz.is_published ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+                          <button className="row-action" onClick={() => openEditQuiz(quiz)}><Pencil size={12} /> تعديل</button>
                           <button className="row-action" onClick={() => deleteQuiz(quiz.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
                           <button className="row-action" onClick={() => { setExpanded(expanded === quiz.id ? null : quiz.id); if (!questions[quiz.id]) fetchQuestions(quiz.id) }}>
                             {expanded === quiz.id ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -367,6 +430,7 @@ export default function AdminQuizzes() {
                                   <p style={{ margin: 0, fontWeight: 700, fontSize: 11.5 }}><span style={{ color: '#7736e7' }}>{i + 1}.</span> {q.question_text}</p>
                                   <div className="adm-question-card-actions">
                                     <button type="button" onClick={() => setPreviewQuestion(q)} aria-label="معاينة السؤال"><Eye size={14} /></button>
+                                    <button type="button" onClick={() => openEditQuestion(q)} aria-label="تعديل السؤال"><Pencil size={13} /></button>
                                     <button type="button" onClick={() => deleteQuestion(q.id, quiz.id)} aria-label="حذف السؤال"><Trash2 size={13} /></button>
                                   </div>
                                 </div>
@@ -457,6 +521,36 @@ export default function AdminQuizzes() {
         </Modal>
       )}
 
+      {editQuizId && (
+        <Modal title="تعديل الاختبار" onClose={() => { setEditQuizId(null); setQuizForm(emptyQuiz) }} wide>
+          <form onSubmit={handleUpdateQuiz} className="admin-form">
+            <label>عنوان الاختبار *<input value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} placeholder="مثال: اختبار الوحدة الأولى" /></label>
+            <label>الكورس *
+              <select value={quizForm.course_id} onChange={(e) => { setQuizForm({ ...quizForm, course_id: e.target.value, lesson_id: '' }); fetchLessons(e.target.value) }}>
+                <option value="">اختر الكورس</option>
+                {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </label>
+            <label>الدرس المرتبط (اختياري)
+              <select value={quizForm.lesson_id} onChange={(e) => setQuizForm({ ...quizForm, lesson_id: e.target.value })} disabled={!quizForm.course_id}>
+                <option value="">بدون درس (اختبار عام للكورس)</option>
+                {lessons.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
+              </select>
+            </label>
+            <label>الوصف<textarea rows={2} value={quizForm.description} onChange={(e) => setQuizForm({ ...quizForm, description: e.target.value })} placeholder="وصف مختصر..." /></label>
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+              <label>الدرجة الكاملة<input type="number" value={quizForm.total_marks} onChange={(e) => setQuizForm({ ...quizForm, total_marks: Number(e.target.value) })} /></label>
+              <label>درجة النجاح<input type="number" value={quizForm.pass_marks} onChange={(e) => setQuizForm({ ...quizForm, pass_marks: Number(e.target.value) })} /></label>
+              <label>الوقت (دقيقة)<input type="number" value={quizForm.time_limit_minutes} onChange={(e) => setQuizForm({ ...quizForm, time_limit_minutes: e.target.value })} placeholder="اختياري" /></label>
+            </div>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={saving}>{saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</button>
+              <button type="button" className="ghost-button" onClick={() => { setEditQuizId(null); setQuizForm(emptyQuiz) }}>إلغاء</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {showQModal && (
         <Modal title="إضافة سؤال" onClose={() => setShowQModal(null)} wide>
           <form onSubmit={handleSaveQuestion} className="admin-form">
@@ -496,6 +590,50 @@ export default function AdminQuizzes() {
               <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'إضافة السؤال ✅'}</button>
               <button type="button" className="question-preview-trigger" onClick={() => setPreviewQuestion({ ...qForm })} disabled={uploadingQImage}><Eye size={16} /> معاينة السؤال</button>
               <button type="button" className="ghost-button" onClick={() => setShowQModal(null)}>إغلاق</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {editQuestion && (
+        <Modal title="تعديل السؤال" onClose={() => { setEditQuestion(null); setQForm(emptyQ) }} wide>
+          <form onSubmit={handleUpdateQuestion} className="admin-form">
+            <label>نص السؤال *<textarea rows={3} value={qForm.question_text} onChange={(e) => setQForm({ ...qForm, question_text: e.target.value })} placeholder="اكتب السؤال هنا..." /></label>
+            <label>
+              صورة السؤال (اختياري)
+              {qForm.question_image_url ? (
+                <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', maxHeight: 180, background: '#000' }}>
+                  <img src={qForm.question_image_url} alt="" style={{ width: '100%', maxHeight: 180, objectFit: 'contain' }} />
+                  <button type="button" onClick={() => setQForm((f) => ({ ...f, question_image_url: '' }))} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(211,59,85,.9)', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 8, border: 'none' }}>حذف</button>
+                </div>
+              ) : (
+                <label className="adm-thumb-drop">
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
+                </label>
+              )}
+            </label>
+            <div className="form-grid">
+              <label>رابط إضافي (URL)<input value={qForm.question_link_url} onChange={(e) => setQForm({ ...qForm, question_link_url: e.target.value })} placeholder="https://..." dir="ltr" /></label>
+              <label>نص الرابط<input value={qForm.question_link_text} onChange={(e) => setQForm({ ...qForm, question_link_text: e.target.value })} placeholder="مثال: اقرأ النص" /></label>
+            </div>
+            {(['a', 'b', 'c', 'd'] as const).map((opt) => (
+              <label key={opt}>الخيار {optionLabels[opt]}<input value={(qForm as any)[`option_${opt}`]} onChange={(e) => setQForm({ ...qForm, [`option_${opt}`]: e.target.value })} placeholder={`الخيار ${optionLabels[opt]} (اختياري)`} /></label>
+            ))}
+            <div className="form-grid">
+              <label>الإجابة الصحيحة *
+                <select value={qForm.correct_answer} onChange={(e) => setQForm({ ...qForm, correct_answer: e.target.value })}>
+                  <option value="a">الخيار أ</option><option value="b">الخيار ب</option><option value="c">الخيار ج</option><option value="d">الخيار د</option>
+                </select>
+              </label>
+              <label>الدرجة<input type="number" min={1} value={qForm.marks} onChange={(e) => setQForm({ ...qForm, marks: Number(e.target.value) })} /></label>
+            </div>
+            <label>شرح الإجابة — نص (اختياري)<input value={qForm.explanation} onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })} placeholder="سيظهر للطالب بعد الاختبار" /></label>
+            <label>شرح الإجابة — رقم فيديو Bunny (اختياري)<input value={qForm.explanation_video_id} onChange={(e) => setQForm({ ...qForm, explanation_video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" /></label>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={saving || uploadingQImage}>{saving ? 'جاري الحفظ...' : 'حفظ التعديلات ✅'}</button>
+              <button type="button" className="question-preview-trigger" onClick={() => setPreviewQuestion({ ...qForm })} disabled={uploadingQImage}><Eye size={16} /> معاينة السؤال</button>
+              <button type="button" className="ghost-button" onClick={() => { setEditQuestion(null); setQForm(emptyQ) }}>إلغاء</button>
             </div>
           </form>
         </Modal>
