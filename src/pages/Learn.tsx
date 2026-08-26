@@ -10,6 +10,10 @@ function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, cou
   const [src, setSrc] = useState('')
 
   useEffect(() => {
+    // لسه بنستنى توكن الجلسة يوصل من الأب (أول تحميل للصفحة أحيانًا بياخد لحظة)؛
+    // من غير الشرط ده كنا بنبعت طلب بتوكن فاضي فيرجع "Invalid token" ومايعيدش المحاولة تاني.
+    if (!sessionToken) return
+
     let destroyed = false
 
     async function init() {
@@ -39,7 +43,7 @@ function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, cou
 
     init()
     return () => { destroyed = true }
-  }, [videoId])
+  }, [videoId, sessionToken])
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
