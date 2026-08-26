@@ -57,6 +57,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       0,
       _lessons.indexWhere((lesson) => lesson.id == widget.initialLessonId),
     );
+    if (!_canOpenLesson(_lessons[_selectedIndex])) {
+      final firstAccessibleIndex = _lessons.indexWhere(_canOpenLesson);
+      _selectedIndex = firstAccessibleIndex >= 0 ? firstAccessibleIndex : 0;
+    }
     _resetTracking();
     _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
   }
@@ -100,6 +104,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   }
 
   Future<void> _selectLesson(CourseLesson lesson) async {
+    if (!_canOpenLesson(lesson)) {
+      _showLockedLessonMessage();
+      return;
+    }
     final index = _lessons.indexWhere((item) => item.id == lesson.id);
     if (index < 0 || index == _selectedIndex) return;
     await _saveCurrentPosition();
@@ -108,6 +116,23 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       _selectedIndex = index;
       _resetTracking();
     });
+  }
+
+  bool _canOpenLesson(CourseLesson lesson) =>
+      widget.content.canAccessLesson(lesson);
+
+  void _showLockedLessonMessage() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'هذا الدرس متاح للمشتركين في الكورس فقط',
+            textAlign: TextAlign.center,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   void _onPlaybackProgress(double seconds, double duration) {
@@ -203,14 +228,18 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
 
   int? get _previousPlayableIndex {
     for (var index = _selectedIndex - 1; index >= 0; index--) {
-      if (_lessons[index].hasVideo) return index;
+      if (_lessons[index].hasVideo && _canOpenLesson(_lessons[index])) {
+        return index;
+      }
     }
     return null;
   }
 
   int? get _nextPlayableIndex {
     for (var index = _selectedIndex + 1; index < _lessons.length; index++) {
-      if (_lessons[index].hasVideo) return index;
+      if (_lessons[index].hasVideo && _canOpenLesson(_lessons[index])) {
+        return index;
+      }
     }
     return null;
   }
@@ -375,7 +404,9 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                         lesson: _lessons[index],
                         number: index + 1,
                         selected: index == _selectedIndex,
+                        canOpen: _canOpenLesson(_lessons[index]),
                         onTap: () => _selectLesson(_lessons[index]),
+                        onLockedTap: _showLockedLessonMessage,
                       ),
                       if (index != _lessons.length - 1)
                         const Divider(indent: 70, endIndent: 16),
@@ -766,20 +797,24 @@ class _PlayerLessonTile extends StatelessWidget {
     required this.lesson,
     required this.number,
     required this.selected,
+    required this.canOpen,
     required this.onTap,
+    required this.onLockedTap,
   });
 
   final CourseLesson lesson;
   final int number;
   final bool selected;
+  final bool canOpen;
   final VoidCallback onTap;
+  final VoidCallback onLockedTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: selected ? QmColors.lavender : Colors.transparent,
       child: InkWell(
-        onTap: lesson.hasVideo ? onTap : null,
+        onTap: lesson.hasVideo ? (canOpen ? onTap : onLockedTap) : null,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -795,7 +830,9 @@ class _PlayerLessonTile extends StatelessWidget {
                   border: selected ? null : Border.all(color: QmColors.border),
                 ),
                 child: Icon(
-                  lesson.progress.completed
+                  !canOpen
+                      ? Icons.lock_outline_rounded
+                      : lesson.progress.completed
                       ? Icons.check_rounded
                       : Icons.play_arrow_rounded,
                   color: selected ? Colors.white : QmColors.purple,

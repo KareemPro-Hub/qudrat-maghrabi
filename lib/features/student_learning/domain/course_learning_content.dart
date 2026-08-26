@@ -30,6 +30,9 @@ class CourseLearningContent {
   bool get isFullyFree =>
       allLessons.isNotEmpty && freePreviewLessonsCount >= allLessons.length;
 
+  bool canAccessLesson(CourseLesson lesson) =>
+      hasAccess || lesson.isFreePreview;
+
   int get completedLessons =>
       allLessons.where((lesson) => lesson.progress.completed).length;
 
