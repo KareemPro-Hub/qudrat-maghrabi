@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
-import { Lock, BookOpen, ArrowLeft, Play, Check } from 'lucide-react'
+import { Lock, BookOpen, ArrowLeft, Play, Check, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
@@ -133,10 +133,32 @@ export default function LearnChapterLessons() {
               </>
             )
 
-            return isLocked ? (
-              <div key={lesson.id} className="chapter-gallery-card is-locked" aria-disabled="true">{inner}</div>
-            ) : (
-              <Link key={lesson.id} to={`/learn/${courseId}/${chapterId}/${lesson.id}`} className="chapter-gallery-card">{inner}</Link>
+            const quiz = quizByLesson[lesson.id]
+            const quizPassed = quiz ? passedQuizIds.has(quiz.id) : false
+
+            return (
+              <Fragment key={lesson.id}>
+                {isLocked ? (
+                  <div className="chapter-gallery-card is-locked" aria-disabled="true">{inner}</div>
+                ) : (
+                  <Link to={`/learn/${courseId}/${chapterId}/${lesson.id}`} className="chapter-gallery-card">{inner}</Link>
+                )}
+                {quiz && (
+                  isLocked ? (
+                    <div className="lesson-homework-row is-locked" aria-disabled="true">
+                      <span className="lesson-homework-icon"><ClipboardList size={18} /></span>
+                      <div><b>واجب {lesson.title}</b><small>يفتح بعد فك قفل الدرس</small></div>
+                      <em><Lock size={14} /> مقفول</em>
+                    </div>
+                  ) : (
+                    <Link to={`/quiz/${quiz.id}`} className="lesson-homework-row">
+                      <span className="lesson-homework-icon"><ClipboardList size={18} /></span>
+                      <div><b>واجب {lesson.title}</b><small>{quizPassed ? 'تم الحل — راجع الواجب' : 'اختبر نفسك بعد مشاهدة الدرس'}</small></div>
+                      <em>{quizPassed ? 'مراجعة الواجب' : 'ابدأ الواجب'} <ArrowLeft size={14} /></em>
+                    </Link>
+                  )
+                )}
+              </Fragment>
             )
           })}
         </div>
