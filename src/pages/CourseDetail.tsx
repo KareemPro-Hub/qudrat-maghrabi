@@ -246,8 +246,12 @@ export default function CourseDetail() {
                       const i = globalIndex++
                       const canWatch = enrolled || lesson.is_free_preview || (course.price === 0 && subCourses.length === 0)
                       const thumbnail = lesson.thumbnail_url || null
-                      return (
-                        <div key={lesson.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-0">
+                      const lessonHref = lesson.chapter_id
+                        ? `/learn/${course.id}/${lesson.chapter_id}/${lesson.id}`
+                        : `/learn/${course.id}`
+                      const rowClassName = "flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-0"
+                      const rowContent = (
+                        <>
                           {/* رقم الدرس */}
                           <div className="flex-shrink-0 w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-black text-xs">
                             {i + 1}
@@ -270,6 +274,15 @@ export default function CourseDetail() {
                               {lesson.duration_minutes && <span className="flex items-center gap-1 text-xs text-gray-400"><Clock size={11} /> {lesson.duration_minutes} د</span>}
                             </div>
                           </div>
+                        </>
+                      )
+                      return canWatch ? (
+                        <Link key={lesson.id} to={lessonHref} className={`${rowClassName} hover:bg-gray-50 transition-colors`}>
+                          {rowContent}
+                        </Link>
+                      ) : (
+                        <div key={lesson.id} className={rowClassName} aria-disabled="true">
+                          {rowContent}
                         </div>
                       )
                     })}
