@@ -36,8 +36,8 @@ export default function Footer() {
             <a href="https://apps.apple.com/app/id6799747012" target="_blank" rel="noopener noreferrer" aria-label="حمّل من App Store">
               <img src="/app-badges/app-store.png" alt="Available on the App Store" loading="lazy" />
             </a>
-            <a href="https://play.google.com/store/apps/details?id=com.qudratmaghrabi.app" target="_blank" rel="noopener noreferrer" aria-label="حمّل من Google Play">
-              <img src="/app-badges/google-play.png" alt="Get it on Google Play" loading="lazy" />
+            <a href="/downloads/qudrat-maghrabi.apk" download="qudrat-maghrabi.apk" aria-label="تحميل تطبيق أندرويد مباشرة (APK)">
+              <img src="/app-badges/google-play.png" alt="تحميل تطبيق أندرويد مباشرة" loading="lazy" />
             </a>
           </div>
         </div>

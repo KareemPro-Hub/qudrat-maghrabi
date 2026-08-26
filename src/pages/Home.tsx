@@ -280,8 +280,8 @@ export default function Home() {
               <a href="https://apps.apple.com/app/id6799747012" target="_blank" rel="noopener noreferrer" aria-label="حمّل تطبيق قدرات المغربي من App Store">
                 <img src="/app-badges/app-store.png" alt="حمّل التطبيق من App Store" />
               </a>
-              <a href="https://play.google.com/store/apps/details?id=com.qudratmaghrabi.app" target="_blank" rel="noopener noreferrer" aria-label="حمّل تطبيق قدرات المغربي من Google Play">
-                <img src="/app-badges/google-play.png" alt="حمّل التطبيق من Google Play" />
+              <a href="/downloads/qudrat-maghrabi.apk" download="qudrat-maghrabi.apk" aria-label="تحميل تطبيق قدرات المغربي لأندرويد مباشرة (APK)">
+                <img src="/app-badges/google-play.png" alt="تحميل تطبيق أندرويد مباشرة" />
               </a>
             </div>
           </div>
