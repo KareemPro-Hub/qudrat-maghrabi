@@ -6,6 +6,7 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/forgot_password_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/register_screen.dart';
+import 'package:qudrat_maghrabi_app/features/support/presentation/report_problem_sheet.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -76,6 +77,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: const [SupportIconButton()],
+      ),
       body: DecoratedBox(
         decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(

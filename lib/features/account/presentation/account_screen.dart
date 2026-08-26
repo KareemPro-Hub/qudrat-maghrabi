@@ -1294,10 +1294,11 @@ class SupportScreen extends StatelessWidget {
           _SupportOption(
             icon: Icons.chat_rounded,
             title: 'واتساب',
-            value: '+966 54 806 6321',
+            value: AppMetadata.supportWhatsappDisplay,
             onTap: () => _launch(
               context,
-              'https://wa.me/966548066321?text=مرحبًا، أحتاج مساعدة في تطبيق قدرات المغربي',
+              'https://wa.me/${AppMetadata.supportWhatsappNumber}'
+              '?text=مرحبًا، أحتاج مساعدة في تطبيق قدرات المغربي',
             ),
           ),
           const SizedBox(height: 12),

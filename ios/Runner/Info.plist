@@ -27,6 +27,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>قدرات المغربي</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نحتاج الوصول لمكتبة الصور عشان ترفق لقطة شاشة توضح مشكلتك عند التواصل مع الدعم.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

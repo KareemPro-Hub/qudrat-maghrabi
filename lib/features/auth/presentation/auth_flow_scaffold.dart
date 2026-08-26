@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
+import 'package:qudrat_maghrabi_app/features/support/presentation/report_problem_sheet.dart';
 
 class AuthFlowScaffold extends StatelessWidget {
   const AuthFlowScaffold({
@@ -19,6 +20,13 @@ class AuthFlowScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: const [SupportIconButton()],
+      ),
       body: DecoratedBox(
         decoration: BoxDecoration(gradient: QmGradients.softBackground),
         child: SafeArea(
