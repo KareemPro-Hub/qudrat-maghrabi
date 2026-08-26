@@ -8,3 +8,6 @@ DerivedData/
 xcuserdata/
 .swiftpm/
 _to_delete/
+vite.config.ts.timestamp-*.mjs
+Icon*
+auth_callback_fix.bundle
