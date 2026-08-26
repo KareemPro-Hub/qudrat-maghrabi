@@ -108,9 +108,21 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
     final activeBundleIds = activeBundleEnrollmentRows
         .map((row) => row['course_id'] as String)
         .toSet();
-    final activeSubscription = activeStoreSubscriptionFromRows(
-      storeSubscriptionRows,
-    );
+    final bundleCourseNames = <String, String>{
+      for (final row in courseRows)
+        if (bundleIds.contains(row['id']))
+          row['id'] as String:
+              (row['title'] as String?)?.trim() ?? 'باقة المنصة',
+    };
+    // اشتراك المتجر (Apple/Google) له الأولوية، وإلا نعتمد على اشتراك
+    // مدفوع عبر المنصة (الموقع/Paymob) عشان الطالب ما يفضلش شايف إنه
+    // غير مشترك رغم دفعه فعليًا.
+    final activeSubscription =
+        activeStoreSubscriptionFromRows(storeSubscriptionRows) ??
+        activeEnrollmentSubscriptionFromRows(
+          activeBundleEnrollmentRows,
+          bundleCourseNames: bundleCourseNames,
+        );
 
     final courses = courseRows.map((row) {
       final id = row['id'] as String;

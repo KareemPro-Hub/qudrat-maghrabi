@@ -39,3 +39,46 @@ StudentSubscription? activeStoreSubscriptionFromRows(
     expiresAt: DateTime.tryParse(row['current_period_end']?.toString() ?? ''),
   );
 }
+
+/// اشتراك باقة تم دفعه عبر المنصة (Paymob) بدل متجر التطبيقات.
+/// [bundleCourseNames] خريطة من معرّف الكورس الأب (الباقة) إلى اسم يُعرض للطالب.
+StudentSubscription? activeEnrollmentSubscriptionFromRows(
+  List<Map<String, dynamic>> enrollmentRows, {
+  required Map<String, String> bundleCourseNames,
+  DateTime? now,
+}) {
+  final referenceTime = now ?? DateTime.now();
+  final entitledRows =
+      enrollmentRows.where((row) {
+        if (row['payment_status'] != 'paid') return false;
+        final courseId = row['course_id'] as String?;
+        if (courseId == null || !bundleCourseNames.containsKey(courseId)) {
+          return false;
+        }
+        final expiry = DateTime.tryParse(
+          row['expires_at']?.toString() ?? '',
+        );
+        return expiry == null || expiry.isAfter(referenceTime);
+      }).toList()..sort((first, second) {
+        final firstExpiry = DateTime.tryParse(
+          first['expires_at']?.toString() ?? '',
+        );
+        final secondExpiry = DateTime.tryParse(
+          second['expires_at']?.toString() ?? '',
+        );
+        if (firstExpiry == null && secondExpiry == null) return 0;
+        if (firstExpiry == null) return -1;
+        if (secondExpiry == null) return 1;
+        return secondExpiry.compareTo(firstExpiry);
+      });
+  if (entitledRows.isEmpty) return null;
+
+  final row = entitledRows.first;
+  final courseId = row['course_id'] as String;
+  return StudentSubscription(
+    bundleId: courseId,
+    planName: bundleCourseNames[courseId] ?? 'اشتراك الباقة',
+    startedAt: DateTime.tryParse(row['enrolled_at']?.toString() ?? ''),
+    expiresAt: DateTime.tryParse(row['expires_at']?.toString() ?? ''),
+  );
+}

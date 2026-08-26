@@ -113,6 +113,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return AccountScreen(
         profile: widget.profile,
         repository: widget.accountRepository,
+        subscriptionRepository: widget.subscriptionRepository,
         onProfileUpdated: widget.onProfileUpdated,
         onSignOut: widget.onSignOut,
         onAccountDeleted: widget.onAccountDeleted,

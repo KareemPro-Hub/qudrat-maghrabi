@@ -41,8 +41,49 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
           'name_ar, bundle_course_id)',
         )
         .eq('student_id', studentId);
-    return activeStoreSubscriptionFromRows(
+    final native = activeStoreSubscriptionFromRows(
       (response as List).cast<Map<String, dynamic>>(),
+    );
+    if (native != null) return native;
+    // مفيش اشتراك عبر متجر التطبيقات، نتحقق من اشتراك مدفوع عبر المنصة
+    // (الموقع/Paymob) عشان الطالب ما يفضلش شايف إنه غير مشترك رغم دفعه.
+    return _loadWebEnrollmentSubscription(studentId);
+  }
+
+  Future<StudentSubscription?> _loadWebEnrollmentSubscription(
+    String studentId,
+  ) async {
+    final plansResponse = await _supabase
+        .from('store_subscription_plans')
+        .select('bundle_course_id, name_ar')
+        .not('bundle_course_id', 'is', null);
+    final bundleIds = <String>{
+      for (final row in (plansResponse as List).cast<Map<String, dynamic>>())
+        if (row['bundle_course_id'] != null)
+          row['bundle_course_id'] as String,
+    };
+    if (bundleIds.isEmpty) return null;
+
+    final coursesResponse = await _supabase
+        .from('courses')
+        .select('id, title')
+        .inFilter('id', bundleIds.toList());
+    final bundleCourseNames = <String, String>{
+      for (final row
+          in (coursesResponse as List).cast<Map<String, dynamic>>())
+        row['id'] as String:
+            (row['title'] as String?)?.trim() ?? 'باقة المنصة',
+    };
+
+    final enrollmentsResponse = await _supabase
+        .from('enrollments')
+        .select('course_id, payment_status, expires_at, enrolled_at')
+        .eq('student_id', studentId)
+        .eq('payment_status', 'paid')
+        .inFilter('course_id', bundleIds.toList());
+    return activeEnrollmentSubscriptionFromRows(
+      (enrollmentsResponse as List).cast<Map<String, dynamic>>(),
+      bundleCourseNames: bundleCourseNames,
     );
   }
 

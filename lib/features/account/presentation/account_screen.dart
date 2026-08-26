@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/config/app_metadata.dart';
@@ -6,6 +8,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
+import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,6 +19,7 @@ class AccountScreen extends StatefulWidget {
     required this.onProfileUpdated,
     required this.onSignOut,
     required this.onAccountDeleted,
+    this.subscriptionRepository,
     this.onBack,
     super.key,
   });
@@ -25,6 +29,9 @@ class AccountScreen extends StatefulWidget {
   final ValueChanged<AuthProfile> onProfileUpdated;
   final Future<void> Function() onSignOut;
   final Future<void> Function() onAccountDeleted;
+  // اختياري: لو موجود بنستخدمه لتحديد هل الطالب مشترك في باقة عشان نعرض
+  // بدج "مشترك" على بطاقة الحساب (متاح للطلاب فقط، مش لحساب ولي الأمر).
+  final SubscriptionRepository? subscriptionRepository;
   final VoidCallback? onBack;
 
   @override
@@ -33,6 +40,24 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   late AuthProfile _profile = widget.profile;
+  bool _isSubscribed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadSubscriptionStatus());
+  }
+
+  Future<void> _loadSubscriptionStatus() async {
+    final repository = widget.subscriptionRepository;
+    if (repository == null) return;
+    try {
+      final subscription = await repository.loadCurrentSubscription();
+      if (mounted) setState(() => _isSubscribed = subscription != null);
+    } catch (_) {
+      // تجاهل: البدج تحسين بصري فقط، ومفيش داعي نكسر الشاشة لو فشل التحقق.
+    }
+  }
 
   Future<void> _editProfile() async {
     final updated = await Navigator.of(context).push<AuthProfile>(
@@ -69,7 +94,7 @@ class _AccountScreenState extends State<AccountScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 42),
           children: [
-            _AccountHero(profile: _profile),
+            _AccountHero(profile: _profile, isSubscribed: _isSubscribed),
             const SizedBox(height: 28),
             const _SectionHeading(
               title: 'إدارة الحساب',
@@ -307,9 +332,10 @@ class _AccountScreenState extends State<AccountScreen> {
 }
 
 class _AccountHero extends StatelessWidget {
-  const _AccountHero({required this.profile});
+  const _AccountHero({required this.profile, this.isSubscribed = false});
 
   final AuthProfile profile;
+  final bool isSubscribed;
 
   @override
   Widget build(BuildContext context) {
@@ -384,25 +410,71 @@ class _AccountHero extends StatelessWidget {
                   style: const TextStyle(color: Color(0xD9FFFFFF)),
                 ),
                 const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .15),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    profile.role.arabicLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .15),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        profile.role.arabicLabel,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isSubscribed) const _SubscribedBadge(),
+                  ],
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubscribedBadge extends StatelessWidget {
+  const _SubscribedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF6D374), Color(0xFFC9922B)],
+        ),
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66C9922B),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 14),
+          SizedBox(width: 4),
+          Text(
+            'مشترك',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
