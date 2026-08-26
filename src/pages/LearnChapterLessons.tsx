@@ -25,7 +25,7 @@ export default function LearnChapterLessons() {
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('chapters').select('*').eq('id', chapterId).single(),
       supabase.from('lessons').select('*').eq('course_id', courseId).eq('chapter_id', chapterId).order('order_index'),
-      supabase.from('enrollments').select('id').eq('student_id', user!.id).eq('course_id', courseId!).eq('payment_status', 'paid').single(),
+      supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
       supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
       supabase.from('quiz_results').select('quiz_id').eq('student_id', user!.id).eq('passed', true),
@@ -33,7 +33,7 @@ export default function LearnChapterLessons() {
     setCourse(c)
     setChapter(ch)
     setLessons(l || [])
-    setEnrolled(!!e || Number(c?.price) === 0)
+    setEnrolled(e === true)
 
     const progressMap: Record<string, boolean> = {}
     p?.forEach((item: any) => { progressMap[item.lesson_id] = item.completed })

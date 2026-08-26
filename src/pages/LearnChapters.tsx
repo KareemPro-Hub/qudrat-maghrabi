@@ -23,12 +23,12 @@ export default function LearnChapters() {
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('chapters').select('*').eq('course_id', courseId).order('order_index'),
       supabase.from('lessons').select('id, chapter_id').eq('course_id', courseId),
-      supabase.from('enrollments').select('id').eq('student_id', user!.id).eq('course_id', courseId!).eq('payment_status', 'paid').single(),
+      supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
     ])
     setCourse(c)
     setChapters(ch || [])
-    setEnrolled(!!e || Number(c?.price) === 0)
+    setEnrolled(e === true)
 
     const byChapter: Record<string, any[]> = {}
     ;(l || []).forEach((lesson: any) => {
