@@ -66,8 +66,12 @@ export default function Dashboard() {
 
   async function fetchData() {
     setFetching(true)
+    // الاشتراك المنتهي لازم يتشال زي ما بيعمل has_active_course_access بالظبط
+    // (expires_at is null or expires_at > now())، لأن الداشبورد كان بيعرضه كأنه
+    // فعّال والطالب يضغط "أكمل الدرس" فيتقال له "غير مشترك في هذا الكورس".
+    const nowIso = new Date().toISOString()
     const [{ data: enr }, { data: qr }, { data: notifs }] = await Promise.all([
-      supabase.from('enrollments').select('*, courses(*)').eq('student_id', user!.id).eq('payment_status', 'paid').order('enrolled_at', { ascending: false }),
+      supabase.from('enrollments').select('*, courses(*)').eq('student_id', user!.id).eq('payment_status', 'paid').or(`expires_at.is.null,expires_at.gt.${nowIso}`).order('enrolled_at', { ascending: false }),
       supabase.from('quiz_results').select('*, quizzes(title, total_marks, pass_marks)').eq('student_id', user!.id).order('taken_at', { ascending: false }),
       supabase.from('notifications').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(10),
     ])
