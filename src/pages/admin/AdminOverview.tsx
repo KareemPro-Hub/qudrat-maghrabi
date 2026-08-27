@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Wallet, Users, BookOpen, PlayCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { avatarClass, initials } from '../../components/admin/lightKit'
@@ -50,7 +51,7 @@ function niceMaxAndStep(max: number, ticks = 4) {
 export default function AdminOverview() {
   const { profile } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ students: 0, courses: 0, quizzes: 0, revenueMonth: 0, revenueMonthGrowth: 0 })
+  const [stats, setStats] = useState({ students: 0, courses: 0, lessons: 0, quizzes: 0, revenueMonth: 0, revenueMonthGrowth: 0 })
   const [months, setMonths] = useState<MonthPoint[]>([])
   const [activeMonth, setActiveMonth] = useState(5)
   const [courseProgress, setCourseProgress] = useState<CourseProgressRow[]>([])
@@ -67,9 +68,10 @@ export default function AdminOverview() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-      const [studentsRes, coursesRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes] = await Promise.all([
+      const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
+        supabase.from('lessons').select('id', { count: 'exact', head: true }),
         supabase.from('quizzes').select('id', { count: 'exact', head: true }),
         supabase.from('enrollments').select('amount_paid, enrolled_at, course_id, courses(title)').eq('payment_status', 'paid').gte('enrolled_at', sixMonthsAgo.toISOString()),
         supabase.from('lesson_progress').select('watch_percentage, lessons(course_id, courses(title))'),
@@ -140,6 +142,7 @@ export default function AdminOverview() {
       setStats({
         students: studentsRes.count || 0,
         courses: coursesRes.count || 0,
+        lessons: lessonsRes.count || 0,
         quizzes: quizzesRes.count || 0,
         revenueMonth,
         revenueMonthGrowth,
@@ -221,7 +224,7 @@ export default function AdminOverview() {
                 {stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي
               </div>
             </div>
-            <span className="kpi-icon"><i className="diamond" /></span>
+            <span className="kpi-icon"><Wallet size={20} /></span>
           </div>
         </article>
         <article className="kpi-card purple">
@@ -232,7 +235,29 @@ export default function AdminOverview() {
               <div className="kpi-value">{loading ? '…' : stats.students.toLocaleString('en')}</div>
               <div className="kpi-sub" style={{ color: '#8b7fa3' }}>مسجّلون في المنصة</div>
             </div>
-            <span className="kpi-icon"><i className="circle" /></span>
+            <span className="kpi-icon"><Users size={20} /></span>
+          </div>
+        </article>
+        <article className="kpi-card pink">
+          <span className="kpi-blob" />
+          <div className="kpi-card-row">
+            <div>
+              <div className="kpi-label">إجمالي الكورسات</div>
+              <div className="kpi-value">{loading ? '…' : stats.courses.toLocaleString('en')}</div>
+              <div className="kpi-sub" style={{ color: '#8b7fa3' }}>منشورة على المنصة</div>
+            </div>
+            <span className="kpi-icon"><BookOpen size={20} /></span>
+          </div>
+        </article>
+        <article className="kpi-card green">
+          <span className="kpi-blob" />
+          <div className="kpi-card-row">
+            <div>
+              <div className="kpi-label">إجمالي الدروس</div>
+              <div className="kpi-value">{loading ? '…' : stats.lessons.toLocaleString('en')}</div>
+              <div className="kpi-sub" style={{ color: '#8b7fa3' }}>في كل الكورسات</div>
+            </div>
+            <span className="kpi-icon"><PlayCircle size={20} /></span>
           </div>
         </article>
       </div>
