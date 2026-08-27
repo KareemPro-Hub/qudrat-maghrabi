@@ -28,10 +28,22 @@ export default function Courses() {
         enrolled_count: statsByCourse[c.id]?.enrolled_count ?? 0,
       }))
       const childCounts: Record<string, number> = {}
-      merged.forEach((c: any) => { if (c.parent_course_id) childCounts[c.parent_course_id] = (childCounts[c.parent_course_id] || 0) + 1 })
+      // دروس الباقة منشورة تحت الكورسات الفرعية، فـ lessons_count بتاع الباقة
+      // نفسها بيرجع صفر وكارت الباقة كان مكتوب عليه "0 درس". بنجمع دروس
+      // الكورسات اللي جواها عشان الرقم يعبّر عن اللي الطالب هياخده فعلًا.
+      const childLessons: Record<string, number> = {}
+      merged.forEach((c: any) => {
+        if (c.parent_course_id) {
+          childCounts[c.parent_course_id] = (childCounts[c.parent_course_id] || 0) + 1
+          childLessons[c.parent_course_id] = (childLessons[c.parent_course_id] || 0) + (c.lessons_count || 0)
+        }
+      })
       setChildCountByParent(childCounts)
       // الكورسات الفرعية بتظهر جوه صفحة الكورس الأب بتاعها، مش كبلاطة مستقلة هنا
-      setCourses(merged.filter((c: any) => !c.parent_course_id))
+      setCourses(merged.filter((c: any) => !c.parent_course_id).map((c: any) => ({
+        ...c,
+        lessons_count: (c.lessons_count || 0) + (childLessons[c.id] || 0),
+      })))
       setLoading(false)
     })
   }, [])
