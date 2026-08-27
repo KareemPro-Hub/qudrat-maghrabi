@@ -49,6 +49,25 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
 
     final statsFuture = loadPublicStats();
 
+    // نفس شرط has_active_course_access على السيرفر: الكورس المنشور اللي سعره 0
+    // ومالوش كورسات فرعية متاح للكل. لازم نعرف هل له كورسات فرعية عشان نفرّق
+    // بين الكورس المجاني والباقة اللي سعرها 0 بس محتواها في كورسات مدفوعة.
+    Future<bool> loadHasChildCourses() async {
+      try {
+        final rows = await _client
+            .from('courses')
+            .select('id')
+            .eq('parent_course_id', courseId)
+            .limit(1);
+        return (rows as List).isNotEmpty;
+      } catch (_) {
+        // الأكثر تحفظًا: نعتبره باقة فما نفتحش محتوى بالغلط
+        return true;
+      }
+    }
+
+    final hasChildCoursesFuture = loadHasChildCourses();
+
     final responses = await Future.wait([
       _client
           .from('chapters')
@@ -133,6 +152,8 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
         .toList();
     final price = _asDouble(course['price']);
     final hasActiveEnrollment = enrollmentRows.any(_isActiveEnrollment);
+    final hasChildCourses = await hasChildCoursesFuture;
+    final isFreeLeafCourse = price <= 0 && !hasChildCourses;
     final statsRow = await statsFuture;
 
     return CourseLearningContent(
@@ -141,7 +162,7 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       description: (course['description'] as String?)?.trim() ?? '',
       thumbnailUrl: _cleanText(course['thumbnail_url']),
       price: price,
-      hasAccess: hasActiveEnrollment,
+      hasAccess: isFreeLeafCourse || hasActiveEnrollment,
       chapters: chapters,
       ungroupedLessons: ungroupedLessons,
       totalLessonsCount: _asInt(statsRow?['lessons_count']),

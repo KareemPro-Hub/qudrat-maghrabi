@@ -131,7 +131,12 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       final childCoursesCount = childCountByParent[id] ?? 0;
       final price = _asDouble(row['price']);
       final parentCourseId = row['parent_course_id'] as String?;
+      // نفس شرط has_active_course_access على السيرفر بالظبط: الكورس المنشور
+      // اللي سعره 0 ومالوش كورسات فرعية متاح للكل من غير اشتراك. من غير
+      // الشرط ده كان التطبيق يقفل محتوى السيرفر أصلًا بيسمح بيه.
+      final isFreeLeafCourse = price <= 0 && childCoursesCount == 0;
       final hasAccess =
+          isFreeLeafCourse ||
           activeCourseIds.contains(id) ||
           (parentCourseId != null && activeBundleIds.contains(parentCourseId));
       final accessibleLessons = lessonRows
