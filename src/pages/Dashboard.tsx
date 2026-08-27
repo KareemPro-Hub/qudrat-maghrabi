@@ -216,7 +216,20 @@ export default function Dashboard() {
     ? Math.round(quizResults.reduce((s, r) => s + (r.score / (r.quizzes?.total_marks || 1) * 100), 0) / quizResults.length)
     : null
 
-  const overallPct = courses.length > 0 ? Math.round(courses.reduce((s, c) => s + c.pct, 0) / courses.length) : 0
+  // كانت متوسط حسابي على عدد الاشتراكات، فالكورس اللي لسه من غير دروس بيدخل
+  // بصفر ويسحب النسبة لتحت، والاشتراك على الباقة وعلى الكورس اللي جواها كان
+  // بيعدّ نفس الدروس مرتين. دلوقتي بنحسبها على الدروس نفسها من غير تكرار.
+  const overallPct = useMemo(() => {
+    const allLessonIds = new Set<string>()
+    const doneLessonIds = new Set<string>()
+    courses.forEach((c: any) => {
+      ;(c.lessons || []).forEach((l: any) => {
+        allLessonIds.add(l.id)
+        if (c.completedIds?.has(l.id)) doneLessonIds.add(l.id)
+      })
+    })
+    return allLessonIds.size > 0 ? Math.round((doneLessonIds.size / allLessonIds.size) * 100) : 0
+  }, [courses])
   const primary = courses[0] || null
   const lastResult = quizResults[0] || null
   const lastResultPct = lastResult ? Math.round((lastResult.score / (lastResult.quizzes?.total_marks || 1)) * 100) : null
