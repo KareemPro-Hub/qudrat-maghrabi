@@ -12,6 +12,7 @@ class CourseOverviewScreen extends StatefulWidget {
     required this.studentId,
     required this.repository,
     required this.quizRepository,
+    this.onSubscribe,
     super.key,
   });
 
@@ -19,6 +20,10 @@ class CourseOverviewScreen extends StatefulWidget {
   final String studentId;
   final StudentLearningRepository repository;
   final StudentQuizRepository quizRepository;
+
+  /// يُستدعى لما الطالب يضغط على درس مقفول عشان تظهر له شاشة الاشتراك.
+  /// اختياري عشان الشاشة تفضل تشتغل من غيره في الاختبارات.
+  final Future<void> Function()? onSubscribe;
 
   @override
   State<CourseOverviewScreen> createState() => _CourseOverviewScreenState();
@@ -53,6 +58,14 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
     CourseLesson lesson,
   ) async {
     if (!content.hasAccess && !lesson.isFreePreview) {
+      // الدرس المقفول بيبان في القائمة عادي، فالضغط عليه لازم يعرض الاشتراك
+      // بدل مجرد رسالة رفض.
+      final onSubscribe = widget.onSubscribe;
+      if (onSubscribe != null) {
+        await onSubscribe();
+        if (mounted) await _refresh();
+        return;
+      }
       _showMessage('هذا الدرس متاح للمشتركين في الكورس');
       return;
     }
@@ -68,6 +81,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
           studentId: widget.studentId,
           repository: widget.repository,
           quizRepository: widget.quizRepository,
+          onSubscribe: widget.onSubscribe,
         ),
       ),
     );

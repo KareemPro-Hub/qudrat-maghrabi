@@ -20,6 +20,7 @@ class LessonPlayerScreen extends StatefulWidget {
     required this.studentId,
     required this.repository,
     required this.quizRepository,
+    this.onSubscribe,
     super.key,
   });
 
@@ -28,6 +29,9 @@ class LessonPlayerScreen extends StatefulWidget {
   final String studentId;
   final StudentLearningRepository repository;
   final StudentQuizRepository quizRepository;
+
+  /// يُستدعى لما الطالب يضغط على درس مقفول في قائمة الدروس.
+  final Future<void> Function()? onSubscribe;
 
   @override
   State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
@@ -105,6 +109,12 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
 
   Future<void> _selectLesson(CourseLesson lesson) async {
     if (!_canOpenLesson(lesson)) {
+      // نفس سلوك صفحة الكورس: القفل بيعرض الاشتراك مش مجرد رسالة رفض.
+      final onSubscribe = widget.onSubscribe;
+      if (onSubscribe != null) {
+        await onSubscribe();
+        return;
+      }
       _showLockedLessonMessage();
       return;
     }
