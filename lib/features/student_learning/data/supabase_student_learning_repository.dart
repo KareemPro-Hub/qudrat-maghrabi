@@ -218,19 +218,25 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       0,
       safeDuration > 0 ? safeDuration : positionSeconds,
     );
+    final payload = <String, dynamic>{
+      'student_id': studentId,
+      'lesson_id': lessonId,
+      'watch_percentage': nextCompleted ? 100 : nextPercentage,
+      'last_position_seconds': nextCompleted && safeDuration > 0
+          ? safeDuration
+          : safePosition,
+      'duration_seconds': safeDuration,
+      'last_watched_at': DateTime.now().toUtc().toIso8601String(),
+    };
+    // خط دفاع تاني: مابنبعتش completed إلا لما تكون true. الدرس المكتمل
+    // مابيرجعش غير مكتمل في المنصة أصلًا، وبكده أي حفظ متأخر للموضع
+    // مايقدرش يمسح علامة الإكمال. العمود قيمته الافتراضية false فالصف
+    // الجديد بيتسجّل صح من غير ما نبعتها.
+    if (nextCompleted) payload['completed'] = true;
+
     final Map<String, dynamic> row = await _client
         .from('lesson_progress')
-        .upsert({
-          'student_id': studentId,
-          'lesson_id': lessonId,
-          'watch_percentage': nextCompleted ? 100 : nextPercentage,
-          'completed': nextCompleted,
-          'last_position_seconds': nextCompleted && safeDuration > 0
-              ? safeDuration
-              : safePosition,
-          'duration_seconds': safeDuration,
-          'last_watched_at': DateTime.now().toUtc().toIso8601String(),
-        }, onConflict: 'student_id,lesson_id')
+        .upsert(payload, onConflict: 'student_id,lesson_id')
         .select(
           'watch_percentage, completed, last_position_seconds, '
           'duration_seconds',

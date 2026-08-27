@@ -171,10 +171,20 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     final lessonAtSave = _lesson;
     _saveChain = _saveChain.then((_) async {
       try {
+        // لازم نقرأ آخر تقدّم محفوظ وقت التنفيذ مش وقت الاستدعاء: لو اتبعت
+        // عملية حفظ "مكتمل" وبعدها على طول حفظ للموضع (مثلًا لما التطبيق يروح
+        // للخلفية بعد نهاية الفيديو)، كانت التانية بتستخدم نسخة قديمة فيها
+        // completed=false فتمسح علامة الإكمال، ويفضل الدرس 100% من غير علامة.
+        final savedIndex = _lessons.indexWhere(
+          (item) => item.id == lessonAtSave.id,
+        );
+        final current = savedIndex >= 0
+            ? _lessons[savedIndex].progress
+            : lessonAtSave.progress;
         final progress = await widget.repository.saveProgress(
           studentId: widget.studentId,
           lessonId: lessonAtSave.id,
-          current: lessonAtSave.progress,
+          current: current,
           watchPercentage: percentage,
           completed: completed,
           positionSeconds: positionSeconds,
