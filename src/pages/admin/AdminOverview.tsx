@@ -231,6 +231,10 @@ export default function AdminOverview() {
         <article className="admin-card chart-card revenue-card">
           <header className="card-head revenue-head">
             <div><h3>أداء الإيرادات</h3><p>تطوّر الإيرادات خلال آخر 6 أشهر</p></div>
+            <span className="revenue-period-chip">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="4" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
+              6 أشهر
+            </span>
           </header>
           <div className="revenue-overview">
             <div className="revenue-total"><span>إجمالي الإيرادات (6 أشهر)</span><strong>{fmtMoney(totalRevenue6mo)} <small><CurrencySymbol /></small></strong></div>
