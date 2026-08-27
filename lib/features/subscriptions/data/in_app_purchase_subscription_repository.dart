@@ -215,6 +215,23 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
             productId: purchase.productID,
           );
       }
+
+      // العملية الملغية أو الفاشلة كانت بتفضل معلّقة في طابور المتجر لأن
+      // completePurchase مكانش بيتنادى غير في مسار النجاح. النتيجة:
+      // - iOS: نفس المعاملة بتترجع كل مرة التطبيق يفتح، فالطالب يشوف رسالة
+      //   "لم تكتمل عملية الشراء" كل شوية، وإعادة الشراء ممكن تتعطّل.
+      // - Android: جوجل بترجّع فلوس أي عملية غير مؤكَّدة بعد 3 أيام.
+      // مسار النجاح (purchased/restored) بيكمّل العملية جوه _verifyAndDeliver،
+      // فبنقتصر هنا على الحالتين دول بس عشان ما نناديش completePurchase مرتين.
+      if ((purchase.status == PurchaseStatus.canceled ||
+              purchase.status == PurchaseStatus.error) &&
+          purchase.pendingCompletePurchase) {
+        try {
+          await _store.completePurchase(purchase);
+        } catch (_) {
+          // لو المتجر رفض إقفال معاملة مش موجودة في الطابور، مفيش حاجة نعملها.
+        }
+      }
     }
   }
 
