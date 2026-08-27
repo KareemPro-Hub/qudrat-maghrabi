@@ -31,7 +31,7 @@ export default function Quiz() {
 
   useEffect(() => {
     if (timeLeft === null) return
-    if (timeLeft <= 0) { handleSubmit(); return }
+    if (timeLeft <= 0) { handleSubmit(true); return }
     timerRef.current = setTimeout(() => setTimeLeft(t => (t ?? 1) - 1), 1000)
     return () => clearTimeout(timerRef.current)
   }, [timeLeft])
@@ -47,9 +47,11 @@ export default function Quiz() {
     setLoading(false)
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(force = false) {
     clearTimeout(timerRef.current)
-    if (Object.keys(answers).length < questions.length) {
+    // لما الوقت يخلص لازم الإجابات تترفع إجباريًا؛ قبل كده لو ضغط الطالب "إلغاء"
+    // في رسالة التأكيد كانت المحاولة بتفضل معلّقة من غير ما تترفع خالص.
+    if (!force && Object.keys(answers).length < questions.length) {
       const unanswered = questions.length - Object.keys(answers).length
       if (!confirm(`لم تجب على ${unanswered} سؤال. هل تريد الإرسال ؟`)) return
     }
@@ -76,12 +78,14 @@ export default function Quiz() {
     return `${m}:${sec.toString().padStart(2, '0')}`
   }
 
+  // لازم يتحقق من تسجيل الدخول قبل شاشة التحميل: الزائر غير المسجّل مكانش بيوصل
+  // للسطر ده أصلاً فكان بيفضل على شاشة تحميل بلا نهاية بدل ما يتحوّل لصفحة الدخول.
+  if (!authLoading && !user) return <Navigate to="/login" />
   if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
-  if (!user) return <Navigate to="/login" />
   if (!quiz || questions.length === 0) return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-400 font-bold">الاختبار غير متاح</p>
@@ -204,7 +208,7 @@ export default function Quiz() {
               التالي <ChevronLeft size={18} />
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex items-center gap-2 py-3 px-5">
+            <button onClick={() => handleSubmit()} disabled={submitting} className="btn-primary flex items-center gap-2 py-3 px-5">
               {submitting ? 'جاري الإرسال...' : <><Send size={16} /> إنهاء</>}
             </button>
           )}

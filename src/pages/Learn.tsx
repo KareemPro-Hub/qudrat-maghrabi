@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Navigate, Link } from 'react-router-dom'
+import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
 import { Lock, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -76,6 +76,7 @@ function fmtCount(n: number, one: string, many: string) {
 export default function Learn() {
   const { courseId, chapterId, lessonId } = useParams<{ courseId: string; chapterId?: string; lessonId?: string }>()
   const { user, profile, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
   const [sessionToken, setSessionToken] = useState<string>('')
   const [course, setCourse] = useState<any>(null)
   const [chapter, setChapter] = useState<any>(null)
@@ -131,6 +132,25 @@ export default function Learn() {
 
     const passed = new Set<string>(qr?.map((r: any) => r.quiz_id) || [])
     setPassedQuizIds(passed)
+
+    // الاشتراك بيتم على "الباقة" (كورس أب) والدروس الحقيقية منشورة تحت الكورسات
+    // الفرعية. الطالب بعد الدفع كان بيتوجّه لصفحة الباقة الفاضية ويشوف
+    // "لا توجد دروس في هذا الكورس بعد" من غير أي زرار يكمّل بيه، فبنحوّله
+    // تلقائيًا لأول كورس فرعي فيه محتوى.
+    if ((!l || l.length === 0) && !chapterId) {
+      const { data: children } = await supabase
+        .from('courses').select('id').eq('parent_course_id', courseId)
+        .eq('is_published', true).order('order_index').limit(1)
+      const child = (children || [])[0]
+      if (child) {
+        const { data: childChapters } = await supabase
+          .from('chapters').select('id').eq('course_id', child.id).limit(1)
+        navigate(childChapters && childChapters.length > 0
+          ? `/learn/${child.id}/chapters`
+          : `/learn/${child.id}`, { replace: true })
+        return
+      }
+    }
 
     if (l && l.length > 0) {
       // الدرس المختار من شبكة دروس الباب له الأولوية، وإلا نفتح أول درس غير مكتمل
@@ -220,7 +240,9 @@ export default function Learn() {
     showToast('التدريب جاهز', questionCount > 0 ? `${questionCount} أسئلة متدرجة — ابدأ عندما تكون مستعدًا.` : 'لا يوجد تدريب لهذا الدرس بعد.')
   }
 
-  const completedCount = Object.values(progress).filter(Boolean).length
+  // كانت بتعدّ كل دروس الطالب في المنصة كلها مقابل دروس الباب الحالي بس،
+  // فالنسبة كانت ممكن تعدّي 100% أول ما يتضاف أي درس في باب تاني.
+  const completedCount = lessons.filter((l: any) => progress[l.id]).length
   const progressPct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0
   const currentIndex = lessons.findIndex(l => l.id === currentLesson?.id)
   const currentQuiz = currentLesson ? quizByLesson[currentLesson.id] : null
@@ -229,12 +251,14 @@ export default function Learn() {
   const summaryPoints = (currentLesson?.description || '').split('\n').map((s: string) => s.trim()).filter(Boolean)
   const initial = (profile?.full_name || 'ط').charAt(0)
 
+  // لازم يتحقق من تسجيل الدخول قبل شاشة التحميل: الزائر غير المسجّل مكانش بيوصل
+  // للسطر ده أصلاً فكان بيفضل على شاشة تحميل بلا نهاية بدل ما يتحوّل لصفحة الدخول.
+  if (!authLoading && !user) return <Navigate to="/login" />
   if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
-  if (!user) return <Navigate to="/login" />
   // درس مجاني (is_free_preview) لازم يفضل متاح حتى لغير المشترك — الفحص ده كان بيقفل
   // الصفحة كلها على مستوى الكورس فقط، بدون استثناء للدروس المجانية، وده كان بيمنع
   // مشاهدة أي درس مجاني لأي طالب مش مشترك.

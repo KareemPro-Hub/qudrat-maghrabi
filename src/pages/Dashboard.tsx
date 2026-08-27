@@ -223,6 +223,8 @@ export default function Dashboard() {
     return new Date(Math.max(...dates.map((d) => d.getTime())))
   }, [courses])
 
+  // نفس السبب: من غير الفحص ده الزائر غير المسجّل كان بيعلق على شاشة تحميل دائمة.
+  if (!loading && !user) return <Navigate to="/login" />
   if (loading || fetching) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
@@ -241,8 +243,12 @@ export default function Dashboard() {
   async function handleContinue() {
     if (!primary) return
     showToast(`رائع يا ${firstName}!`, 'خطوة جديدة تقترب بها من هدفك.')
-    const targetCourseId = primary.currentLesson?.course_id || primary.contentCourseId || primary.course.id
-    setTimeout(() => navigate(`/learn/${targetCourseId}`), 550)
+    const cur = primary.currentLesson
+    const targetCourseId = cur?.course_id || primary.contentCourseId || primary.course.id
+    const target = cur?.chapter_id
+      ? `/learn/${cur.course_id}/${cur.chapter_id}/${cur.id}`
+      : `/learn/${targetCourseId}`
+    setTimeout(() => navigate(target), 550)
   }
 
   return (
@@ -345,7 +351,11 @@ export default function Dashboard() {
                     {primary.lessons.length === 0 ? (
                       <p style={{ color: '#9a8fa0', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>لا توجد دروس منشورة بعد في هذا الكورس</p>
                     ) : (() => {
-                      const startIdx = Math.max(0, primary.lessons.findIndex((l: any) => l.id === primary.currentLesson?.id))
+                      // القائمة كانت بتبدأ من الدرس الحالي بالظبط، فأي درس مكتمل كان
+                      // بيختفي خالص من الداشبورد والطالب يفتكر إنه اتحذف. بنرجع خطوة
+                      // واحدة لورا عشان يفضل شايف آخر درس خلّصه جنب درسه الحالي.
+                      const currentIdx = primary.lessons.findIndex((l: any) => l.id === primary.currentLesson?.id)
+                      const startIdx = Math.max(0, (currentIdx < 0 ? 0 : currentIdx) - 1)
                       return primary.lessons.slice(startIdx, startIdx + 3)
                     })().map((lesson: any) => {
                       const done = primary.completedIds.has(lesson.id)
@@ -354,7 +364,9 @@ export default function Dashboard() {
                         <Link
                           key={lesson.id}
                           className={`plan-item${done ? ' done' : ''}${isCurrent && !done ? ' current' : ''}`}
-                          to={`/learn/${lesson.course_id || primary.contentCourseId || primary.course.id}`}
+                          to={lesson.chapter_id
+                            ? `/learn/${lesson.course_id}/${lesson.chapter_id}/${lesson.id}`
+                            : `/learn/${lesson.course_id || primary.contentCourseId || primary.course.id}`}
                         >
                           <span className="plan-state">{done && <svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7" /></svg>}</span>
                           <span className="plan-copy"><b>{lesson.title}</b><small>{lesson.chapter || primary.course?.title}</small></span>
@@ -411,7 +423,9 @@ export default function Dashboard() {
                     <small>مسارك الحالي</small>
                     <h3>{c.course?.title}</h3>
                     <p>{c.completedCount} من {c.lessons.length} درسًا مكتملًا</p>
-                    <Link to={`/learn/${c.currentLesson?.course_id || c.contentCourseId || c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
+                    <Link to={c.currentLesson?.chapter_id
+                      ? `/learn/${c.currentLesson.course_id}/${c.currentLesson.chapter_id}/${c.currentLesson.id}`
+                      : `/learn/${c.currentLesson?.course_id || c.contentCourseId || c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
                   </div>
                 </article>
               ))}

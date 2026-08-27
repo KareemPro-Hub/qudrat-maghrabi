@@ -51,12 +51,14 @@ export default function LearnChapters() {
 
   const initial = (profile?.full_name || 'ط').charAt(0)
 
+  // لازم يتحقق من تسجيل الدخول قبل شاشة التحميل: الزائر غير المسجّل مكانش بيوصل
+  // للسطر ده أصلاً فكان بيفضل على شاشة تحميل بلا نهاية بدل ما يتحوّل لصفحة الدخول.
+  if (!authLoading && !user) return <Navigate to="/login" />
   if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
-  if (!user) return <Navigate to="/login" />
   if (!enrolled && !hasFreeLesson && course) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-sm">

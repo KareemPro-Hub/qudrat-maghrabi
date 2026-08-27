@@ -9,6 +9,9 @@ function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoI
   const [src, setSrc] = useState('')
 
   useEffect(() => {
+    // من غير الفحص ده كان الطلب بيتبعت بتوكن فاضي لو الجلسة لسه بتتحمّل،
+    // فتظهر رسالة "تعذّر تحميل الفيديو" ومتتصلحش لوحدها بعد ما التوكن يجهز.
+    if (!sessionToken) return
     let destroyed = false
     async function init() {
       try {
@@ -26,7 +29,7 @@ function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoI
     }
     init()
     return () => { destroyed = true }
-  }, [videoId])
+  }, [videoId, sessionToken])
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
