@@ -234,7 +234,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         return _CourseCard(
                           key: ValueKey(course.id),
                           course: course,
-                          onTap: () => course.hasAccess
+                          // الكورس اللي فيه دروس مجانية لازم يفتح حتى لغير المشترك،
+                          // القفل الحقيقي بيتم على مستوى الدرس نفسه جوه الكورس.
+                          onTap: () => course.hasAccess || course.hasFreePreview
                               ? _showCourseDetails(course)
                               : _showSubscriptions(),
                         );
@@ -312,7 +314,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   return _CourseCard(
                     key: ValueKey('catalog-${course.id}'),
                     course: course,
-                    onTap: () => course.hasAccess
+                    // نفس السبب: الكورس اللي فيه دروس مجانية يفضل مفتوح لغير المشترك.
+                    onTap: () => course.hasAccess || course.hasFreePreview
                         ? _showCourseDetails(course)
                         : _showSubscriptions(),
                   );

@@ -61,7 +61,14 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _restoreSession() async {
-    final profile = await widget.authRepository.restoreSession();
+    // من غير try/catch كان أي خطأ شبكة أثناء استعادة الجلسة (نت ضعيف أو مقطوع)
+    // بيخلي المستخدم على شاشة التحميل للأبد من غير أي طريقة يخرج بيها.
+    AuthProfile? profile;
+    try {
+      profile = await widget.authRepository.restoreSession();
+    } catch (_) {
+      profile = null;
+    }
     if (!mounted) return;
     setState(() {
       if (!_passwordRecoveryPending) _profile = profile;
@@ -76,7 +83,10 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _signOut() async {
-    await widget.authRepository.signOut();
+    // فشل نداء الخروج (نت مقطوع) مكانش المفروض يمنع الخروج من الواجهة نفسها.
+    try {
+      await widget.authRepository.signOut();
+    } catch (_) {}
     if (!mounted) return;
     setState(() => _profile = null);
   }
@@ -95,7 +105,11 @@ class _AuthGateState extends State<AuthGate> {
           });
         },
         onCancelled: () async {
-          await widget.authRepository.signOut();
+          // الشاشة دي PopScope(canPop: false)، فلو نداء الخروج رمى استثناء كان
+          // الزرار ما بيعملش حاجة والمستخدم يفضل محبوس فيها.
+          try {
+            await widget.authRepository.signOut();
+          } catch (_) {}
           if (!mounted) return;
           setState(() {
             _passwordRecoveryPending = false;

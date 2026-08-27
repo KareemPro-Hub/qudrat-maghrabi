@@ -29,7 +29,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<List<AppNotification>> _load() async {
     final notifications = await widget.repository.load(userId: widget.userId);
-    await widget.repository.markAllRead(userId: widget.userId);
+    // تعليم الإشعارات كمقروءة عملية ثانوية؛ فشلها مكانش المفروض يخفي
+    // الإشعارات نفسها ويعرض "تعذّر تحميل الإشعارات" رغم إنها اتحمّلت فعلًا.
+    try {
+      await widget.repository.markAllRead(userId: widget.userId);
+    } catch (_) {}
     return notifications;
   }
 

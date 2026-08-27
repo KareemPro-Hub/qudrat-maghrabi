@@ -60,6 +60,10 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
       quizId: widget.quiz.id,
     );
     _questions = questions;
+    // لو الطالب خرج من الاختبار والأسئلة لسه بتتحمّل، الشاشة بتكون اتقفلت خلاص
+    // ومفيش حد يوقف المؤقت — فكان بيفضل شغال في الخلفية ويرمي استثناء عند
+    // انتهاء الوقت لأنه بينادي setState على شاشة مقفولة.
+    if (!mounted) return questions;
     if (widget.quiz.hasTimer) {
       final seconds = widget.quiz.timeLimitMinutes! * 60;
       _deadline = DateTime.now().add(Duration(seconds: seconds));
@@ -73,6 +77,10 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
   }
 
   void _updateTimer() {
+    if (!mounted) {
+      _timer?.cancel();
+      return;
+    }
     final deadline = _deadline;
     if (deadline == null || _finished) return;
     final remaining = deadline.difference(DateTime.now()).inSeconds;

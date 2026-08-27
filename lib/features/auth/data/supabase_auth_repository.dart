@@ -149,6 +149,17 @@ class SupabaseAuthRepository implements AuthRepository {
         );
       }
 
+      // مع تفعيل تأكيد البريد، Supabase مابيرجعش خطأ لو الإيميل مسجّل قبل كده
+      // (حماية ضد تعداد الحسابات)؛ بيرجع مستخدم بـ identities فاضية. من غير
+      // الفحص ده كان الطالب يشوف "تم إنشاء الحساب" وما توصلهوش رسالة ولا يقدر
+      // يسجّل دخول بالباسورد اللي كتبه.
+      if (response.user!.identities?.isEmpty ?? false) {
+        throw const AuthFailure(
+          code: 'user_already_exists',
+          message: 'البريد الإلكتروني مسجّل مسبقًا. سجّل الدخول أو استخدم "نسيت كلمة المرور"',
+        );
+      }
+
       // Confirmation is required in production. Do not leave an accidental
       // session active if that setting is temporarily disabled.
       if (response.session != null) {

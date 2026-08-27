@@ -641,7 +641,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final updated = await widget.repository.updateProfile(
         profile: widget.profile,
         fullName: _nameController.text,
-        phone: _phoneController.text,
+        phone: _normalizePhone(_phoneController.text),
       );
       if (!mounted) return;
       Navigator.of(context).pop(updated);
@@ -725,9 +725,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  String? _validatePhone(String? value) {
+  // التطبيع كان بيتعمل للتحقق بس، والحفظ بيبعت النص الخام — فرقم زي 05xxxxxxxx
+  // كان بيتخزن كده بدل الصيغة الدولية +9665xxxxxxxx اللي الباك إند معتمد عليها.
+  static String _normalizePhone(String? value) {
     final compact = (value ?? '').replaceAll(RegExp(r'[\s()-]'), '');
-    final normalized = compact.startsWith('+')
+    return compact.startsWith('+')
         ? compact
         : compact.startsWith('05') && compact.length == 10
         ? '+966${compact.substring(1)}'
@@ -738,7 +740,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         : compact.startsWith('20') && compact.length == 12
         ? '+$compact'
         : compact;
-    if (!RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(normalized)) {
+  }
+
+  String? _validatePhone(String? value) {
+    if (!RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(_normalizePhone(value))) {
       return 'أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx';
     }
     return null;
