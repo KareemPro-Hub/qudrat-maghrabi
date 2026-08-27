@@ -51,6 +51,12 @@ class _AuthGateState extends State<AuthGate> {
     _passwordRecoverySubscription = widget.authRepository.passwordRecoveryEvents
         .listen((_) {
           if (!mounted) return;
+          // شاشة "عيّن كلمة مرور جديدة" بتتعرض كجسم AuthGate نفسه (الصفحة
+          // الأولى)، بينما "نسيت كلمة المرور" و"إنشاء حساب" بيتفتحوا كصفحات
+          // فوقها. من غير إغلاق الصفحات دي، الطالب بيرجع من رابط البريد
+          // ويلاقي نفسه لسه على شاشة "راجع بريدك الإلكتروني" وشاشة كلمة
+          // المرور الجديدة مغطّاة تحتها، فيفتكر إن الرابط مش شغال.
+          Navigator.maybeOf(context)?.popUntil((route) => route.isFirst);
           setState(() {
             _passwordRecoveryPending = true;
             _restoringSession = false;

@@ -135,6 +135,32 @@ void main() {
     expect(find.text('أهلًا بعودتك'), findsOneWidget);
   });
 
+  testWidgets('recovery deep link shows the reset form over forgot password', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository();
+    await tester.pumpWidget(_createApp(repository));
+    await tester.pumpAndSettle();
+
+    // الطالب بيطلب الرابط، فيفضل واقف على شاشة "راجع بريدك الإلكتروني"
+    await tester.tap(find.byKey(const Key('forgot-password-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('recovery-email-input')),
+      'student@example.com',
+    );
+    await tester.tap(find.byKey(const Key('recovery-submit-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('راجع بريدك الإلكتروني'), findsOneWidget);
+
+    // ولما يفتح الرابط من بريده لازم يشوف شاشة كلمة المرور الجديدة
+    repository.emitPasswordRecovery();
+    await tester.pumpAndSettle();
+
+    expect(find.text('عيّن كلمة مرور جديدة'), findsOneWidget);
+    expect(find.text('راجع بريدك الإلكتروني'), findsNothing);
+  });
+
   testWidgets('registration validates required identity and password fields', (
     tester,
   ) async {
