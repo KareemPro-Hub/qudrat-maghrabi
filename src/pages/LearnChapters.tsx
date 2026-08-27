@@ -12,6 +12,7 @@ export default function LearnChapters() {
   const [lessonsByChapter, setLessonsByChapter] = useState<Record<string, any[]>>({})
   const [progress, setProgress] = useState<Record<string, boolean>>({})
   const [enrolled, setEnrolled] = useState(false)
+  const [hasFreeLesson, setHasFreeLesson] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,13 +23,16 @@ export default function LearnChapters() {
     const [{ data: c }, { data: ch }, { data: l }, { data: e }, { data: p }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('chapters').select('*').eq('course_id', courseId).order('order_index'),
-      supabase.from('lessons').select('id, chapter_id').eq('course_id', courseId),
+      supabase.from('lessons').select('id, chapter_id, is_free_preview').eq('course_id', courseId),
       supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
     ])
     setCourse(c)
     setChapters(ch || [])
     setEnrolled(e === true)
+    // لو الكورس فيه أي درس مجاني (RLS بترجعه حتى لغير المشترك)، لازم يقدر يدخل يتصفح
+    // الأبواب علشان يوصله — القفل الفعلي على مستوى الدرس نفسه بيتم في الصفحة اللي بعدها.
+    setHasFreeLesson((l || []).some((lesson: any) => lesson.is_free_preview))
 
     const byChapter: Record<string, any[]> = {}
     ;(l || []).forEach((lesson: any) => {
@@ -53,7 +57,7 @@ export default function LearnChapters() {
     </div>
   )
   if (!user) return <Navigate to="/login" />
-  if (!enrolled && course) return (
+  if (!enrolled && !hasFreeLesson && course) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
         <Lock size={48} className="mx-auto text-gray-300 mb-4" />

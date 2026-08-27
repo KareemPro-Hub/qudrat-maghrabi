@@ -64,7 +64,7 @@ export default function LearnChapterLessons() {
     </div>
   )
   if (!user) return <Navigate to="/login" />
-  if (!enrolled && course) return (
+  if (!enrolled && lessons.length === 0 && course) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
         <Lock size={48} className="mx-auto text-gray-300 mb-4" />
