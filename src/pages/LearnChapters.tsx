@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
-import { Lock, BookOpen, ArrowLeft } from 'lucide-react'
+import { BookOpen, ArrowLeft } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
@@ -12,7 +12,6 @@ export default function LearnChapters() {
   const [lessonsByChapter, setLessonsByChapter] = useState<Record<string, any[]>>({})
   const [progress, setProgress] = useState<Record<string, boolean>>({})
   const [enrolled, setEnrolled] = useState(false)
-  const [hasFreeLesson, setHasFreeLesson] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,17 +22,14 @@ export default function LearnChapters() {
     const [{ data: c }, { data: ch }, { data: l }, { data: e }, { data: p }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('chapters').select('*').eq('course_id', courseId).order('order_index'),
-      supabase.from('lessons').select('id, chapter_id, is_free_preview').eq('course_id', courseId),
+      // مخطط الدروس العام: بيدي عدد دروس كل باب الحقيقي لأي طالب، مشترك أو لأ
+      supabase.from('lesson_public_outline').select('id, chapter_id, is_free_preview').eq('course_id', courseId),
       supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
     ])
     setCourse(c)
     setChapters(ch || [])
     setEnrolled(e === true)
-    // لو الكورس فيه أي درس مجاني (RLS بترجعه حتى لغير المشترك)، لازم يقدر يدخل يتصفح
-    // الأبواب علشان يوصله — القفل الفعلي على مستوى الدرس نفسه بيتم في الصفحة اللي بعدها.
-    setHasFreeLesson((l || []).some((lesson: any) => lesson.is_free_preview))
-
     const byChapter: Record<string, any[]> = {}
     ;(l || []).forEach((lesson: any) => {
       const key = lesson.chapter_id || ''
@@ -59,18 +55,7 @@ export default function LearnChapters() {
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
-  if (!enrolled && !hasFreeLesson && course) return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center max-w-sm">
-        <Lock size={48} className="mx-auto text-gray-300 mb-4" />
-        <h2 className="text-2xl font-black text-brand-navy mb-2">غير مشترك في هذا الكورس</h2>
-        <p className="text-gray-500 mb-6">اشترك الآن للوصول لجميع الأبواب والدروس</p>
-        <Link to={`/courses/${courseId}`} className="btn-primary inline-block py-3 px-8">
-          اشترك الآن ←
-        </Link>
-      </div>
-    </div>
-  )
+  // الأبواب بتظهر لكل الطلاب سواء مشتركين أو لأ — القفل بيبقى على الدرس نفسه.
   if (chapters.length === 0) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">

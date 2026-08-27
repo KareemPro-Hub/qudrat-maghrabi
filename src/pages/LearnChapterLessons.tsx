@@ -24,7 +24,9 @@ export default function LearnChapterLessons() {
     const [{ data: c }, { data: ch }, { data: l }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
       supabase.from('chapters').select('*').eq('id', chapterId).single(),
-      supabase.from('lessons').select('*').eq('course_id', courseId).eq('chapter_id', chapterId).order('order_index'),
+      // مخطط الدروس العام: كل دروس الباب بتظهر للطالب مشترك أو لأ،
+      // والدرس غير المجاني بيتقفل لغير المشترك بدل ما يختفي.
+      supabase.from('lesson_public_outline').select('*').eq('course_id', courseId).eq('chapter_id', chapterId).order('order_index'),
       supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
       supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
@@ -66,16 +68,6 @@ export default function LearnChapterLessons() {
       <div className="w-12 h-12 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
-  if (!enrolled && lessons.length === 0 && course) return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center max-w-sm">
-        <Lock size={48} className="mx-auto text-gray-300 mb-4" />
-        <h2 className="text-2xl font-black text-brand-navy mb-2">غير مشترك في هذا الكورس</h2>
-        <p className="text-gray-500 mb-6">اشترك الآن للوصول لجميع الأبواب والدروس</p>
-        <Link to={`/courses/${courseId}`} className="btn-primary inline-block py-3 px-8">اشترك الآن ←</Link>
-      </div>
-    </div>
-  )
   if (lessons.length === 0) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
@@ -111,8 +103,13 @@ export default function LearnChapterLessons() {
         <div className="chapters-gallery">
           {lessons.map((lesson, i) => {
             const isCompleted = !!progress[lesson.id]
-            const isLocked = isBlockedByQuiz(i)
-            const meta = isLocked
+            const isQuizLocked = isBlockedByQuiz(i)
+            // الدرس غير المجاني بيظهر لغير المشترك عادي بس بقفل ودعوة للاشتراك
+            const isSubscriptionLocked = !enrolled && !lesson.is_free_preview
+            const isLocked = isQuizLocked || isSubscriptionLocked
+            const meta = isSubscriptionLocked
+              ? 'متاح للمشتركين في الباقة'
+              : isQuizLocked
               ? 'اجتز اختبار الدرس السابق الأول'
               : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'
 
@@ -127,7 +124,9 @@ export default function LearnChapterLessons() {
                   <h3>{lesson.title}</h3>
                   <p>{meta}</p>
                   <em>
-                    {isLocked
+                    {isSubscriptionLocked
+                      ? <><Lock size={14} /> اشترك لفتح الدرس</>
+                      : isQuizLocked
                       ? <><Lock size={14} /> مقفول</>
                       : <>{isCompleted ? 'أعد المشاهدة' : 'ابدأ الدرس'} <ArrowLeft size={15} /></>}
                   </em>
@@ -140,7 +139,9 @@ export default function LearnChapterLessons() {
 
             return (
               <Fragment key={lesson.id}>
-                {isLocked ? (
+                {isSubscriptionLocked ? (
+                  <Link to={`/courses/${courseId}`} className="chapter-gallery-card is-locked">{inner}</Link>
+                ) : isQuizLocked ? (
                   <div className="chapter-gallery-card is-locked" aria-disabled="true">{inner}</div>
                 ) : (
                   <Link to={`/learn/${courseId}/${chapterId}/${lesson.id}`} className="chapter-gallery-card">{inner}</Link>

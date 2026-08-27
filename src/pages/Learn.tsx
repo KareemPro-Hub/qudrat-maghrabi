@@ -105,20 +105,35 @@ export default function Learn() {
   }, [user, authLoading, courseId, chapterId, lessonId])
 
   async function fetchData() {
+    // استعلامين: الأول بيرجع الدروس المتاحة للطالب ببياناتها الكاملة (فيها
+    // video_id للتشغيل)، والتاني مخطط الدروس العام اللي بيرجع كل دروس الكورس
+    // لأي طالب من غير بيانات تشغيل — عشان القائمة تبان كاملة والدرس غير
+    // المتاح يظهر عليه قفل بدل ما يختفي.
     let lessonsQuery = supabase.from('lessons').select('*').eq('course_id', courseId).order('order_index')
     lessonsQuery = chapterId ? lessonsQuery.eq('chapter_id', chapterId) : lessonsQuery
-    const [{ data: c }, { data: ch }, { data: l }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
+    let outlineQuery = supabase.from('lesson_public_outline').select('*').eq('course_id', courseId).order('order_index')
+    outlineQuery = chapterId ? outlineQuery.eq('chapter_id', chapterId) : outlineQuery
+    const [{ data: c }, { data: ch }, { data: playable }, { data: outline }, { data: e }, { data: p }, { data: q }, { data: qr }] = await Promise.all([
       supabase.from('courses').select('*').eq('id', courseId).single(),
       chapterId ? supabase.from('chapters').select('*').eq('id', chapterId).single() : Promise.resolve({ data: null }),
       lessonsQuery,
+      outlineQuery,
       supabase.rpc('has_active_course_access', { p_student_id: user!.id, p_course_id: courseId! }),
       supabase.from('lesson_progress').select('lesson_id, completed').eq('student_id', user!.id),
       supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
       supabase.from('quiz_results').select('quiz_id').eq('student_id', user!.id).eq('passed', true),
     ])
+    // دمج الاتنين: الدرس المتاح بياخد بياناته الكاملة، وغير المتاح بيفضل
+    // بعنوانه ومدته بس (من غير video_id) فيتقفل في الواجهة.
+    const playableById: Record<string, any> = {}
+    ;(playable || []).forEach((lesson: any) => { playableById[lesson.id] = lesson })
+    const l = (outline && outline.length > 0)
+      ? outline.map((lesson: any) => ({ ...lesson, ...(playableById[lesson.id] || {}) }))
+      : (playable || [])
+
     setCourse(c)
     setChapter(ch)
-    setLessons(l || [])
+    setLessons(l)
     // الكورس المجاني بالكامل (سعر 0) يعامل معاملة المشترك
     setEnrolled(e === true)
 
@@ -152,12 +167,14 @@ export default function Learn() {
       }
     }
 
-    if (l && l.length > 0) {
+    if (l.length > 0) {
       // قفل الواجب كان متطبّق على قائمة الدروس بس، أما الدرس اللي بيتفتح تلقائيًا
       // فكان بيتشغّل حتى لو واجب الدرس اللي قبله لسه ما اتحلش. القفل بيتطبّق على
       // المشترك بس؛ غير المشترك مش بيشوف واجبات أصلًا والدروس المجانية تفضل مفتوحة.
       const isEnrolled = e === true
       const blockedAt = (index: number) => {
+        // الدرس غير المجاني مقفول على غير المشترك، فما نفتحوش تلقائيًا
+        if (!isEnrolled && !l[index]?.is_free_preview) return true
         if (!isEnrolled || index <= 0) return false
         const prevQuiz = quizMap[l[index - 1]?.id]
         if (!prevQuiz) return false
@@ -533,16 +550,18 @@ export default function Learn() {
               <button
                 key={lesson.id}
                 className={stateClass}
-                disabled={isLocked}
+                // الدرس المقفول بالاشتراك بيفضل قابل للضغط عشان تظهر للطالب
+                // دعوة الاشتراك، أما المقفول بالواجب فبيفضل معطّل زي ما هو.
+                disabled={isQuizBlocked}
                 onClick={() => {
-                  if (isLocked) return
+                  if (isQuizBlocked) return
                   setCurrentLesson(lesson)
                   setDrawerOpen(false)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
               >
                 <span>{isCompleted ? '✓' : isCurrent ? '▶' : isLocked ? '⌁' : i + 1}</span>
-                <p><b>{lesson.title}</b><small>{isCompleted ? 'مكتمل' : isCurrent ? 'تشاهد الآن' : isQuizBlocked ? 'اجتز اختبار الدرس السابق' : isLocked ? 'مغلق' : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}</small></p>
+                <p><b>{lesson.title}</b><small>{isCompleted ? 'مكتمل' : isCurrent ? 'تشاهد الآن' : isQuizBlocked ? 'اجتز اختبار الدرس السابق' : isNotEnrolled ? 'متاح للمشتركين' : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}</small></p>
               </button>
             )
           })}

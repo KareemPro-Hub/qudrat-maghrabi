@@ -32,8 +32,11 @@ export default function CourseDetail() {
 
     if (data) {
       const { data: lessonsData } = await supabase
-        .from('lessons')
-        .select('id, title, chapter, chapter_id, duration_minutes, is_free_preview, order_index, video_id, thumbnail_url')
+        // lesson_public_outline بيعرض مخطط الدروس كامل لأي زائر (عناوين ومدد
+        // وترتيب بس، من غير video_id)، عشان الطالب يشوف المنهج كله والدرس
+        // المدفوع يظهر عليه قفل بدل ما يختفي تمامًا.
+        .from('lesson_public_outline')
+        .select('id, title, chapter, chapter_id, duration_minutes, is_free_preview, order_index, thumbnail_url')
         .eq('course_id', id)
         .order('order_index')
       setLessons(lessonsData || [])
