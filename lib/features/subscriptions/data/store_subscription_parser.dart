@@ -27,17 +27,24 @@ StudentSubscription? activeStoreSubscriptionFromRows(
       });
   if (entitledRows.isEmpty) return null;
 
-  final row = entitledRows.first;
-  final plan = row['store_subscription_plans'] as Map<String, dynamic>?;
-  final bundleId = plan?['bundle_course_id'] as String?;
-  if (bundleId == null || bundleId.isEmpty) return null;
+  // كنا بناخد أحدث صف بس؛ فلو الباقة المرتبطة بيه ناقصة bundle_course_id
+  // كانت الدالة ترجع null وتخفي اشتراك فعّال بالكامل رغم إن في صف تاني
+  // سليم يستحق الوصول. دلوقتي بنكمل على باقي الصفوف بدل ما نتوقف عند الأول.
+  for (final row in entitledRows) {
+    final plan = row['store_subscription_plans'] as Map<String, dynamic>?;
+    final bundleId = plan?['bundle_course_id'] as String?;
+    if (bundleId == null || bundleId.isEmpty) continue;
 
-  return StudentSubscription(
-    bundleId: bundleId,
-    planName: plan?['name_ar'] as String? ?? 'اشتراك المنصة',
-    startedAt: DateTime.tryParse(row['current_period_start']?.toString() ?? ''),
-    expiresAt: DateTime.tryParse(row['current_period_end']?.toString() ?? ''),
-  );
+    return StudentSubscription(
+      bundleId: bundleId,
+      planName: plan?['name_ar'] as String? ?? 'اشتراك المنصة',
+      startedAt: DateTime.tryParse(
+        row['current_period_start']?.toString() ?? '',
+      ),
+      expiresAt: DateTime.tryParse(row['current_period_end']?.toString() ?? ''),
+    );
+  }
+  return null;
 }
 
 /// اشتراك باقة تم دفعه عبر المنصة (Paymob) بدل متجر التطبيقات.
