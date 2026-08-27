@@ -8,10 +8,16 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/domain/subscription_p
 import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/store_subscription_screen.dart';
 
 class _FakeStoreRepository implements SubscriptionRepository {
-  _FakeStoreRepository({this.localizedMonthlyPrice, this.currentSubscription});
+  _FakeStoreRepository({
+    this.localizedMonthlyPrice,
+    this.currentSubscription,
+    this.emitOnRestore = true,
+  });
 
   final String? localizedMonthlyPrice;
   final StudentSubscription? currentSubscription;
+  // المتجر مابيبعتش أي تحديث لو الطالب مالوش مشتريات سابقة يستعيدها
+  final bool emitOnRestore;
   final controller = StreamController<SubscriptionUpdate>.broadcast();
   int purchaseCalls = 0;
   int restoreCalls = 0;
@@ -61,6 +67,7 @@ class _FakeStoreRepository implements SubscriptionRepository {
   @override
   Future<void> restorePurchases() async {
     restoreCalls++;
+    if (!emitOnRestore) return;
     controller.add(
       const SubscriptionUpdate(
         type: SubscriptionUpdateType.restored,
@@ -149,6 +156,28 @@ void main() {
     expect(repository.manageCalls, 1);
     expect(find.textContaining('قبل موعد التجديد بثلاثة أيام'), findsNothing);
   });
+
+  testWidgets(
+    'restore with nothing to restore does not block buying',
+    (tester) async {
+      final repository = _FakeStoreRepository(emitOnRestore: false);
+      addTearDown(repository.dispose);
+      await tester.pumpWidget(_app(repository));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('restore-purchases-button')));
+      await tester.pumpAndSettle();
+      expect(repository.restoreCalls, 1);
+
+      final monthlyButton = find.byKey(const ValueKey('select-شهر واحد'));
+      await tester.ensureVisible(monthlyButton);
+      await tester.pumpAndSettle();
+      await tester.tap(monthlyButton);
+      await tester.pump();
+
+      expect(repository.purchaseCalls, 1);
+    },
+  );
 
   testWidgets('Saudi price uses the official Riyal symbol', (tester) async {
     tester.view.physicalSize = const Size(390, 844);

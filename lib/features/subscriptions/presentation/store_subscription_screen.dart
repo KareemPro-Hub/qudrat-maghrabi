@@ -115,7 +115,14 @@ class _StoreSubscriptionScreenState extends State<StoreSubscriptionScreen> {
   Future<void> _restore() async {
     if (_processingProductId != null || _restoring) return;
     setState(() => _restoring = true);
-    await widget.repository.restorePurchases();
+    // كان _restoring بيتقفل من _onUpdate بس، والمتجر مابيبعتش أي تحديث لو
+    // مفيش مشتريات سابقة يستعيدها — فالزرار كان بيفضل "جارٍ الاستعادة" للأبد
+    // ويقفل معاه كل أزرار الشراء (purchaseBlocked)، والطالب ما يقدرش يشترك.
+    try {
+      await widget.repository.restorePurchases();
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
   }
 
   @override
