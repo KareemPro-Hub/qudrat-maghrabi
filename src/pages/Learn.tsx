@@ -235,7 +235,11 @@ export default function Learn() {
     </div>
   )
   if (!user) return <Navigate to="/login" />
-  if (!enrolled && course) return (
+  // درس مجاني (is_free_preview) لازم يفضل متاح حتى لغير المشترك — الفحص ده كان بيقفل
+  // الصفحة كلها على مستوى الكورس فقط، بدون استثناء للدروس المجانية، وده كان بيمنع
+  // مشاهدة أي درس مجاني لأي طالب مش مشترك.
+  const currentLessonIsFree = !!currentLesson?.is_free_preview
+  if (!enrolled && !currentLessonIsFree && course) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
         <Lock size={48} className="mx-auto text-gray-300 mb-4" />
