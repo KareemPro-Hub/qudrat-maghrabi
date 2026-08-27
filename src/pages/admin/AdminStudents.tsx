@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, Ban, UserCheck, BookOpen, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { MessageSquare, Ban, UserCheck, BookOpen, X, UserPlus, Copy, Check, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal, avatarClass, initials } from '../../components/admin/lightKit'
@@ -30,7 +31,39 @@ function timeAgo(iso: string | null) {
   return `منذ ${days} أيام`
 }
 
+// نفس منطق تطبيع رقم الجوال المستخدم في شاشة إنشاء الحساب (src/pages/Auth.tsx)
+function normalizeStudentPhone(value: string) {
+  const phone = value.trim().replace(/[\s()-]/g, '')
+  if (/^05\d{8}$/.test(phone)) return `+966${phone.slice(1)}`
+  if (/^5\d{8}$/.test(phone)) return `+966${phone}`
+  if (/^9665\d{8}$/.test(phone)) return `+${phone}`
+  if (/^\+[1-9]\d{7,14}$/.test(phone)) return phone
+  return null
+}
+
+function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+  let out = ''
+  for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)]
+  return out
+}
+
+async function functionErrorMessage(error: unknown, fallback: string) {
+  try {
+    const body = await (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context?.json?.()
+    return body?.error || fallback
+  } catch {
+    return fallback
+  }
+}
+
 export default function AdminStudents() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [students, setStudents] = useState<StudentRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'attention'>('all')
@@ -47,7 +80,23 @@ export default function AdminStudents() {
   const [enrollList, setEnrollList] = useState<EnrollmentRow[]>([])
   const [enrollLoading, setEnrollLoading] = useState(false)
 
+  // إضافة طالب جديد وإنشاء حساب له مباشرة
+  const [showAdd, setShowAdd] = useState(false)
+  const [addForm, setAddForm] = useState({ full_name: '', email: '', phone: '', password: '' })
+  const [addSaving, setAddSaving] = useState(false)
+  const [showAddPassword, setShowAddPassword] = useState(false)
+  const [createdStudent, setCreatedStudent] = useState<{ email: string; password: string } | null>(null)
+  const [copiedCreds, setCopiedCreds] = useState(false)
+
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if ((location.state as any)?.openAddStudent) {
+      openAdd()
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function load() {
     setLoading(true)
@@ -95,6 +144,69 @@ export default function AdminStudents() {
     if (error) { toast.error('حدث خطأ'); return }
     toast.success(willBan ? 'تم حظر الطالب' : 'تم إلغاء الحظر ✅')
     setStudents((prev) => prev.map((p) => (p.id === s.id ? { ...p, is_active: !willBan } : p)))
+  }
+
+  function openAdd() {
+    setAddForm({ full_name: '', email: '', phone: '', password: generatePassword() })
+    setCreatedStudent(null)
+    setShowAddPassword(false)
+    setCopiedCreds(false)
+    setShowAdd(true)
+  }
+
+  function closeAdd() {
+    if (addSaving) return
+    setShowAdd(false)
+  }
+
+  async function handleAddStudent(e: React.FormEvent) {
+    e.preventDefault()
+    if (!addForm.full_name.trim() || !addForm.email.trim() || !addForm.phone.trim() || !addForm.password) {
+      return toast.error('يرجى تعبئة جميع الحقول المطلوبة')
+    }
+    const phone = normalizeStudentPhone(addForm.phone)
+    if (!phone) return toast.error('أدخل رقم جوال صحيحًا، مثل 05xxxxxxxx')
+    if (!isEmail(addForm.email.trim())) return toast.error('البريد الإلكتروني غير صالح')
+    if (addForm.password.length < 8) return toast.error('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
+
+    setAddSaving(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { toast.error('انتهت الجلسة، سجّل الدخول من جديد'); return }
+
+      const { data: result, error } = await supabase.functions.invoke<{ success?: boolean; user_id?: string }>('create-student', {
+        body: {
+          full_name: addForm.full_name.trim(),
+          email: addForm.email.trim(),
+          phone,
+          password: addForm.password,
+        },
+      })
+
+      if (error || !result?.success) {
+        toast.error(await functionErrorMessage(error, 'تعذّر إنشاء حساب الطالب'))
+        return
+      }
+
+      toast.success('تم إنشاء حساب الطالب بنجاح ✅')
+      setCreatedStudent({ email: addForm.email.trim(), password: addForm.password })
+      await load()
+    } catch {
+      toast.error('تعذر الاتصال بالسيرفر، حاول مرة أخرى')
+    } finally {
+      setAddSaving(false)
+    }
+  }
+
+  async function copyCreds() {
+    if (!createdStudent) return
+    try {
+      await navigator.clipboard.writeText(`البريد الإلكتروني: ${createdStudent.email}\nكلمة المرور: ${createdStudent.password}`)
+      setCopiedCreds(true)
+      setTimeout(() => setCopiedCreds(false), 2000)
+    } catch {
+      toast.error('تعذّر النسخ، انسخ البيانات يدويًا')
+    }
   }
 
   function openMessage(s: StudentRow) {
@@ -154,7 +266,11 @@ export default function AdminStudents() {
 
   return (
     <>
-      <SectionToolbar title="إدارة الطلاب" subtitle="تابع رحلة كل طالب وتقدمه ونتائجه في مكان واحد." />
+      <SectionToolbar
+        title="إدارة الطلاب"
+        subtitle="تابع رحلة كل طالب وتقدمه ونتائجه في مكان واحد."
+        action={<button className="primary-admin" onClick={openAdd}><UserPlus size={16} /> طالب جديد</button>}
+      />
 
       <div className="mini-metrics">
         <article><span>{loading ? '…' : students.length}</span><p>إجمالي الطلاب<small>مسجّلون في المنصة</small></p></article>
@@ -204,6 +320,60 @@ export default function AdminStudents() {
             </table>
           </div>
         </article>
+      )}
+
+      {showAdd && (
+        <Modal title="إضافة طالب جديد" onClose={closeAdd}>
+          {createdStudent ? (
+            <div className="admin-form">
+              <p className="adm-hint" style={{ marginTop: 0 }}>
+                تم إنشاء الحساب ✅ — انسخ بيانات الدخول دي وابعتها للطالب مباشرة (واتساب/تليفون)، مفيش أي إيميل هيتبعت تلقائيًا.
+              </p>
+              <div style={{ padding: '14px 16px', borderRadius: 12, background: '#faf7ff', border: '1px solid #e3d7eb', display: 'grid', gap: 10 }}>
+                <div>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 12, marginBottom: 2 }}>البريد الإلكتروني</small>
+                  <div style={{ fontWeight: 800, direction: 'ltr', textAlign: 'right' }}>{createdStudent.email}</div>
+                </div>
+                <div>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 12, marginBottom: 2 }}>كلمة المرور</small>
+                  <div style={{ fontWeight: 800, direction: 'ltr', textAlign: 'right' }}>{createdStudent.password}</div>
+                </div>
+              </div>
+              <div className="form-row">
+                <button type="button" className="primary-admin" onClick={copyCreds}>
+                  {copiedCreds ? <><Check size={16} /> تم النسخ</> : <><Copy size={16} /> نسخ البيانات</>}
+                </button>
+                <button type="button" className="ghost-button" onClick={() => setShowAdd(false)}>تم</button>
+              </div>
+            </div>
+          ) : (
+            <form className="admin-form" onSubmit={handleAddStudent}>
+              <label>الاسم الكامل<input value={addForm.full_name} onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })} placeholder="اسم الطالب" /></label>
+              <label>البريد الإلكتروني<input type="email" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} placeholder="name@example.com" dir="ltr" /></label>
+              <label>رقم الجوال<input type="tel" value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} placeholder="05xxxxxxxx" dir="ltr" /></label>
+              <label>
+                كلمة المرور
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type={showAddPassword ? 'text' : 'password'}
+                    value={addForm.password}
+                    onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                    placeholder="8 أحرف على الأقل"
+                    dir="ltr"
+                    style={{ flex: 1 }}
+                  />
+                  <button type="button" className="ghost-button" onClick={() => setShowAddPassword((v) => !v)} style={{ flexShrink: 0 }}>{showAddPassword ? 'إخفاء' : 'إظهار'}</button>
+                  <button type="button" className="ghost-button" onClick={() => setAddForm((f) => ({ ...f, password: generatePassword() }))} style={{ flexShrink: 0 }} title="توليد كلمة سر جديدة"><RefreshCw size={14} /></button>
+                </div>
+              </label>
+              <p className="adm-hint">هتقدر تشوف وتنسخ كلمة المرور دي بعد الإنشاء علشان تدّيها للطالب — مفيش إيميل هيتبعت تلقائيًا.</p>
+              <div className="form-row">
+                <button type="submit" className="primary-admin" disabled={addSaving}>{addSaving ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button>
+                <button type="button" className="ghost-button" onClick={closeAdd} disabled={addSaving}>إلغاء</button>
+              </div>
+            </form>
+          )}
+        </Modal>
       )}
 
       {messageTarget && (

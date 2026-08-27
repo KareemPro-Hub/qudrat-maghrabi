@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, Navigate } from 'react-router-dom'
+import { UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { avatarClass } from './admin/lightKit'
@@ -17,7 +18,7 @@ const navDefs = [
 ]
 
 const PANEL_META: Record<string, { title: string; subtitle: string; action?: { label: string; to: string } }> = {
-  '/admin': { title: 'نظرة عامة', subtitle: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', action: { label: '+ طالب جديد', to: '/admin/students' } },
+  '/admin': { title: 'نظرة عامة', subtitle: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', action: { label: 'طالب جديد', to: '/admin/students' } },
   '/admin/courses': { title: 'الكورسات', subtitle: 'إدارة المحتوى التعليمي ومتابعة أداء الكورسات' },
   '/admin/quizzes': { title: 'الاختبارات', subtitle: 'إنشاء الاختبارات وتحليل نتائج الطلاب' },
   '/admin/students': { title: 'الطلاب', subtitle: 'متابعة الطلاب ودرجاتهم وتقدمهم الدراسي' },
@@ -158,8 +159,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             )}
             {!isQuizManager && meta.action && (
-              <Link className="quick-button" to={meta.action.to}>
-                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+              <Link className="quick-button" to={meta.action.to} state={{ openAddStudent: true }}>
+                <UserPlus size={18} />
                 {meta.action.label}
               </Link>
             )}
