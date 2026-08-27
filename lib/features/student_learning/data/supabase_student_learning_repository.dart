@@ -32,6 +32,23 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       throw const LearningFailure('الكورس غير موجود أو غير منشور حاليًا');
     }
 
+    // إجمالي الدروس المنشورة بييجي من إحصائيات الكورس العامة، لأن استعلام
+    // الدروس نفسه بيرجع لغير المشترك الدروس المجانية بس. بيتنفّذ بالتوازي،
+    // وفشله مايمنعش تحميل الكورس.
+    Future<Map<String, dynamic>?> loadPublicStats() async {
+      try {
+        return await _client
+            .from('course_public_stats')
+            .select('lessons_count')
+            .eq('course_id', courseId)
+            .maybeSingle();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final statsFuture = loadPublicStats();
+
     final responses = await Future.wait([
       _client
           .from('chapters')
@@ -116,6 +133,7 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
         .toList();
     final price = _asDouble(course['price']);
     final hasActiveEnrollment = enrollmentRows.any(_isActiveEnrollment);
+    final statsRow = await statsFuture;
 
     return CourseLearningContent(
       courseId: courseId,
@@ -126,6 +144,7 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       hasAccess: hasActiveEnrollment,
       chapters: chapters,
       ungroupedLessons: ungroupedLessons,
+      totalLessonsCount: _asInt(statsRow?['lessons_count']),
     );
   }
 

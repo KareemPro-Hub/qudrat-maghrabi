@@ -165,7 +165,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${content.allLessons.length} دروس',
+                      '${content.totalLessons} دروس',
                       style: TextStyle(
                         color: QmColors.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -358,7 +358,7 @@ class _ProgressCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${content.completedLessons} من ${content.allLessons.length} دروس مكتملة',
+                      '${content.completedLessons} من ${content.totalLessons} دروس مكتملة',
                       style: TextStyle(
                         color: QmColors.textSecondary,
                         fontSize: 13,
