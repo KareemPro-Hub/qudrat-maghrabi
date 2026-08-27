@@ -47,13 +47,6 @@ function niceMaxAndStep(max: number, ticks = 4) {
   return { niceMax, step }
 }
 
-// مستطيل بحواف علوية دائرية فقط (شكل عمود بار شارت احترافي)
-function roundedTopRect(x: number, y: number, w: number, h: number, r: number) {
-  const rr = Math.min(r, w / 2, Math.max(h, 0))
-  if (h <= 0) return `M${x} ${y} H${x + w} V${y} H${x}Z`
-  return `M${x} ${y + h} V${y + rr} Q${x} ${y} ${x + rr} ${y} H${x + w - rr} Q${x + w} ${y} ${x + w} ${y + rr} V${y + h} Z`
-}
-
 export default function AdminOverview() {
   const { profile } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -65,6 +58,7 @@ export default function AdminOverview() {
   const [recentQuizzes, setRecentQuizzes] = useState<RecentQuiz[]>([])
   const [slices, setSlices] = useState<SliceDatum[]>([])
   const [performanceScore, setPerformanceScore] = useState(0)
+  const [chartStyle, setChartStyle] = useState<'bars' | 'area'>('bars')
 
   useEffect(() => {
     async function load() {
@@ -171,19 +165,23 @@ export default function AdminOverview() {
     load()
   }, [])
 
-  const topY = 26, bottomY = 210
-  const plotLeft = 58, plotRight = 726
   const { niceMax, step } = niceMaxAndStep(Math.max(...months.map((m) => m.value), 0), 4)
   const gridTicks = [0, 1, 2, 3, 4].map((i) => step * i).filter((v) => v <= niceMax)
-  const barSlot = (plotRight - plotLeft) / Math.max(months.length, 1)
-  const barWidth = Math.min(46, barSlot * 0.44)
-  const bars = months.map((m, i) => {
-    const cx = plotLeft + barSlot * i + barSlot / 2
-    const h = niceMax > 0 ? (m.value / niceMax) * (bottomY - topY) : 0
-    return { x: cx - barWidth / 2, y: bottomY - h, h, cx }
-  })
   const totalRevenue6mo = months.reduce((s, m) => s + m.value, 0)
   const hasRevenue = totalRevenue6mo > 0
+  const chartMax = niceMax
+  const yAxisTicks = [...gridTicks].reverse()
+  const areaMonths = months.map((m, i) => {
+    const x = months.length > 1 ? 600 - (i / (months.length - 1)) * 600 : 300
+    const y = chartMax > 0 ? 240 - (m.value / chartMax) * 240 : 240
+    return { x, y }
+  })
+  const linePath = areaMonths.length
+    ? areaMonths.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+    : ''
+  const areaPath = areaMonths.length
+    ? `${linePath} L${areaMonths[areaMonths.length - 1].x.toFixed(1)} 240 L${areaMonths[0].x.toFixed(1)} 240 Z`
+    : ''
   const donutGradient = (() => {
     const total = slices.reduce((s, sl) => s + sl.count, 0) || 1
     let acc = 0
@@ -200,88 +198,139 @@ export default function AdminOverview() {
 
   return (
     <>
-      <div className="welcome-strip">
+      <div className="stats-header">
         <div>
-          <h2>مرحبًا {firstName ? `أ. ${firstName}` : ''} 👋</h2>
-          <p>أداء المنصة يسير بشكل {performanceScore >= 60 ? 'جيد' : 'يحتاج متابعة'}، لديك <strong>{recentQuizzes.length} اختبارات</strong> مضافة مؤخرًا لمراجعتها.</p>
+          <div className="stats-kicker"><i /><span>قدرات المغربي · لوحة التحكم</span></div>
+          <h1>الإحصائيات</h1>
+          <p className="stats-header-sub">نظرة شاملة على أداء المنصة خلال آخر 6 أشهر</p>
         </div>
-        <div className="welcome-score"><span>معدل نجاح الطلاب</span><strong>{loading ? '…' : `${performanceScore}%`}</strong><i /></div>
+        <div className="stats-header-actions">
+          <span className="stats-update-pill">آخر تحديث: اليوم</span>
+          <button className="stats-export-btn" onClick={() => window.print()}><i />تصدير التقرير</button>
+        </div>
       </div>
 
-      <div className="metric-grid">
-        <article className="metric-card purple">
-          <span className="metric-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.5" /><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6M15 14c3.4-.4 5.5 1.4 6 5" /></svg></span>
-          <div><small>إجمالي الطلاب</small><strong>{loading ? '…' : stats.students.toLocaleString('en')}</strong><em>مسجّلون في المنصة</em></div>
+      <div className="kpi-grid">
+        <article className="kpi-card gold">
+          <span className="kpi-blob" />
+          <div className="kpi-card-row">
+            <div>
+              <div className="kpi-label">إيرادات هذا الشهر</div>
+              <div className="kpi-value">{loading ? '…' : <>{fmtMoney(stats.revenueMonth)} <CurrencySymbol /></>}</div>
+              <div className="kpi-sub" style={{ color: stats.revenueMonthGrowth >= 0 ? '#149a5b' : '#c17a12' }}>
+                {stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي
+              </div>
+            </div>
+            <span className="kpi-icon"><i className="diamond" /></span>
+          </div>
         </article>
-        <article className="metric-card pink">
-          <span className="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 5.5c3.1-.8 5.8-.1 8 1.7v12c-2.2-1.8-4.9-2.5-8-1.7v-12Zm16 0c-3.1-.8-5.8-.1-8 1.7v12c2.2-1.8 4.9-2.5 8-1.7v-12Z" /></svg></span>
-          <div><small>الكورسات النشطة</small><strong>{loading ? '…' : stats.courses}</strong><em>منشورة للطلاب</em></div>
-        </article>
-        <article className="metric-card orange">
-          <span className="metric-icon"><svg viewBox="0 0 24 24"><path d="M8 4h8M9 3v3h6V3M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z" /><path d="m8 12 2 2 5-5" /></svg></span>
-          <div><small>إجمالي الاختبارات</small><strong>{loading ? '…' : stats.quizzes}</strong><em>في كل الكورسات</em></div>
-        </article>
-        <article className="metric-card gold">
-          <span className="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 2 5-7" /><path d="M16 6h3v3" /></svg></span>
-          <div><small>إيرادات هذا الشهر</small><strong>{loading ? '…' : fmtMoney(stats.revenueMonth)} <b><CurrencySymbol /></b></strong><em>{stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي</em></div>
+        <article className="kpi-card purple">
+          <span className="kpi-blob" />
+          <div className="kpi-card-row">
+            <div>
+              <div className="kpi-label">إجمالي الطلاب</div>
+              <div className="kpi-value">{loading ? '…' : stats.students.toLocaleString('en')}</div>
+              <div className="kpi-sub" style={{ color: '#8b7fa3' }}>مسجّلون في المنصة</div>
+            </div>
+            <span className="kpi-icon"><i className="circle" /></span>
+          </div>
         </article>
       </div>
 
       <div className="overview-grid">
         <article className="admin-card chart-card revenue-card">
-          <header className="card-head revenue-head">
-            <div><h3>أداء الإيرادات</h3><p>تطوّر الإيرادات خلال آخر 6 أشهر</p></div>
-          </header>
-          <div className="revenue-overview">
-            <div className="revenue-total"><span>إجمالي الإيرادات (6 أشهر)</span><strong>{fmtMoney(totalRevenue6mo)} <small><CurrencySymbol /></small></strong></div>
-            <div className="revenue-growth"><b>{stats.revenueMonthGrowth >= 0 ? '↗' : '↘'} {Math.abs(stats.revenueMonthGrowth)}%</b><span>نمو عن الفترة السابقة</span></div>
-            <div className="revenue-status"><i />{stats.revenueMonthGrowth >= 0 ? <span>أداء يتجاوز الشهر السابق</span> : <span>أداء أقل من الشهر السابق</span>}</div>
+          <div className="revenue-head-row">
+            <div>
+              <h3>أداء الإيرادات</h3>
+              <p>تطوّر الإيرادات خلال آخر 6 أشهر</p>
+            </div>
+            <div className="revenue-head-meta">
+              <span className={`revenue-status-pill${stats.revenueMonthGrowth < 0 ? ' negative' : ''}`}>
+                <i />
+                {stats.revenueMonthGrowth >= 0 ? 'أداء يتجاوز الشهر السابق' : 'أداء أقل من الشهر السابق'}
+              </span>
+              <div className="revenue-total-mini">
+                <span>إجمالي الإيرادات</span>
+                <strong>{fmtMoney(totalRevenue6mo)} <CurrencySymbol /></strong>
+              </div>
+            </div>
           </div>
+
           {loading ? (
             <div className="adm-loading"><i /></div>
           ) : hasRevenue ? (
-            <div className="revenue-chart-shell">
-              <svg className="bar-chart" viewBox="0 0 760 232" preserveAspectRatio="none">
-                <g className="chart-grid">
-                  {gridTicks.map((v, i) => {
-                    const y = bottomY - (v / niceMax) * (bottomY - topY)
-                    return <path key={i} className={v === 0 ? 'chart-baseline' : ''} d={`M${plotLeft} ${y}H${plotRight}`} />
-                  })}
-                </g>
-                <g className="chart-y-labels">
-                  {gridTicks.map((v, i) => (
-                    <text key={i} x={plotLeft - 12} y={bottomY - (v / niceMax) * (bottomY - topY) + 4}>{fmtMoney(v)}</text>
+            <>
+              <div className="revenue-toolbar">
+                <span className="revenue-growth-pill">
+                  {stats.revenueMonthGrowth >= 0 ? '↗' : '↘'} نمو {Math.abs(stats.revenueMonthGrowth)}% عن الفترة السابقة
+                </span>
+                <div className="chart-toggle">
+                  <button type="button" className={chartStyle === 'bars' ? 'active' : ''} onClick={() => setChartStyle('bars')}>أعمدة</button>
+                  <button type="button" className={chartStyle === 'area' ? 'active' : ''} onClick={() => setChartStyle('area')}>مساحي</button>
+                </div>
+              </div>
+
+              <div className="revenue-plot">
+                <div className="revenue-plot-grid">
+                  {yAxisTicks.map((v, i) => (
+                    <div key={i}><span>{fmtMoney(v)}</span><i /></div>
                   ))}
-                </g>
-                <g className="chart-bars">
-                  {bars.map((b, i) => {
-                    const active = i === activeMonth
-                    const hasValue = months[i].value > 0
-                    return (
-                      <g key={i} className={`chart-bar${active ? ' active' : ''}`} onMouseEnter={() => setActiveMonth(i)}>
-                        {hasValue ? (
-                          <path
-                            className="bar-fill"
-                            style={{ animationDelay: `${i * 70}ms` }}
-                            d={roundedTopRect(b.x, b.y, barWidth, Math.max(b.h, 3), barWidth / 2)}
-                          />
-                        ) : (
-                          <rect className="bar-zero" x={b.x} y={bottomY - 5} width={barWidth} height="5" rx="2.5" />
-                        )}
-                        {hasValue && <text className="bar-value" x={b.cx} y={b.y - 12}>{fmtMoney(months[i].value)}</text>}
-                      </g>
-                    )
-                  })}
-                </g>
-              </svg>
-              <div className="chart-months">
+                </div>
+
+                {chartStyle === 'bars' ? (
+                  <div className="revenue-bars">
+                    {months.map((m, i) => {
+                      const active = i === activeMonth
+                      const heightPct = chartMax > 0 ? Math.max((m.value / chartMax) * 100, m.value > 0 ? 3 : 1.5) : 1.5
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          className={`bar-col${active ? ' active' : ''}`}
+                          onClick={() => setActiveMonth(i)}
+                        >
+                          {active && <span className="bar-col-value">{fmtMoney(m.value)}</span>}
+                          <span className="bar-col-fill" style={{ height: `${heightPct}%` }} />
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <svg className="revenue-area" viewBox="0 0 600 240" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#7736e7" stopOpacity="0.28" />
+                        <stop offset="100%" stopColor="#7736e7" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={areaPath} fill="url(#revenueAreaFill)" />
+                    <path d={linePath} fill="none" stroke="#7736e7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    {areaMonths.map((p, i) => (
+                      <circle
+                        key={i}
+                        cx={p.x}
+                        cy={p.y}
+                        r="5"
+                        fill="#fff"
+                        stroke="#7736e7"
+                        strokeWidth="2.5"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setActiveMonth(i)}
+                      />
+                    ))}
+                  </svg>
+                )}
+              </div>
+
+              <div className="revenue-month-strip">
                 {months.map((m, i) => (
-                  <span key={i} className={i === activeMonth ? 'active' : ''} onMouseEnter={() => setActiveMonth(i)}>
-                    <b>{m.short}</b><small>{fmtMoney(m.value)}</small>
-                  </span>
+                  <button key={i} type="button" className={i === activeMonth ? 'active' : ''} onClick={() => setActiveMonth(i)}>
+                    <b>{m.short}</b>
+                    <small>{fmtMoney(m.value)}</small>
+                  </button>
                 ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="revenue-empty">
               <span className="revenue-empty-icon">
@@ -293,23 +342,45 @@ export default function AdminOverview() {
           )}
         </article>
 
-        <article className="admin-card progress-card">
-          <header className="card-head"><div><h3>إكمال الكورسات</h3><p>متوسط تقدم الطلاب</p></div><Link to="/admin/courses">عرض الكل</Link></header>
-          {loading ? <Spinner /> : courseProgress.length === 0 ? (
-            <div className="empty-state">لا توجد بيانات تقدّم كافية بعد</div>
-          ) : (
-            <div className="course-progress-list">
-              {courseProgress.map((c) => (
-                <div key={c.title}>
-                  <span className={`course-mini ${c.colorClass}`}>{c.title.charAt(0)}</span>
-                  <p><b>{c.title}</b><small>{c.students} طالب</small></p>
-                  <strong>{c.pct}%</strong>
-                  <i><u style={{ width: `${c.pct}%` }} /></i>
+        <div className="stats-side-col">
+          <article className="admin-card completion-card">
+            <h3>إكمال الكورسات</h3>
+            <p>متوسط تقدم الطلاب</p>
+            {loading ? <Spinner /> : courseProgress.length === 0 ? (
+              <div className="empty-state">لا توجد بيانات تقدّم كافية بعد</div>
+            ) : (
+              courseProgress.map((c) => (
+                <div className="completion-row" key={c.title}>
+                  <div className="completion-row-top">
+                    <div className="completion-row-info">
+                      <span className="completion-avatar">{c.title.charAt(0)}</span>
+                      <div>
+                        <b>{c.title}</b>
+                        <small>{c.students} طالب</small>
+                      </div>
+                    </div>
+                    <span className="completion-pct">{c.pct}%</span>
+                  </div>
+                  <div className="completion-track"><i style={{ width: `${c.pct}%` }} /></div>
                 </div>
-              ))}
+              ))
+            )}
+          </article>
+
+          <article className="stats-summary-card">
+            <div>
+              <div className="stats-summary-label">متوسط الإيراد الشهري</div>
+              <div className="stats-summary-value">{fmtMoney(totalRevenue6mo / 6)} <CurrencySymbol /></div>
+              <div className="stats-summary-note">عبر آخر 6 أشهر نشطة</div>
+              <div className="stats-summary-divider">
+                <div>
+                  <span>إجمالي الطلاب</span>
+                  <strong>{stats.students.toLocaleString('en')}</strong>
+                </div>
+              </div>
             </div>
-          )}
-        </article>
+          </article>
+        </div>
       </div>
 
       <div className="lower-grid">
