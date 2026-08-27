@@ -231,10 +231,6 @@ export default function AdminOverview() {
         <article className="admin-card chart-card revenue-card">
           <header className="card-head revenue-head">
             <div><h3>أداء الإيرادات</h3><p>تطوّر الإيرادات خلال آخر 6 أشهر</p></div>
-            <span className="revenue-period-chip">
-              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="4" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
-              6 أشهر
-            </span>
           </header>
           <div className="revenue-overview">
             <div className="revenue-total"><span>إجمالي الإيرادات (6 أشهر)</span><strong>{fmtMoney(totalRevenue6mo)} <small><CurrencySymbol /></small></strong></div>
@@ -246,17 +242,6 @@ export default function AdminOverview() {
           ) : hasRevenue ? (
             <div className="revenue-chart-shell">
               <svg className="bar-chart" viewBox="0 0 760 232" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="barActive" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0" stopColor="#8738e7" />
-                    <stop offset=".55" stopColor="#dd429a" />
-                    <stop offset="1" stopColor="#f6b42e" />
-                  </linearGradient>
-                  <linearGradient id="barMuted" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0" stopColor="#c8b3ec" />
-                    <stop offset="1" stopColor="#ecd3e6" />
-                  </linearGradient>
-                </defs>
                 <g className="chart-grid">
                   {gridTicks.map((v, i) => {
                     const y = bottomY - (v / niceMax) * (bottomY - topY)
@@ -271,21 +256,19 @@ export default function AdminOverview() {
                 <g className="chart-bars">
                   {bars.map((b, i) => {
                     const active = i === activeMonth
+                    const hasValue = months[i].value > 0
                     return (
                       <g key={i} className={`chart-bar${active ? ' active' : ''}`} onMouseEnter={() => setActiveMonth(i)}>
-                        <path className="bar-track" d={roundedTopRect(b.x, topY, barWidth, bottomY - topY, barWidth / 2)} />
-                        <path
-                          className="bar-fill"
-                          style={{ animationDelay: `${i * 70}ms` }}
-                          d={roundedTopRect(b.x, b.y, barWidth, Math.max(b.h, 3), barWidth / 2)}
-                          fill={active ? 'url(#barActive)' : 'url(#barMuted)'}
-                        />
-                        {active && (
-                          <g className="bar-tooltip" transform={`translate(${b.cx} ${b.y - 16})`}>
-                            <rect x="-40" y="-28" width="80" height="26" rx="8" />
-                            <text y="-9">{fmtMoney(months[i].value)} ر.س</text>
-                          </g>
+                        {hasValue ? (
+                          <path
+                            className="bar-fill"
+                            style={{ animationDelay: `${i * 70}ms` }}
+                            d={roundedTopRect(b.x, b.y, barWidth, Math.max(b.h, 3), barWidth / 2)}
+                          />
+                        ) : (
+                          <rect className="bar-zero" x={b.x} y={bottomY - 5} width={barWidth} height="5" rx="2.5" />
                         )}
+                        {hasValue && <text className="bar-value" x={b.cx} y={b.y - 12}>{fmtMoney(months[i].value)}</text>}
                       </g>
                     )
                   })}
