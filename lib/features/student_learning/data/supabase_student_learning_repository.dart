@@ -68,6 +68,27 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
 
     final hasChildCoursesFuture = loadHasChildCourses();
 
+    // مخطط الدروس العام: بيرجع كل دروس الكورس لأي طالب (عناوين ومدد وأغلفة
+    // بس، من غير video_id)، عشان المنهج يبان كامل والدرس غير المتاح يظهر
+    // عليه قفل بدل ما يختفي تمامًا من القائمة.
+    Future<List<Map<String, dynamic>>> loadOutline() async {
+      try {
+        final rows = await _client
+            .from('lesson_public_outline')
+            .select(
+              'id, course_id, chapter_id, title, thumbnail_url, '
+              'duration_minutes, order_index, is_free_preview',
+            )
+            .eq('course_id', courseId)
+            .order('order_index', ascending: true);
+        return (rows as List).cast<Map<String, dynamic>>();
+      } catch (_) {
+        return const <Map<String, dynamic>>[];
+      }
+    }
+
+    final outlineFuture = loadOutline();
+
     final responses = await Future.wait([
       _client
           .from('chapters')
@@ -111,7 +132,24 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
         ),
     };
 
-    final lessons = lessonRows
+    // الدرس المتاح بياخد بياناته الكاملة (فيها video_id)، وغير المتاح بيفضل
+    // بعنوانه ومدته بس فيتقفل في الواجهة.
+    final outlineRows = await outlineFuture;
+    final playableById = <String, Map<String, dynamic>>{
+      for (final row in lessonRows) row['id'] as String: row,
+    };
+    final mergedRows = outlineRows.isEmpty
+        ? lessonRows
+        : outlineRows
+              .map(
+                (row) => <String, dynamic>{
+                  ...row,
+                  ...?playableById[row['id'] as String],
+                },
+              )
+              .toList();
+
+    final lessons = mergedRows
         .map(
           (row) => CourseLesson(
             id: row['id'] as String,

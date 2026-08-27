@@ -591,6 +591,11 @@ class _LessonTile extends StatelessWidget {
   }
 
   String _lessonMeta(CourseLesson lesson) {
+    // الدرس المقفول بيبان في القائمة عادي، فلازم يوضّح إنه محتاج اشتراك
+    // بدل ما الطالب يفتكره درس عادي مش راضي يفتح.
+    if (!hasCourseAccess && !lesson.isFreePreview) {
+      return 'الدرس $lessonNumber • متاح للمشتركين';
+    }
     final duration = lesson.durationMinutes;
     if (duration == null || duration <= 0) return 'الدرس $lessonNumber';
     return 'الدرس $lessonNumber • $duration دقيقة';
