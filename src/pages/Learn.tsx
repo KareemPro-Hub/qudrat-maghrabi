@@ -153,11 +153,28 @@ export default function Learn() {
     }
 
     if (l && l.length > 0) {
+      // قفل الواجب كان متطبّق على قائمة الدروس بس، أما الدرس اللي بيتفتح تلقائيًا
+      // فكان بيتشغّل حتى لو واجب الدرس اللي قبله لسه ما اتحلش. القفل بيتطبّق على
+      // المشترك بس؛ غير المشترك مش بيشوف واجبات أصلًا والدروس المجانية تفضل مفتوحة.
+      const isEnrolled = e === true
+      const blockedAt = (index: number) => {
+        if (!isEnrolled || index <= 0) return false
+        const prevQuiz = quizMap[l[index - 1]?.id]
+        if (!prevQuiz) return false
+        return !passed.has(prevQuiz.id)
+      }
+
       // الدرس المختار من شبكة دروس الباب له الأولوية، وإلا نفتح أول درس غير مكتمل
-      const picked = (lessonId && l.find((lesson: any) => lesson.id === lessonId))
-        || l.find((lesson: any) => !progressMap[lesson.id])
-        || l[0]
-      setCurrentLesson(picked)
+      // ومش مقفول، وإلا آخر درس متاح — عشان ما نرميهوش على درس مقفول.
+      const requestedIdx = lessonId ? l.findIndex((lesson: any) => lesson.id === lessonId) : -1
+      let idx = -1
+      if (requestedIdx >= 0) idx = requestedIdx
+      if (idx < 0) idx = l.findIndex((lesson: any, i: number) => !progressMap[lesson.id] && !blockedAt(i))
+      if (idx < 0) {
+        idx = 0
+        for (let i = 0; i < l.length; i++) if (!blockedAt(i)) idx = i
+      }
+      setCurrentLesson(l[idx])
     }
     setLoading(false)
   }
@@ -271,6 +288,22 @@ export default function Learn() {
         <p className="text-gray-500 mb-6">اشترك الآن للوصول لجميع الدروس والاختبارات</p>
         <Link to={`/courses/${courseId}`} className="btn-primary inline-block py-3 px-8">
           اشترك الآن ←
+        </Link>
+      </div>
+    </div>
+  )
+  // الدرس المقفول بواجب الدرس السابق كان بيتفتح ويتشغّل عادي لو الطالب جه عليه
+  // برابط مباشر، رغم إنه بيظهر "مقفول" في قائمة الدروس. القفل بيتطبّق على
+  // المشترك بس، عشان الدروس المجانية تفضل مفتوحة لغير المشترك زي ما هي.
+  const prevQuizOfCurrent = enrolled && currentIndex > 0 ? quizByLesson[lessons[currentIndex - 1]?.id] : null
+  if (prevQuizOfCurrent && !passedQuizIds.has(prevQuizOfCurrent.id)) return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center max-w-sm">
+        <Lock size={48} className="mx-auto text-gray-300 mb-4" />
+        <h2 className="text-2xl font-black text-brand-navy mb-2">الدرس مقفول</h2>
+        <p className="text-gray-500 mb-6">لازم تجتاز واجب الدرس السابق الأول عشان يفتح لك الدرس ده</p>
+        <Link to={`/quiz/${prevQuizOfCurrent.id}`} className="btn-primary inline-block py-3 px-8">
+          ابدأ الواجب ←
         </Link>
       </div>
     </div>
