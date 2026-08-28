@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
+import { initErrorMonitoring } from './lib/errorMonitoring'
 import './index.css'
 import './styles/home.css'
 import './styles/admin-light.css'
@@ -10,6 +11,8 @@ import './styles/lesson-light.css'
 import './styles/auth.css'
 import './styles/info-pages.css'
 import './styles/primary-buttons.css'
+
+initErrorMonitoring()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
