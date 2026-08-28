@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import type { EmailOtpType } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -8,9 +9,22 @@ type CallbackStatus = 'processing' | 'success' | 'error'
 
 const ADMIN_ROLES = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
 
+const RETURN_TO_KEY = 'qm_auth_return_to'
+
+function isSafePath(value: string | null) {
+  return Boolean(value && value.startsWith('/') && !value.startsWith('//'))
+}
+
 function getSafeReturnTo(search: string) {
   const value = new URLSearchParams(search).get('returnTo')
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : null
+  if (isSafePath(value)) return value
+  try {
+    const stored = localStorage.getItem(RETURN_TO_KEY)
+    if (isSafePath(stored)) return stored
+  } catch {
+    // localStorage unavailable (private mode) — fall back to the default route
+  }
+  return null
 }
 
 function mapCallbackError(errorCode: string | null, errorDescription: string | null) {
@@ -41,6 +55,7 @@ export default function AuthCallback() {
       if (finishedRef.current || cancelled) return
       finishedRef.current = true
       setStatus('success')
+      try { localStorage.removeItem(RETURN_TO_KEY) } catch { /* ignore */ }
       toast.success('تم تأكيد بريدك بنجاح !')
 
       try {
@@ -73,9 +88,25 @@ export default function AuthCallback() {
       const errorCode = hashParams.get('error_code') || searchParams.get('error_code')
       const errorDescription = hashParams.get('error_description') || searchParams.get('error_description')
       const code = searchParams.get('code')
+      const tokenHash = searchParams.get('token_hash')
+      const otpType = searchParams.get('type')
 
       if (errorCode || hashParams.get('error') || searchParams.get('error')) {
         fail(mapCallbackError(errorCode, errorDescription))
+        return
+      }
+
+      if (tokenHash) {
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: (otpType as EmailOtpType) || 'email',
+          token_hash: tokenHash,
+        })
+        if (cancelled) return
+        if (error || !data.session) {
+          fail('تعذّر إكمال التأكيد. الرابط قد يكون منتهي الصلاحية، اطلب رابطًا جديدًا')
+          return
+        }
+        await routeAfterSession(data.session)
         return
       }
 

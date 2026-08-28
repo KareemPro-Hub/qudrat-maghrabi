@@ -165,6 +165,15 @@ export default function Auth() {
     }
   }
 
+  function rememberReturnTo() {
+    try {
+      if (returnTo) localStorage.setItem('qm_auth_return_to', returnTo)
+      else localStorage.removeItem('qm_auth_return_to')
+    } catch {
+      // localStorage unavailable — the callback falls back to the dashboard
+    }
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (!form.full_name.trim() || !form.email.trim() || !form.phone.trim() || !form.password) return toast.error('يرجى تعبئة جميع الحقول المطلوبة')
@@ -175,6 +184,7 @@ export default function Auth() {
     if (!agreeTerms) return toast.error('يرجى الموافقة على الشروط وسياسة الخصوصية')
 
     setSignupLoading(true)
+    rememberReturnTo()
     const { error } = await supabase.auth.signUp({
       email: form.email.trim().toLowerCase(),
       password: form.password,
@@ -196,6 +206,7 @@ export default function Auth() {
   async function handleResendConfirmation() {
     if (!unconfirmedEmail || resendLoading) return
     setResendLoading(true)
+    rememberReturnTo()
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
