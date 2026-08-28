@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock, User, Phone, LogIn, UserPlus } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Phone, LogIn, UserPlus, Fingerprint } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { isPasskeySupported, passkeyErrorMessage } from '../lib/passkeys'
 import toast from 'react-hot-toast'
 
 type Mode = 'login' | 'signup'
@@ -65,6 +66,8 @@ export default function Auth() {
   const [showLoginPass, setShowLoginPass] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loginLoading, setLoginLoading] = useState(false)
+  const [passkeyLoading, setPasskeyLoading] = useState(false)
+  const passkeyAvailable = isPasskeySupported()
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
 
@@ -134,34 +137,58 @@ export default function Auth() {
         return
       }
 
-      const { data: primaryProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user!.id)
-        .single()
-
-      if (profileError || !primaryProfile) {
-        await supabase.auth.signOut()
-        toast.error('تم التحقق من الحساب لكن تعذّر تحديد صلاحياته. حاول مجددًا')
-        return
-      }
-
-      const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
-      if (adminRoles.includes(primaryProfile.role)) {
-        toast.success('مرحبًا بك !')
-        navigate('/admin')
-      } else if (primaryProfile.role !== 'student') {
-        await supabase.auth.signOut()
-        toast.error('هذه المنصة مخصّصة للطلاب فقط')
-        return
-      } else {
-        toast.success('مرحبًا بك !')
-        navigate(returnTo || '/dashboard')
-      }
+      await routeAfterSignIn(data.user!.id)
     } catch {
       toast.error('تعذّر الاتصال بخدمة تسجيل الدخول. حاول مجددًا')
     } finally {
       setLoginLoading(false)
+    }
+  }
+
+  // نفس التحقق من الدور والتوجيه بعد الدخول — سواء بكلمة المرور أو بالبصمة.
+  async function routeAfterSignIn(userId: string) {
+    const { data: primaryProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (profileError || !primaryProfile) {
+      await supabase.auth.signOut()
+      toast.error('تم التحقق من الحساب لكن تعذّر تحديد صلاحياته. حاول مجددًا')
+      return
+    }
+
+    const adminRoles = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
+    if (adminRoles.includes(primaryProfile.role)) {
+      toast.success('مرحبًا بك !')
+      navigate('/admin')
+    } else if (primaryProfile.role !== 'student') {
+      await supabase.auth.signOut()
+      toast.error('هذه المنصة مخصّصة للطلاب فقط')
+      return
+    } else {
+      toast.success('مرحبًا بك !')
+      navigate(returnTo || '/dashboard')
+    }
+  }
+
+  async function handlePasskeyLogin() {
+    if (passkeyLoading) return
+    setPasskeyLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithPasskey()
+      if (error || !data?.user) {
+        const message = passkeyErrorMessage(error, 'تعذّر الدخول بالبصمة. جرّب كلمة المرور')
+        if (message) toast.error(message)
+        return
+      }
+      await routeAfterSignIn(data.user.id)
+    } catch (error) {
+      const message = passkeyErrorMessage(error, 'تعذّر الدخول بالبصمة. جرّب كلمة المرور')
+      if (message) toast.error(message)
+    } finally {
+      setPasskeyLoading(false)
     }
   }
 
@@ -403,6 +430,18 @@ export default function Auth() {
                   )}
                 </div>
               </form>
+
+              {passkeyAvailable && (
+                <button
+                  type="button"
+                  className="auth-passkey"
+                  onClick={handlePasskeyLogin}
+                  disabled={passkeyLoading}
+                >
+                  <Fingerprint size={20} strokeWidth={1.9} />
+                  {passkeyLoading ? 'جاري التحقق...' : 'الدخول بالبصمة'}
+                </button>
+              )}
 
               <div>
                 <div className="auth-divider"><span /> أو تابع باستخدام <span /></div>

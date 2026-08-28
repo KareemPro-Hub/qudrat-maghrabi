@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { User, Phone, Mail, Save, Lock, Trash2, AlertTriangle } from 'lucide-react'
+import { User, Phone, Mail, Save, Lock, Trash2, AlertTriangle, Fingerprint } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { isPasskeySupported, passkeyErrorMessage } from '../lib/passkeys'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 
@@ -65,6 +66,61 @@ export default function Profile() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteForm, setDeleteForm] = useState({ password: '', email: '', phrase: '' })
   const [deleting, setDeleting] = useState(false)
+  const [passkeys, setPasskeys] = useState<{ id: string; friendly_name?: string; created_at: string }[]>([])
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  const passkeyAvailable = isPasskeySupported()
+
+  const loadPasskeys = useCallback(async () => {
+    if (!passkeyAvailable) return
+    try {
+      const { data, error } = await supabase.auth.passkey.list()
+      if (!error && data) setPasskeys(data)
+    } catch {
+      // القائمة تحسين إضافي فقط، مفيش داعي نكسر الصفحة لو فشلت
+    }
+  }, [passkeyAvailable])
+
+  useEffect(() => {
+    if (user) void loadPasskeys()
+  }, [user, loadPasskeys])
+
+  async function handleAddPasskey() {
+    if (passkeyBusy) return
+    setPasskeyBusy(true)
+    try {
+      const { error } = await supabase.auth.registerPasskey()
+      if (error) {
+        const message = passkeyErrorMessage(error, 'تعذّر تفعيل الدخول بالبصمة. حاول مجددًا')
+        if (message) toast.error(message)
+        return
+      }
+      toast.success('تم تفعيل الدخول بالبصمة على هذا الجهاز !')
+      await loadPasskeys()
+    } catch (error) {
+      const message = passkeyErrorMessage(error, 'تعذّر تفعيل الدخول بالبصمة. حاول مجددًا')
+      if (message) toast.error(message)
+    } finally {
+      setPasskeyBusy(false)
+    }
+  }
+
+  async function handleRemovePasskey(passkeyId: string) {
+    if (passkeyBusy) return
+    setPasskeyBusy(true)
+    try {
+      const { error } = await supabase.auth.passkey.delete({ passkeyId })
+      if (error) {
+        toast.error('تعذّر حذف البصمة. حاول مجددًا')
+        return
+      }
+      toast.success('تم حذف البصمة')
+      await loadPasskeys()
+    } catch {
+      toast.error('تعذّر حذف البصمة. حاول مجددًا')
+    } finally {
+      setPasskeyBusy(false)
+    }
+  }
 
   if (!initialized && profile) {
     setForm({ full_name: profile.full_name || '', phone: profile.phone || '' })
@@ -274,6 +330,52 @@ export default function Profile() {
             </button>
           </form>
         </div>
+
+        {/* Passkey */}
+        {passkeyAvailable && (
+        <div className="card mt-6">
+          <h2 className="text-lg font-black text-brand-navy mb-2 flex items-center gap-2">
+            <Fingerprint size={18} />
+            الدخول بالبصمة
+          </h2>
+          <p className="text-sm text-gray-500 leading-7 mb-4">
+            فعّلها على هذا الجهاز لتدخل حسابك ببصمتك أو وجهك بدل كتابة كلمة المرور.
+          </p>
+
+          {passkeys.length > 0 && (
+            <ul className="space-y-2 mb-4">
+              {passkeys.map(passkey => (
+                <li key={passkey.id} className="flex items-center justify-between gap-3 border border-gray-200 rounded-xl px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="font-bold text-brand-navy truncate">{passkey.friendly_name || 'جهاز مسجّل'}</p>
+                    <p className="text-xs text-gray-400">
+                      أُضيف في {new Date(passkey.created_at).toLocaleDateString('ar-EG')}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePasskey(passkey.id)}
+                    disabled={passkeyBusy}
+                    className="text-sm font-bold text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    حذف
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <button
+            type="button"
+            onClick={handleAddPasskey}
+            disabled={passkeyBusy}
+            className="btn-primary flex items-center gap-2 py-3 px-6"
+          >
+            <Fingerprint size={16} />
+            {passkeyBusy ? 'جاري التفعيل...' : 'تفعيل البصمة على هذا الجهاز'}
+          </button>
+        </div>
+        )}
 
         {/* Delete Account */}
         {canSelfDelete && (

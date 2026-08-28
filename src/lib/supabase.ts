@@ -7,4 +7,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// passkey تجريبية في مكتبة Supabase ولازم نفعّلها صراحةً عشان
+// supabase.auth.signInWithPasskey / registerPasskey يشتغلوا.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { experimental: { passkey: true } },
+})
