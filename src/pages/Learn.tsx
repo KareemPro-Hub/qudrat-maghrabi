@@ -362,7 +362,7 @@ export default function Learn() {
         </Link>
 
         <nav className="hub-breadcrumb" aria-label="مسار الدرس">
-          <span>{course?.title}</span><i>/</i>{chapter && <><span>{chapter.title}</span><i>/</i></>}<strong>{currentLesson.title}</strong>
+          <span><Link to={chapter ? `/learn/${courseId}/chapters` : `/learn/${courseId}`}>{course?.title}</Link></span><i>/</i>{chapter && <><span><Link to={`/learn/${courseId}/${chapter.id}`}>{chapter.title}</Link></span><i>/</i></>}<strong>{currentLesson.title}</strong>
         </nav>
 
         <div className="hub-user-actions">

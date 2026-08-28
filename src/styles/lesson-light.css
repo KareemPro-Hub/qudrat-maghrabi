@@ -14,6 +14,8 @@
 .lesson-hub-page .hub-breadcrumb{display:flex;justify-content:center;align-items:center;gap:14px;color:#4f4358;font-size:19px;font-weight:400}
 .lesson-hub-page .hub-breadcrumb i{color:#aaa0b2;font-style:normal}
 .lesson-hub-page .hub-breadcrumb strong{color:#6c2eca;font-weight:900}
+.lesson-hub-page .hub-breadcrumb a{color:inherit;text-decoration:none;border-radius:6px;transition:color .15s ease}
+.lesson-hub-page .hub-breadcrumb a:hover,.lesson-hub-page .hub-breadcrumb a:focus-visible{color:#6c2eca;text-decoration:underline;text-underline-offset:4px}
 .lesson-hub-page .hub-user-actions{display:flex;align-items:center;gap:14px;direction:ltr}
 .lesson-hub-page .hub-profile{height:58px;display:flex;align-items:center;gap:10px;padding:5px 7px 5px 16px;border:1px solid #ded6e5;border-radius:17px;background:#fff;direction:rtl}
 .lesson-hub-page .hub-profile>span{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#7131d7,#b03fd1);color:#fff;font-weight:900}
