@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
@@ -32,18 +33,42 @@ import Maintenance from './pages/Maintenance'
 import { useAuth } from './hooks/useAuth'
 import { fetchMaintenanceMode } from './lib/platformSettings'
 
+// بعد أي نشر جديد بتتغيّر أسماء ملفات الكود، فالصفحة اللي فاضلة مفتوحة من قبل النشر
+// بتدوّر على ملف اتشال وبيطلع خطأ "Failed to fetch dynamically imported module".
+// الحل: نعيد تحميل الصفحة مرة واحدة بس (بحارس في sessionStorage عشان ما ندخلش في حلقة).
+const CHUNK_RELOAD_KEY = 'qm_chunk_reloaded'
+
+function lazyWithReload<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return lazy(async () => {
+    try {
+      const mod = await factory()
+      try { sessionStorage.removeItem(CHUNK_RELOAD_KEY) } catch { /* sessionStorage غير متاح */ }
+      return mod
+    } catch (error) {
+      let alreadyReloaded = false
+      try { alreadyReloaded = sessionStorage.getItem(CHUNK_RELOAD_KEY) === '1' } catch { /* تجاهل */ }
+      if (!alreadyReloaded) {
+        try { sessionStorage.setItem(CHUNK_RELOAD_KEY, '1') } catch { /* تجاهل */ }
+        window.location.reload()
+        return new Promise<{ default: T }>(() => {})
+      }
+      throw error
+    }
+  })
+}
+
 // لوحة الإدارة محمّلة كسوليًا (lazy) — مش محتاجها إلا الأدمن فقط، بتقلل حجم الباندل الأساسي
-const AdminLayout = lazy(() => import('./components/AdminLayout'))
-const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'))
-const AdminCourses = lazy(() => import('./pages/admin/AdminCourses'))
-const AdminStudents = lazy(() => import('./pages/admin/AdminStudents'))
-const AdminEnrollments = lazy(() => import('./pages/admin/AdminEnrollments'))
-const AdminQuizzes = lazy(() => import('./pages/admin/AdminQuizzes'))
-const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'))
-const AdminTeam = lazy(() => import('./pages/admin/AdminTeam'))
-const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'))
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
-const AdminLessons = lazy(() => import('./pages/admin/AdminLessons'))
+const AdminLayout = lazyWithReload(() => import('./components/AdminLayout'))
+const AdminOverview = lazyWithReload(() => import('./pages/admin/AdminOverview'))
+const AdminCourses = lazyWithReload(() => import('./pages/admin/AdminCourses'))
+const AdminStudents = lazyWithReload(() => import('./pages/admin/AdminStudents'))
+const AdminEnrollments = lazyWithReload(() => import('./pages/admin/AdminEnrollments'))
+const AdminQuizzes = lazyWithReload(() => import('./pages/admin/AdminQuizzes'))
+const AdminNotifications = lazyWithReload(() => import('./pages/admin/AdminNotifications'))
+const AdminTeam = lazyWithReload(() => import('./pages/admin/AdminTeam'))
+const AdminCoupons = lazyWithReload(() => import('./pages/admin/AdminCoupons'))
+const AdminSettings = lazyWithReload(() => import('./pages/admin/AdminSettings'))
+const AdminLessons = lazyWithReload(() => import('./pages/admin/AdminLessons'))
 
 function AdminFallback() {
   return (
