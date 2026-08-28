@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import SiteNav from './components/SiteNav'
 import Footer from './components/Footer'
@@ -28,6 +28,9 @@ import Terms from './pages/Terms'
 import AccountDeletion from './pages/AccountDeletion'
 import Refund from './pages/Refund'
 import NotFound from './pages/NotFound'
+import Maintenance from './pages/Maintenance'
+import { useAuth } from './hooks/useAuth'
+import { fetchMaintenanceMode } from './lib/platformSettings'
 
 // لوحة الإدارة محمّلة كسوليًا (lazy) — مش محتاجها إلا الأدمن فقط، بتقلل حجم الباندل الأساسي
 const AdminLayout = lazy(() => import('./components/AdminLayout'))
@@ -48,6 +51,37 @@ function AdminFallback() {
       <div className="w-10 h-10 rounded-full border-4 border-brand-pink border-t-transparent animate-spin" />
     </div>
   )
+}
+
+// أدوار فريق العمل — المفروض ما يتقفلش عليهم الموقع وقت الصيانة
+const STAFF_ROLES = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
+
+// وضع الصيانة: لما الأدمن يفعّله من لوحة التحكم، أي زائر أو طالب بيشوف
+// شاشة الصيانة. بنستثني صفحة الدخول ولوحة الإدارة عشان الأدمن يقدر يدخل
+// ويقفل الوضع تاني. ولو فشلت قراءة الحالة لأي سبب، الموقع بيشتغل عادي.
+function MaintenanceGate({ children }: { children: React.ReactNode }) {
+  const { profile, loading } = useAuth()
+  const location = useLocation()
+  const [maintenance, setMaintenance] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    fetchMaintenanceMode().then((value) => { if (alive) setMaintenance(value) })
+    return () => { alive = false }
+  }, [])
+
+  if (maintenance !== true) return <>{children}</>
+
+  const path = location.pathname
+  if (path === '/login' || path === '/register' || path.startsWith('/admin')) {
+    return <>{children}</>
+  }
+
+  // ننتظر معرفة الدور قبل ما نقفل، عشان ما نقفلش على فريق العمل بالغلط
+  if (loading) return <>{children}</>
+  if (profile && STAFF_ROLES.includes(profile.role)) return <>{children}</>
+
+  return <Maintenance />
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -84,6 +118,7 @@ export default function App() {
           success: { iconTheme: { primary: '#D946C6', secondary: '#fff' } },
         }}
       />
+      <MaintenanceGate>
       <Routes>
         {/* Public */}
         <Route path="/" element={<Layout><Home /></Layout>} />
@@ -132,6 +167,7 @@ export default function App() {
         {/* 404 */}
         <Route path="*" element={<Layout><NotFound /></Layout>} />
       </Routes>
+      </MaintenanceGate>
     </BrowserRouter>
   )
 }
