@@ -27,11 +27,11 @@ const NAV_ITEMS: { key: PanelKey; label: string; icon: JSX.Element }[] = [
     icon: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.4 12 3.8l8.2 6.6v8.4a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8z" /><path d="M9 20.5v-6h6v6" /></svg>
   },
   {
-    key: 'learning', label: 'تعلّمي',
+    key: 'learning', label: 'دورة التأسيس',
     icon: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg>
   },
   {
-    key: 'tests', label: 'الاختبارات',
+    key: 'tests', label: 'بنوك الأسئلة',
     icon: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="3" /><path d="M9 4.2V3h6v1.2M8.7 9h6.6M8.7 13h4.8M8.7 17h6.6" /></svg>
   },
   {
@@ -58,11 +58,33 @@ export default function Dashboard() {
   const [learningDays, setLearningDays] = useState(0)
   const [weekActivity, setWeekActivity] = useState<boolean[]>(new Array(7).fill(false))
   const [unreadCount, setUnreadCount] = useState(0)
+  // تقدّم كل درس على حدة، عشان نرسم دائرة صغيرة جنب كل درس في قائمة "دورة التأسيس"
+  const [lessonProgress, setLessonProgress] = useState<Record<string, any>>({})
+  const [openCourseId, setOpenCourseId] = useState<string>('')
   const [latestNotification, setLatestNotification] = useState<any>(null)
 
   useEffect(() => {
     if (user) fetchData()
   }, [user])
+
+  // أول مسار يفتح تلقائيًا بعد تحميل البيانات، والباقي الطالب يفتحه بنفسه
+  useEffect(() => {
+    if (courses.length > 0) setOpenCourseId(courses[0].enrollment.id)
+  }, [courses])
+
+  function lessonPct(lesson: any) {
+    const row = lessonProgress[lesson.id]
+    if (!row) return 0
+    if (row.completed) return 100
+    const value = Number(row.watch_percentage) || 0
+    return Math.max(0, Math.min(100, Math.round(value)))
+  }
+
+  function lessonPath(lesson: any) {
+    return lesson.chapter_id
+      ? `/learn/${lesson.course_id}/${lesson.chapter_id}/${lesson.id}`
+      : `/learn/${lesson.course_id}`
+  }
 
   async function fetchData() {
     setFetching(true)
@@ -116,6 +138,7 @@ export default function Dashboard() {
 
     const progressByLesson: Record<string, any> = {}
     ;(allProgress || []).forEach((p: any) => { progressByLesson[p.lesson_id] = p })
+    setLessonProgress(progressByLesson)
 
     const courseRows = enrollments.map((e: any) => {
       const contentIds = contentCourseIdsByEnrollment[e.course_id] || [e.course_id]
@@ -424,35 +447,75 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* ===== تعلّمي ===== */}
+        {/* ===== دورة التأسيس ===== */}
         <section className={`student-panel simple-view${panel === 'learning' ? ' active' : ''}`} data-panel="learning">
-          <div className="simple-view-head"><div><h2>تعلّمي</h2><p>مسارك واضح؛ درس واحد في كل مرة.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg></span></div>
+          <div className="simple-view-head"><div><h2>دورة التأسيس</h2><p>مسارك واضح؛ درس واحد في كل مرة.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg></span></div>
           {courses.length === 0 ? (
             <EmptyPanel text="لم تشترك في أي كورس بعد" cta={{ label: 'استعرض الكورسات', to: '/courses' }} />
           ) : (
-            <div className="single-course-stack">
-              {courses.map((c) => (
-                <article className="single-course" key={c.enrollment.id}>
-                  <div className="single-course-progress" style={{ background: `conic-gradient(#7c35df 0 ${c.pct}%, #ece5f1 ${c.pct}%)` }}>
-                    <strong>{c.pct}%</strong><span>منجز</span>
-                  </div>
-                  <div>
-                    <small>مسارك الحالي</small>
-                    <h3>{c.course?.title}</h3>
-                    <p>{c.completedCount} من {c.lessons.length} درسًا مكتملًا</p>
-                    <Link to={c.currentLesson?.chapter_id
-                      ? `/learn/${c.currentLesson.course_id}/${c.currentLesson.chapter_id}/${c.currentLesson.id}`
-                      : `/learn/${c.currentLesson?.course_id || c.contentCourseId || c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
-                  </div>
-                </article>
-              ))}
+            <div className="course-accordion-stack">
+              {courses.map((c) => {
+                const open = openCourseId === c.enrollment.id
+                return (
+                  <article className={`course-accordion${open ? ' open' : ''}`} key={c.enrollment.id}>
+                    <button
+                      type="button"
+                      className="course-accordion-head"
+                      aria-expanded={open}
+                      onClick={() => setOpenCourseId(open ? '' : c.enrollment.id)}
+                    >
+                      <span className="course-accordion-info">
+                        <small>مسارك الحالي</small>
+                        <h3>{c.course?.title}</h3>
+                        <p>{c.completedCount} من {c.lessons.length} درسًا مكتملًا</p>
+                      </span>
+                      <span className="course-accordion-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+                      </span>
+                    </button>
+
+                    {open && (
+                      <div className="course-accordion-body">
+                        {c.lessons.length === 0 ? (
+                          <p className="course-accordion-empty">لا توجد دروس منشورة في هذا المسار بعد</p>
+                        ) : (
+                          <ul className="lesson-progress-list">
+                            {c.lessons.map((lesson: any, index: number) => {
+                              const pct = lessonPct(lesson)
+                              return (
+                                <li key={lesson.id}>
+                                  <Link to={lessonPath(lesson)}>
+                                    <span
+                                      className="lesson-progress-ring"
+                                      style={{ background: `conic-gradient(#7c35df 0 ${pct}%, #ece5f1 ${pct}%)` }}
+                                    >
+                                      <strong>{pct}%</strong>
+                                    </span>
+                                    <span className="lesson-progress-info">
+                                      <b>{lesson.title}</b>
+                                      <small>الدرس {index + 1}{pct === 100 ? ' · مكتمل' : pct > 0 ? ' · قيد المتابعة' : ''}</small>
+                                    </span>
+                                  </Link>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        )}
+                        <Link to={c.currentLesson?.chapter_id
+                          ? `/learn/${c.currentLesson.course_id}/${c.currentLesson.chapter_id}/${c.currentLesson.id}`
+                          : `/learn/${c.currentLesson?.course_id || c.contentCourseId || c.course.id}`} className="primary-study-button compact">متابعة التعلّم</Link>
+                      </div>
+                    )}
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>
 
-        {/* ===== الاختبارات ===== */}
+        {/* ===== بنوك الأسئلة ===== */}
         <section className={`student-panel simple-view${panel === 'tests' ? ' active' : ''}`} data-panel="tests">
-          <div className="simple-view-head"><div><h2>الاختبارات</h2><p>اختبارك القادم ونتيجتك الأخيرة، بدون تشتيت.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="3" /><path d="M9 4V3h6v1M9 10h6M9 14h4" /></svg></span></div>
+          <div className="simple-view-head"><div><h2>بنوك الأسئلة</h2><p>اختبارك القادم ونتيجتك الأخيرة، بدون تشتيت.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="3" /><path d="M9 4V3h6v1M9 10h6M9 14h4" /></svg></span></div>
           <div className="test-focus-row">
             <article>
               <small>القادم</small>
