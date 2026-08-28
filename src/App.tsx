@@ -73,7 +73,7 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
   if (maintenance !== true) return <>{children}</>
 
   const path = location.pathname
-  if (path === '/login' || path.startsWith('/admin')) {
+  if (path === '/login' || path === '/auth/callback' || path.startsWith('/admin')) {
     return <>{children}</>
   }
 
