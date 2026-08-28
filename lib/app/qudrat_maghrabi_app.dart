@@ -7,6 +7,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
+import 'package:qudrat_maghrabi_app/features/auth/data/biometric_lock_service.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/auth_gate.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_home/data/student_home_repository.dart';
@@ -23,6 +24,7 @@ class QudratMaghrabiApp extends StatefulWidget {
     required this.studentQuizRepository,
     this.subscriptionRepository = const UnavailableSubscriptionRepository(),
     this.notificationRepository = const EmptyNotificationRepository(),
+    this.biometricLock,
     super.key,
   });
 
@@ -33,6 +35,7 @@ class QudratMaghrabiApp extends StatefulWidget {
   final StudentQuizRepository studentQuizRepository;
   final SubscriptionRepository subscriptionRepository;
   final NotificationRepository notificationRepository;
+  final BiometricLockService? biometricLock;
 
   @override
   State<QudratMaghrabiApp> createState() => _QudratMaghrabiAppState();
@@ -105,6 +108,7 @@ class _QudratMaghrabiAppState extends State<QudratMaghrabiApp> {
               studentQuizRepository: widget.studentQuizRepository,
               subscriptionRepository: widget.subscriptionRepository,
               notificationRepository: widget.notificationRepository,
+              biometricLock: widget.biometricLock,
             ),
           ),
         ),

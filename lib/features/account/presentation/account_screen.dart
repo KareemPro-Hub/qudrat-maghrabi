@@ -7,6 +7,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
+import 'package:qudrat_maghrabi_app/features/auth/data/biometric_lock_service.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
@@ -21,6 +22,7 @@ class AccountScreen extends StatefulWidget {
     required this.onAccountDeleted,
     this.subscriptionRepository,
     this.onBack,
+    this.biometricLock,
     super.key,
   });
 
@@ -33,6 +35,7 @@ class AccountScreen extends StatefulWidget {
   // بدج "مشترك" على بطاقة الحساب (متاح للطلاب فقط، مش لحساب ولي الأمر).
   final SubscriptionRepository? subscriptionRepository;
   final VoidCallback? onBack;
+  final BiometricLockService? biometricLock;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -41,11 +44,52 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   late AuthProfile _profile = widget.profile;
   bool _isSubscribed = false;
+  bool _biometricSupported = false;
+  bool _biometricEnabled = false;
+  bool _biometricBusy = false;
+  late final BiometricLockService _biometricLock =
+      widget.biometricLock ?? BiometricLockService();
 
   @override
   void initState() {
     super.initState();
     unawaited(_loadSubscriptionStatus());
+    unawaited(_loadBiometricStatus());
+  }
+
+  Future<void> _loadBiometricStatus() async {
+    final supported = await _biometricLock.isSupported();
+    final enabled = supported && await _biometricLock.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _biometricSupported = supported;
+      _biometricEnabled = enabled;
+    });
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (_biometricBusy) return;
+    setState(() => _biometricBusy = true);
+    var enabled = _biometricEnabled;
+    if (value) {
+      // ما نفعّلش القفل غير بعد ما نتأكد إن البصمة شغالة فعلًا على الجهاز،
+      // عشان الطالب ما يتقفلش بره حسابه.
+      final confirmed = await _biometricLock.authenticate(
+        reason: 'أكّد بصمتك لتفعيل قفل التطبيق',
+      );
+      if (confirmed) {
+        await _biometricLock.setEnabled(true);
+        enabled = true;
+      }
+    } else {
+      await _biometricLock.setEnabled(false);
+      enabled = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _biometricBusy = false;
+      _biometricEnabled = enabled;
+    });
   }
 
   Future<void> _loadSubscriptionStatus() async {
@@ -110,6 +154,24 @@ class _AccountScreenState extends State<AccountScreen> {
                   subtitle: QmThemeModeScope.of(context).preference.label,
                   onTap: () => _showThemeModePicker(context),
                 ),
+                if (_biometricSupported) ...[
+                  const _TileDivider(),
+                  _SettingTile(
+                    key: const Key('biometric-lock-tile'),
+                    icon: Icons.fingerprint_rounded,
+                    title: 'الدخول بالبصمة',
+                    subtitle: _biometricEnabled
+                        ? 'مفعّل — نطلب بصمتك عند فتح التطبيق'
+                        : 'افتح التطبيق ببصمتك بدل كلمة المرور',
+                    onTap: _biometricBusy
+                        ? () {}
+                        : () => _toggleBiometric(!_biometricEnabled),
+                    trailing: Switch(
+                      value: _biometricEnabled,
+                      onChanged: _biometricBusy ? null : _toggleBiometric,
+                    ),
+                  ),
+                ],
                 const _TileDivider(),
                 _SettingTile(
                   key: const Key('edit-profile-tile'),
@@ -547,6 +609,7 @@ class _SettingTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.trailing,
     super.key,
   });
 
@@ -554,6 +617,7 @@ class _SettingTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -580,11 +644,13 @@ class _SettingTile extends StatelessWidget {
         subtitle,
         style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
       ),
-      trailing: Icon(
-        Icons.arrow_back_ios_new_rounded,
-        size: 16,
-        color: QmColors.textMuted,
-      ),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 16,
+            color: QmColors.textMuted,
+          ),
     );
   }
 }

@@ -39,6 +39,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>نستخدم بصمة الوجه لفتح التطبيق بأمان بدل إدخال كلمة المرور في كل مرة.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>mailto</string>
