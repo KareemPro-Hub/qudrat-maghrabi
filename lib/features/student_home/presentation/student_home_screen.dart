@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
+import 'package:qudrat_maghrabi_app/features/app_update/data/app_update_service.dart';
 import 'package:qudrat_maghrabi_app/features/account/presentation/account_screen.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/notification_repository.dart';
@@ -18,6 +19,7 @@ import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_l
 import 'package:qudrat_maghrabi_app/features/subscriptions/data/subscription_repository.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/domain/student_subscription.dart';
 import 'package:qudrat_maghrabi_app/features/subscriptions/presentation/store_subscription_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({
@@ -53,11 +55,40 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   final _scrollController = ScrollController();
   late Future<StudentHomeSnapshot> _snapshotFuture;
   int _selectedNavigationIndex = 0;
+  // تطبيق أندرويد بيتوزّع من الموقع مش من متجر، فمفيش تحديث تلقائي
+  AppUpdateInfo? _availableUpdate;
+  bool _updateDismissed = false;
 
   @override
   void initState() {
     super.initState();
     _snapshotFuture = _load();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    final update = await const AppUpdateService().checkForUpdate();
+    if (!mounted || update == null) return;
+    setState(() => _availableUpdate = update);
+  }
+
+  Future<void> _openUpdateLink(AppUpdateInfo update) async {
+    final uri = Uri.tryParse(update.url);
+    if (uri == null) return;
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تعذّر فتح رابط التحديث. جرّب من موقع المنصة.',
+              textAlign: TextAlign.center,
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 
   @override
@@ -189,6 +220,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
+                if (_availableUpdate != null && !_updateDismissed) ...[
+                  _UpdateBanner(
+                    update: _availableUpdate!,
+                    onUpdate: () => _openUpdateLink(_availableUpdate!),
+                    onDismiss: () => setState(() => _updateDismissed = true),
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 if (previewCourse != null)
                   _FreeCourseSurpriseCard(
                     course: previewCourse,
@@ -1255,6 +1294,84 @@ class _EmptyCoursesCard extends StatelessWidget {
           Text(
             'لا توجد كورسات منشورة حاليًا',
             style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// تنبيه بسيط بتحديث التطبيق، بيظهر على أندرويد بس ويقدر الطالب يخفيه.
+class _UpdateBanner extends StatelessWidget {
+  const _UpdateBanner({
+    required this.update,
+    required this.onUpdate,
+    required this.onDismiss,
+  });
+
+  final AppUpdateInfo update;
+  final VoidCallback onUpdate;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final versionLabel = update.version.isEmpty ? '' : ' ${update.version}';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: QmColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QmColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              gradient: QmGradients.brand,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.system_update_alt_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'يتوفر تحديث جديد$versionLabel',
+                  style: TextStyle(
+                    color: QmColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'نزّل النسخة الأحدث للحصول على آخر التحسينات.',
+                  style: TextStyle(
+                    color: QmColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            key: const Key('app-update-button'),
+            onPressed: onUpdate,
+            child: const Text('تحديث'),
+          ),
+          IconButton(
+            key: const Key('app-update-dismiss'),
+            onPressed: onDismiss,
+            icon: Icon(Icons.close_rounded, size: 18, color: QmColors.textMuted),
+            tooltip: 'إخفاء',
           ),
         ],
       ),
