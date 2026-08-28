@@ -53,12 +53,12 @@ function AdminFallback() {
   )
 }
 
-// أدوار فريق العمل — المفروض ما يتقفلش عليهم الموقع وقت الصيانة
-const STAFF_ROLES = ['admin', 'teacher', 'content_manager', 'student_manager', 'quiz_manager']
-
-// وضع الصيانة: لما الأدمن يفعّله من لوحة التحكم، أي زائر أو طالب بيشوف
-// شاشة الصيانة. بنستثني صفحة الدخول ولوحة الإدارة عشان الأدمن يقدر يدخل
-// ويقفل الوضع تاني. ولو فشلت قراءة الحالة لأي سبب، الموقع بيشتغل عادي.
+// وضع الصيانة: لما يتفعّل، الموقع بيتقفل على **الجميع** — زوار وطلاب
+// وأولياء أمور وحتى باقي فريق العمل — والأدمن وحده هو اللي بيكمّل عادي.
+// بنسيب صفحة الدخول ولوحة الإدارة مفتوحتين عشان الأدمن يقدر يسجّل دخول
+// ويقفل الوضع تاني (من غير كده مفيش طريقة يدخل بيها).
+// ولو فشلت قراءة الحالة لأي سبب، الموقع بيشتغل عادي — عطل مؤقت في
+// السيرفر ما ينفعش يقفل المنصة بالغلط.
 function MaintenanceGate({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth()
   const location = useLocation()
@@ -73,13 +73,13 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
   if (maintenance !== true) return <>{children}</>
 
   const path = location.pathname
-  if (path === '/login' || path === '/register' || path.startsWith('/admin')) {
+  if (path === '/login' || path.startsWith('/admin')) {
     return <>{children}</>
   }
 
-  // ننتظر معرفة الدور قبل ما نقفل، عشان ما نقفلش على فريق العمل بالغلط
+  // ننتظر معرفة الدور قبل ما نقفل، عشان ما نقفلش على الأدمن بالغلط
   if (loading) return <>{children}</>
-  if (profile && STAFF_ROLES.includes(profile.role)) return <>{children}</>
+  if (profile?.role === 'admin') return <>{children}</>
 
   return <Maintenance />
 }
