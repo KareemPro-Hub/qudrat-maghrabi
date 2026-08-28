@@ -258,18 +258,40 @@ export default function AdminQuizzes() {
     setSaving(false)
   }
 
+  async function uploadQuestionImageFile(file: File) {
+    setUploadingQImage(true)
+    try {
+      const data = new FormData()
+      data.append('file', file)
+      data.append('upload_preset', CLOUDINARY_PRESET)
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+      const json = await res.json()
+      if (json.secure_url) { setQForm((f) => ({ ...f, question_image_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
+      else toast.error('فشل رفع الصورة')
+    } catch {
+      toast.error('فشل رفع الصورة')
+    } finally {
+      setUploadingQImage(false)
+    }
+  }
+
   async function handleQuestionImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setUploadingQImage(true)
-    const data = new FormData()
-    data.append('file', file)
-    data.append('upload_preset', CLOUDINARY_PRESET)
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
-    const json = await res.json()
-    if (json.secure_url) { setQForm((f) => ({ ...f, question_image_url: json.secure_url })); toast.success('تم رفع الصورة ✅') }
-    else toast.error('فشل رفع الصورة')
-    setUploadingQImage(false)
+    await uploadQuestionImageFile(file)
+  }
+
+  // لصق صورة من الحافظة مباشرة (Ctrl+V / Cmd+V) بدل ما المشرف يحفظها على
+  // الجهاز الأول ويرفعها يدويًا. لو اللي متلصق نص عادي، بنسيبه يتلصق طبيعي.
+  function handleQuestionImagePaste(e: React.ClipboardEvent) {
+    if (uploadingQImage) return
+    const items = Array.from(e.clipboardData?.items || [])
+    const imageItem = items.find((item) => item.type.startsWith('image/'))
+    if (!imageItem) return
+    const file = imageItem.getAsFile()
+    if (!file) return
+    e.preventDefault()
+    void uploadQuestionImageFile(file)
   }
 
   async function handleSaveQuestion(e: React.FormEvent) {
@@ -457,7 +479,7 @@ export default function AdminQuizzes() {
 
       {showQuizModal && (
         <Modal title="إضافة اختبار جديد" onClose={() => { setShowQuizModal(false); setQForm(emptyQ) }} wide>
-          <form onSubmit={handleSaveQuiz} className="admin-form">
+          <form onSubmit={handleSaveQuiz} className="admin-form" onPaste={handleQuestionImagePaste}>
             <label>عنوان الاختبار *<input value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} placeholder="مثال: اختبار الوحدة الأولى" /></label>
             <label>الكورس *
               <select value={quizForm.course_id} onChange={(e) => { setQuizForm({ ...quizForm, course_id: e.target.value, lesson_id: '' }); fetchLessons(e.target.value) }}>
@@ -492,7 +514,7 @@ export default function AdminQuizzes() {
                 </div>
               ) : (
                 <label className="adm-thumb-drop">
-                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال أو الصقها Ctrl+V</span></>)}
                   <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
                 </label>
               )}
@@ -553,7 +575,7 @@ export default function AdminQuizzes() {
 
       {showQModal && (
         <Modal title="إضافة سؤال" onClose={() => setShowQModal(null)} wide>
-          <form onSubmit={handleSaveQuestion} className="admin-form">
+          <form onSubmit={handleSaveQuestion} className="admin-form" onPaste={handleQuestionImagePaste}>
             <label>نص السؤال *<textarea rows={3} value={qForm.question_text} onChange={(e) => setQForm({ ...qForm, question_text: e.target.value })} placeholder="اكتب السؤال هنا..." /></label>
             <label>
               صورة السؤال (اختياري)
@@ -564,7 +586,7 @@ export default function AdminQuizzes() {
                 </div>
               ) : (
                 <label className="adm-thumb-drop">
-                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال أو الصقها Ctrl+V</span></>)}
                   <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
                 </label>
               )}
@@ -597,7 +619,7 @@ export default function AdminQuizzes() {
 
       {editQuestion && (
         <Modal title="تعديل السؤال" onClose={() => { setEditQuestion(null); setQForm(emptyQ) }} wide>
-          <form onSubmit={handleUpdateQuestion} className="admin-form">
+          <form onSubmit={handleUpdateQuestion} className="admin-form" onPaste={handleQuestionImagePaste}>
             <label>نص السؤال *<textarea rows={3} value={qForm.question_text} onChange={(e) => setQForm({ ...qForm, question_text: e.target.value })} placeholder="اكتب السؤال هنا..." /></label>
             <label>
               صورة السؤال (اختياري)
@@ -608,7 +630,7 @@ export default function AdminQuizzes() {
                 </div>
               ) : (
                 <label className="adm-thumb-drop">
-                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال</span></>)}
+                  {uploadingQImage ? <div className="adm-loading"><i /></div> : (<><Upload size={20} /><span>اضغط لرفع صورة السؤال أو الصقها Ctrl+V</span></>)}
                   <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} disabled={uploadingQImage} />
                 </label>
               )}
