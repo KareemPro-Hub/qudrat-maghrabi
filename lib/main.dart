@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:qudrat_maghrabi_app/app/qudrat_maghrabi_app.dart';
 import 'package:qudrat_maghrabi_app/core/config/app_environment.dart';
+import 'package:qudrat_maghrabi_app/core/config/error_monitoring.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/supabase_account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/supabase_auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/notifications/data/supabase_notification_repository.dart';
@@ -13,6 +14,12 @@ import 'package:qudrat_maghrabi_app/features/subscriptions/data/in_app_purchase_
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
+  // بنشغّل التطبيق جوه نطاق محمي عشان أي خطأ غير متوقع عند أي طالب يتسجّل
+  // ويوصلنا تنبيه بيه، بدل ما نعرف بالمشكلة من شكوى بعد ساعات.
+  await ErrorMonitoring.runGuarded(_startApp);
+}
+
+Future<void> _startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     AppEnvironment.validate();
