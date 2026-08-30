@@ -101,7 +101,7 @@ class SupabaseAuthRepository implements AuthRepository {
         'set_my_active_portal',
         params: {'p_portal': AccountRole.student.databaseValue},
       );
-      return _fetchProfile(user.id);
+      return await _fetchProfile(user.id);
     } on AuthFailure {
       rethrow;
     } on AuthException catch (error) {
