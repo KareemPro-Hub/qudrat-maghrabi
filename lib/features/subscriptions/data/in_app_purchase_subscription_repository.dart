@@ -114,7 +114,7 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
             plan: plan,
             priceLabel:
                 _products[plan.productId]?.price ??
-                plan.fallbackPriceSar.toStringAsFixed(0),
+                plan.fallbackPriceLabel,
             canPurchase: _products.containsKey(plan.productId),
           ),
       ];

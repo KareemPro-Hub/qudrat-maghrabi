@@ -732,11 +732,11 @@ class _PlanPrice extends StatelessWidget {
 
   String get _amountLabel {
     if (_showSaudiPreview) {
-      return offer.plan.fallbackPriceSar.toStringAsFixed(0);
+      return offer.plan.fallbackPriceLabel;
     }
     final amount = _normalizedLabel.replaceAll(_sarPattern, '').trim();
     return amount.isEmpty
-        ? offer.plan.fallbackPriceSar.toStringAsFixed(0)
+        ? offer.plan.fallbackPriceLabel
         : amount;
   }
 

@@ -30,13 +30,20 @@ class SubscriptionPlan {
   final List<SubscriptionBenefit> benefits;
   final bool popular;
 
+  /// السعر الاحتياطي كنص: بدون كسور إذا كان رقمًا صحيحًا، وبمنزلتين غير ذلك.
+  String get fallbackPriceLabel {
+    return fallbackPriceSar == fallbackPriceSar.roundToDouble()
+        ? fallbackPriceSar.toStringAsFixed(0)
+        : fallbackPriceSar.toStringAsFixed(2);
+  }
+
   static const monthly = SubscriptionPlan(
     id: 'monthly',
     productId: 'com.qudratmaghrabi.app.subscription.monthly',
     name: 'الأساسية',
     duration: 'شهر واحد',
     durationDays: 30,
-    fallbackPriceSar: 79,
+    fallbackPriceSar: 19.99,
     benefits: [
       SubscriptionBenefit('تأسيس قوي يبدأ بك من الصفر'),
       SubscriptionBenefit('فيديوهات احترافية بجودة عالية'),
@@ -52,7 +59,7 @@ class SubscriptionPlan {
     name: 'المميزة',
     duration: '3 أشهر',
     durationDays: 90,
-    fallbackPriceSar: 199,
+    fallbackPriceSar: 39.99,
     popular: true,
     benefits: [
       SubscriptionBenefit('جميع مزايا الباقة الأساسية'),
@@ -69,7 +76,7 @@ class SubscriptionPlan {
     name: 'الاحترافية',
     duration: '6 أشهر',
     durationDays: 180,
-    fallbackPriceSar: 299,
+    fallbackPriceSar: 59.99,
     benefits: [
       SubscriptionBenefit('جميع مزايا الباقة المميزة'),
       SubscriptionBenefit('بث مباشر أسبوعي مع الطلاب'),
