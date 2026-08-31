@@ -17,6 +17,13 @@ class SupabaseAuthRepository implements AuthRepository {
       .map((_) {});
 
   @override
+  bool get hasStoredSession => _client.auth.currentSession != null;
+
+  /// عدد محاولات استعادة الجلسة عند أخطاء الشبكة المؤقتة.
+  static const int _restoreAttempts = 3;
+  static const Duration _restoreRetryDelay = Duration(milliseconds: 700);
+
+  @override
   Future<AuthProfile?> restoreSession() async {
     var session = _client.auth.currentSession;
     if (session == null) return null;
@@ -24,8 +31,9 @@ class SupabaseAuthRepository implements AuthRepository {
     if (session.isExpired) {
       try {
         session = (await _client.auth.refreshSession()).session;
-      } on AuthException {
-        await _safeSignOut();
+      } catch (_) {
+        // فشل التحديث غالبًا بيكون انقطاع نت أو مهلة، ومش سبب لمسح الجلسة.
+        // بنرجع بدون ملف، والطالب يقدر يعيد المحاولة بالبصمة أو يخرج بنفسه.
         return null;
       }
     }
@@ -33,21 +41,27 @@ class SupabaseAuthRepository implements AuthRepository {
     final user = session?.user;
     if (user == null) return null;
 
-    try {
-      final profile = await _fetchProfile(user.id);
-      if (profile.role != AccountRole.student ||
-          profile.primaryRole != AccountRole.student) {
+    for (var attempt = 1; attempt <= _restoreAttempts; attempt++) {
+      try {
+        final profile = await _fetchProfile(user.id);
+        if (profile.role != AccountRole.student ||
+            profile.primaryRole != AccountRole.student) {
+          await _safeSignOut();
+          return null;
+        }
+        return profile;
+      } on AuthFailure {
+        // ملف ناقص أو دور غير مدعوم: إجابة نهائية من السيرفر.
         await _safeSignOut();
         return null;
+      } catch (_) {
+        // أي فشل آخر (شبكة، مهلة، خطأ مؤقت من القاعدة) يستاهل إعادة محاولة،
+        // ولو فشل في الآخر بنحافظ على الجلسة بدل ما نطرد الطالب.
+        if (attempt == _restoreAttempts) return null;
+        await Future<void>.delayed(_restoreRetryDelay);
       }
-      return profile;
-    } on AuthFailure {
-      await _safeSignOut();
-      return null;
-    } on PostgrestException {
-      await _safeSignOut();
-      return null;
     }
+    return null;
   }
 
   @override

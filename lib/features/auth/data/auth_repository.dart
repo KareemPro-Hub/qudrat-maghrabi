@@ -3,6 +3,9 @@ import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 abstract interface class AuthRepository {
   Stream<void> get passwordRecoveryEvents;
 
+  /// هل فيه جلسة محفوظة على الجهاز (حتى لو استعادتها فشلت مؤقتًا).
+  bool get hasStoredSession;
+
   Future<AuthProfile?> restoreSession();
 
   Future<AuthProfile> signIn({

@@ -64,6 +64,11 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  bool get hasStoredSession => storedSession;
+
+  bool storedSession = false;
+
+  @override
   Future<AuthProfile?> restoreSession() async => restoredProfile;
 
   @override
@@ -112,5 +117,6 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     signOutCalls += 1;
     restoredProfile = null;
+    storedSession = false;
   }
 }

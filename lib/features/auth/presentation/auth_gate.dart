@@ -87,6 +87,10 @@ class _AuthGateState extends State<AuthGate> {
     var locked = false;
     if (profile != null) {
       locked = await _biometricLock.isEnabled();
+    } else if (widget.authRepository.hasStoredSession) {
+      // الاستعادة فشلت لسبب مؤقت لكن الجلسة لسه موجودة، فبدل ما نطلب كلمة
+      // المرور بنعرض البصمة ونعيد المحاولة بعد التأكيد.
+      locked = await _biometricLock.isEnabled();
     }
     if (!mounted) return;
     setState(() {
@@ -94,7 +98,7 @@ class _AuthGateState extends State<AuthGate> {
       _locked = !_passwordRecoveryPending && locked;
       _restoringSession = false;
     });
-    if (_locked) unawaited(_unlock());
+    if (_locked && profile != null) unawaited(_unlock());
   }
 
   Future<void> _unlock() async {
@@ -102,6 +106,22 @@ class _AuthGateState extends State<AuthGate> {
     setState(() => _unlocking = true);
     final unlocked = await _biometricLock.authenticate();
     if (!mounted) return;
+    if (unlocked && _profile == null) {
+      // الجلسة محفوظة لكن ملف الطالب ما اتحمّلش، فنعيد المحاولة بعد التأكيد.
+      AuthProfile? profile;
+      try {
+        profile = await widget.authRepository.restoreSession();
+      } catch (_) {
+        profile = null;
+      }
+      if (!mounted) return;
+      setState(() {
+        _unlocking = false;
+        _profile = profile;
+        if (profile != null) _locked = false;
+      });
+      return;
+    }
     setState(() {
       _unlocking = false;
       if (unlocked) _locked = false;
@@ -159,6 +179,14 @@ class _AuthGateState extends State<AuthGate> {
       return const _SessionLoadingScreen();
     }
 
+    if (_locked) {
+      return _BiometricLockScreen(
+        busy: _unlocking,
+        onUnlock: _unlock,
+        onSignOut: _signOut,
+      );
+    }
+
     final profile = _profile;
     if (profile == null) {
       return LoginScreen(
@@ -166,14 +194,6 @@ class _AuthGateState extends State<AuthGate> {
         onSignedIn: (signedInProfile) {
           setState(() => _profile = signedInProfile);
         },
-      );
-    }
-
-    if (_locked) {
-      return _BiometricLockScreen(
-        busy: _unlocking,
-        onUnlock: _unlock,
-        onSignOut: _signOut,
       );
     }
 
