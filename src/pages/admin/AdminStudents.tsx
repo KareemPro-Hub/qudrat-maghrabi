@@ -225,9 +225,13 @@ export default function AdminStudents() {
     if (error) { toast.error('حدث خطأ أثناء الإرسال'); setSendingMsg(false); return }
     toast.success('تم إرسال الرسالة ✅')
     if (msgSendEmail && messageTarget.email) {
+      const { data: sessionData } = await supabase.auth.getSession()
       fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData.session?.access_token ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {}),
+        },
         body: JSON.stringify({ to: messageTarget.email, type: 'admin_broadcast', data: { studentName: messageTarget.full_name, title: msgTitle, body: msgBody } }),
       }).catch(() => {})
     }

@@ -86,9 +86,13 @@ export default function QuizResult() {
       emailSent.current = true
       const { data: { user } } = await supabase.auth.getUser()
       const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', user!.id).single()
+      const { data: sessionData } = await supabase.auth.getSession()
       fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData.session?.access_token ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           to: profile?.email || user?.email,
           type: 'quiz_passed',

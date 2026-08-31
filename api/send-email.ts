@@ -46,12 +46,15 @@ function escapeHtml(value: string) {
   })[character] || character)
 }
 
-async function isAdminRequest(req: ApiRequest) {
+type Requester = { id: string, email: string, role: string }
+
+// يتحقق من توكن المستخدم ويرجع هويته ودوره، أو null لو التوكن غائب أو غير صالح.
+async function getRequester(req: ApiRequest): Promise<Requester | null> {
   const authHeader = req.headers?.authorization ?? ''
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-  if (!authHeader.startsWith('Bearer ') || !supabaseUrl || !supabaseAnonKey) return false
+  if (!authHeader.startsWith('Bearer ') || !supabaseUrl || !supabaseAnonKey) return null
 
   const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: {
@@ -59,13 +62,13 @@ async function isAdminRequest(req: ApiRequest) {
       apikey: supabaseAnonKey,
     },
   })
-  if (!authResponse.ok) return false
+  if (!authResponse.ok) return null
 
-  const user = await authResponse.json() as { id?: string }
-  if (!user.id) return false
+  const user = await authResponse.json() as { id?: string, email?: string }
+  if (!user.id) return null
 
   const profileResponse = await fetch(
-    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=role`,
+    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=role,email`,
     {
       headers: {
         Authorization: authHeader,
@@ -73,10 +76,20 @@ async function isAdminRequest(req: ApiRequest) {
       },
     },
   )
-  if (!profileResponse.ok) return false
+  if (!profileResponse.ok) return null
 
-  const profiles = await profileResponse.json() as Array<{ role?: string }>
-  return profiles.length === 1 && profiles[0].role === 'admin'
+  const profiles = await profileResponse.json() as Array<{ role?: string, email?: string }>
+  if (profiles.length !== 1) return null
+
+  return {
+    id: user.id,
+    email: (profiles[0].email || user.email || '').trim().toLowerCase(),
+    role: profiles[0].role || '',
+  }
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254
 }
 
 function isTrustedInviteLink(value: string) {
@@ -249,9 +262,43 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
+  const recipient = to.trim().toLowerCase()
+  if (!isValidEmail(recipient)) {
+    return res.status(400).json({ error: 'Invalid recipient' })
+  }
+
+  // كل الأنواع تتطلب مستخدمًا مسجّلًا. الأنواع الإدارية تتطلب دور admin،
+  // و quiz_passed مسموح للطالب لنفسه فقط، وإلا كانت النقطة مفتوحة للعالم.
+  const requester = await getRequester(req)
+  if (!requester) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  const ADMIN_ONLY_TYPES = ['team_invite', 'admin_broadcast', 'enrollment', 'payment_failed', 'new_lesson']
+  if (ADMIN_ONLY_TYPES.includes(type) && requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+  if (type === 'quiz_passed' && requester.role !== 'admin' && recipient !== requester.email) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
   const RESEND_API_KEY = process.env.RESEND_API_KEY
   if (!RESEND_API_KEY) {
     return res.status(500).json({ error: 'Email service not configured' })
+  }
+
+  // كل قيمة قادمة من العميل تُهرَّب قبل حقنها في HTML.
+  const safeText = (value: unknown) => escapeHtml((value ?? '').toString().trim())
+  const safe = {
+    studentName: safeText(data?.studentName),
+    courseName: safeText(data?.courseName),
+    lessonName: safeText(data?.lessonName),
+    quizTitle: safeText(data?.quizTitle),
+    score: safeText(data?.score),
+    totalMarks: safeText(data?.totalMarks),
+    title: safeText(data?.title),
+    body: safeText(data?.body),
+    courseId: encodeURIComponent((data?.courseId ?? '').toString().trim()),
   }
 
   let subject = ''
@@ -274,10 +321,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const footer = `<p style="color:#aaa;font-size:12px;text-align:center;margin-top:20px;">منصة قدرات المغربي | qudratmaghrabi.com</p>`
 
   if (type === 'team_invite') {
-    if (!await isAdminRequest(req)) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
-
     const memberName = data?.memberName?.trim() || ''
     const inviteLink = data?.inviteLink?.trim() || ''
     const roleLabel = data?.roleLabel?.trim() || ''
@@ -295,8 +338,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #E91E8C;">
           <h2 style="color:#1B1B5E;">مبروك! تم تفعيل اشتراكك 🎉</h2>
           <p style="color:#444;line-height:1.8;">
-            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
-            تم تفعيل اشتراكك في كورس <strong>${data?.courseName || ''}</strong> بنجاح.
+            أهلاً <strong>${safe.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            تم تفعيل اشتراكك في كورس <strong>${safe.courseName}</strong> بنجاح.
             يمكنك الآن الدخول للمنصة والبدء في الدراسة فوراً.
           </p>
           <div style="text-align:center;margin:28px 0;">
@@ -318,8 +361,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #FF8008;">
           <h2 style="color:#1B1B5E;">لم تتم عملية الدفع ⚠️</h2>
           <p style="color:#444;line-height:1.8;">
-            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
-            للأسف لم تتم عملية الدفع لكورس <strong>${data?.courseName || ''}</strong>.
+            أهلاً <strong>${safe.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            للأسف لم تتم عملية الدفع لكورس <strong>${safe.courseName}</strong>.
             يمكنك المحاولة مجدداً من خلال الرابط أدناه.
           </p>
           <div style="text-align:center;margin:28px 0;">
@@ -333,15 +376,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       </div>`
 
   } else if (type === 'new_lesson') {
-    subject = `درس جديد متاح الآن — ${data?.courseName || 'قدرات المغربي'}`
+    subject = `درس جديد متاح الآن — ${(data?.courseName || '').toString().trim() || 'قدرات المغربي'}`
     html = `
       <div dir="rtl" style="${baseStyle}">
         ${header}
         <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #3D1070;">
           <h2 style="color:#1B1B5E;">درس جديد متاح الآن 📚</h2>
           <p style="color:#444;line-height:1.8;">
-            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
-            تم إضافة درس جديد <strong>${data?.lessonName || ''}</strong> في كورس <strong>${data?.courseName || ''}</strong>.
+            أهلاً <strong>${safe.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            تم إضافة درس جديد <strong>${safe.lessonName}</strong> في كورس <strong>${safe.courseName}</strong>.
           </p>
           <div style="text-align:center;margin:28px 0;">
             <a href="${PLATFORM_URL}/dashboard"
@@ -353,19 +396,19 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         ${footer}
       </div>`
   } else if (type === 'quiz_passed') {
-    subject = `أحسنت! اجتزت اختبار "${data?.quizTitle || ''}" 🎉 — قدرات المغربي`
+    subject = `أحسنت! اجتزت اختبار "${safe.quizTitle}" 🎉 — قدرات المغربي`
     html = `
       <div dir="rtl" style="${baseStyle}">
         ${header}
         <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #22c55e;">
           <h2 style="color:#1B1B5E;">أحسنت! لقد اجتزت الاختبار 🏆</h2>
           <p style="color:#444;line-height:1.8;">
-            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
-            لقد اجتزت اختبار <strong>${data?.quizTitle || ''}</strong> بدرجة <strong>${data?.score || ''} / ${data?.totalMarks || ''}</strong>.
+            أهلاً <strong>${safe.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            لقد اجتزت اختبار <strong>${safe.quizTitle}</strong> بدرجة <strong>${safe.score} / ${safe.totalMarks}</strong>.
             يمكنك الآن الانتقال للدرس التالي.
           </p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="${PLATFORM_URL}/learn/${data?.courseId || ''}"
+            <a href="${PLATFORM_URL}/learn/${safe.courseId}"
                style="background:linear-gradient(135deg,#FF8008,#E91E8C);color:white;padding:14px 40px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:16px;">
               تابع التعلم الآن ←
             </a>
@@ -376,15 +419,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       </div>`
 
   } else if (type === 'admin_broadcast') {
-    subject = data?.title || 'إشعار جديد — قدرات المغربي'
+    subject = (data?.title || '').toString().trim() || 'إشعار جديد — قدرات المغربي'
     html = `
       <div dir="rtl" style="${baseStyle}">
         ${header}
         <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #3D1070;">
-          <h2 style="color:#1B1B5E;">${data?.title || ''}</h2>
+          <h2 style="color:#1B1B5E;">${safe.title}</h2>
           <p style="color:#444;line-height:1.8;white-space:pre-wrap;">
-            أهلاً <strong>${data?.studentName || 'طالبنا العزيز'}</strong>،<br/>
-            ${data?.body || ''}
+            أهلاً <strong>${safe.studentName || 'طالبنا العزيز'}</strong>،<br/>
+            ${safe.body}
           </p>
           <div style="text-align:center;margin:28px 0;">
             <a href="${PLATFORM_URL}/dashboard"
@@ -409,7 +452,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'قدرات المغربي <noreply@qudratmaghrabi.com>',
-        to: [to],
+        to: [recipient],
         subject,
         html,
       }),
