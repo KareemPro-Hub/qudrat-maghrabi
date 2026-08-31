@@ -189,7 +189,7 @@ const TRANSACTION_HMAC_FIELDS = [
   'error_occured',
   'has_parent_transaction',
   'id',
-  'integration',
+  'integration_id',
   'is_3d_secure',
   'is_auth',
   'is_capture',
@@ -206,10 +206,20 @@ const TRANSACTION_HMAC_FIELDS = [
 ] as const
 
 function readNestedValue(source: Record<string, unknown>, path: string) {
+  if (path === 'integration_id') {
+    return source.integration_id ?? source.integration
+  }
+
   return path.split('.').reduce<unknown>((current, key) => {
     if (!current || typeof current !== 'object') return undefined
     return (current as Record<string, unknown>)[key]
   }, source)
+}
+
+export function getTransactionIntegrationId(transaction: Record<string, unknown>) {
+  const value = transaction.integration_id ?? transaction.integration
+  const integrationId = Number(value)
+  return Number.isSafeInteger(integrationId) && integrationId > 0 ? integrationId : null
 }
 
 export function verifyTransactionHmac(

@@ -8,6 +8,7 @@ import {
   getPaymobConfig,
   getQueryValue,
   getSupabaseAdmin,
+  getTransactionIntegrationId,
   parseBody,
   sendEnrollmentEmail,
   verifyTransactionHmac,
@@ -98,7 +99,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const callbackAmount = Number(transaction.amount_cents)
   const callbackCurrency = asString(transaction.currency)?.toUpperCase()
-  const callbackIntegrationId = Number(transaction.integration)
+  const callbackIntegrationId = getTransactionIntegrationId(transaction)
 
   if (
     !Number.isSafeInteger(callbackAmount)
