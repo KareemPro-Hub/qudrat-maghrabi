@@ -218,6 +218,15 @@ export default function Home() {
     if (!location.hash) return
     const id = location.hash.slice(1)
     const timer = setTimeout(() => {
+      // قسم الأسعار أطول من الشاشة، والوقوف على أوله كان بيخفي أزرار «ابدأ الآن».
+      // فبنحاذي آخر شبكة الباقات مع أسفل الشاشة عشان الأزرار تبان.
+      if (id === 'qm-prices') {
+        const grid = document.querySelector('.qm-price-grid')
+        if (grid) {
+          grid.scrollIntoView({ behavior: 'smooth', block: 'end' })
+          return
+        }
+      }
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 60)
     return () => clearTimeout(timer)
