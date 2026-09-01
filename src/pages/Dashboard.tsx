@@ -45,6 +45,16 @@ const ROLE_LABEL: Record<string, string> = {
   admin: 'مدير المنصة', content_manager: 'مسؤول محتوى', student_manager: 'مسؤول طلاب',
 }
 
+// سطر ثابت تحت عنوان كل كورس داخل الباقة، بنص محدّد من صاحب المنصة.
+const BUNDLE_CHILD_NOTES: Record<string, JSX.Element> = {
+  // دورة تأسيس 2027
+  '40176e62-f9e8-4a85-82ce-5cfb8e65c15c': (
+    <>30 حصة - <b className="bundle-free">أول 3 حصص مجاني</b></>
+  ),
+  // بنوك الأسئلة والاختبارات
+  '6aab68b7-eab2-401f-b98e-8f7e9689835e': <>120 بنوك أسئلة</>,
+}
+
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth()
   const navigate = useNavigate()
@@ -643,6 +653,9 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
                     </Link>
                     <div className="bundle-kid-body">
                       <h3>{child.title}</h3>
+                      {BUNDLE_CHILD_NOTES[child.id] && (
+                        <small className="bundle-kid-note">{BUNDLE_CHILD_NOTES[child.id]}</small>
+                      )}
                       <Link to={`/courses/${child.id}`} className="bundle-go">ابدأ الكورس ←</Link>
                     </div>
                   </article>
