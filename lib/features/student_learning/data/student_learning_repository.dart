@@ -11,6 +11,9 @@ abstract interface class StudentLearningRepository {
     required String videoId,
   });
 
+  /// ملفات الدرس المرفقة (PDF / أوراق عمل). ترجع فاضية لو مفيش ملفات.
+  Future<List<LessonFile>> loadLessonFiles({required String lessonId});
+
   Future<LessonProgress> saveProgress({
     required String studentId,
     required String lessonId,

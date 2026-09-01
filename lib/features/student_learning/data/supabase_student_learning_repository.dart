@@ -223,6 +223,39 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
   }
 
   @override
+  Future<List<LessonFile>> loadLessonFiles({required String lessonId}) async {
+    try {
+      final rows = await _client
+          .from('lesson_files')
+          .select('id, lesson_id, title, file_url, size_label, file_type, '
+              'order_index')
+          .eq('lesson_id', lessonId)
+          .order('order_index', ascending: true);
+      final files = <LessonFile>[];
+      for (final row in (rows as List).cast<Map<String, dynamic>>()) {
+        final url = (row['file_url'] as String?)?.trim() ?? '';
+        final title = (row['title'] as String?)?.trim() ?? '';
+        // صف بلا رابط صالح مايتعرضش أصلًا عشان الطالب ما يضغطش على ملف مكسور.
+        if (url.isEmpty || Uri.tryParse(url)?.hasScheme != true) continue;
+        files.add(
+          LessonFile(
+            id: row['id'] as String,
+            lessonId: row['lesson_id'] as String,
+            title: title.isEmpty ? 'ملف الدرس' : title,
+            fileUrl: url,
+            sizeLabel: (row['size_label'] as String?)?.trim(),
+            fileType: (row['file_type'] as String?)?.trim(),
+            orderIndex: (row['order_index'] as num?)?.toInt() ?? 0,
+          ),
+        );
+      }
+      return files;
+    } catch (_) {
+      throw const LearningFailure('تعذّر تحميل ملفات الدرس');
+    }
+  }
+
+  @override
   Future<BunnyEmbedCredentials> requestVideo({
     required String courseId,
     required String videoId,

@@ -260,28 +260,54 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                         : '${otherCourses.length} كورسات',
                   ),
                   const SizedBox(height: 14),
-                  SizedBox(
-                    height: 350,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsetsDirectional.only(end: 2),
-                      itemCount: otherCourses.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 14),
-                      itemBuilder: (context, index) {
-                        final course = otherCourses[index];
-                        return _CourseCard(
-                          key: ValueKey(course.id),
-                          course: course,
-                          // الكورس اللي فيه دروس مجانية لازم يفتح حتى لغير المشترك،
-                          // القفل الحقيقي بيتم على مستوى الدرس نفسه جوه الكورس.
-                          onTap: () => course.hasAccess || course.hasFreePreview
-                              ? _showCourseDetails(course)
-                              : _showSubscriptions(),
+                  // كورس واحد بس؟ يتعرض بعرض الشاشة زي كرت الدورة اللي فوقه؛
+                  // الشريط الأفقي بيبقى له معنى من كورسين وفوق بس. الارتفاع
+                  // بيتحسب من عرض الكرت عشان الغلاف الأعرض ما يزقّش المحتوى.
+                  if (otherCourses.length == 1)
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = constraints.maxWidth;
+                        final imageHeight = width >= 380
+                            ? width * 9 / 16
+                            : 155.0;
+                        return SizedBox(
+                          height: imageHeight + 195,
+                          child: _CourseCard(
+                            key: ValueKey(otherCourses.first.id),
+                            course: otherCourses.first,
+                            onTap: () =>
+                                otherCourses.first.hasAccess ||
+                                    otherCourses.first.hasFreePreview
+                                ? _showCourseDetails(otherCourses.first)
+                                : _showSubscriptions(),
+                          ),
                         );
                       },
+                    )
+                  else
+                    SizedBox(
+                      height: 350,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsetsDirectional.only(end: 2),
+                        itemCount: otherCourses.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 14),
+                        itemBuilder: (context, index) {
+                          final course = otherCourses[index];
+                          return _CourseCard(
+                            key: ValueKey(course.id),
+                            course: course,
+                            // الكورس اللي فيه دروس مجانية لازم يفتح حتى لغير
+                            // المشترك، والقفل الحقيقي بيتم على مستوى الدرس.
+                            onTap: () =>
+                                course.hasAccess || course.hasFreePreview
+                                ? _showCourseDetails(course)
+                                : _showSubscriptions(),
+                          );
+                        },
+                      ),
                     ),
-                  ),
                 ],
                 const SizedBox(height: 24),
                 _SubscriptionStatusCard(
@@ -893,7 +919,7 @@ class _CourseCard extends StatelessWidget {
         final imageHeight = cardWidth >= 380 ? cardWidth * 9 / 16 : 155.0;
 
         return SizedBox(
-          width: 286,
+          width: cardWidth,
           child: Material(
             color: QmColors.surface,
             borderRadius: BorderRadius.circular(26),

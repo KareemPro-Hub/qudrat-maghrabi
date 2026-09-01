@@ -7,10 +7,12 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
+import 'package:qudrat_maghrabi_app/features/student_learning/presentation/lesson_files_section.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/lesson_homework_section.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class LessonPlayerScreen extends StatefulWidget {
@@ -49,6 +51,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   bool _closing = false;
   bool _allowPop = false;
   late Future<List<StudentQuiz>> _quizzesFuture;
+  late Future<List<LessonFile>> _filesFuture;
 
   CourseLesson get _lesson => _lessons[_selectedIndex];
 
@@ -67,6 +70,37 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     }
     _resetTracking();
     _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
+    _filesFuture = widget.repository.loadLessonFiles(lessonId: _lesson.id);
+  }
+
+  void _reloadFiles() {
+    setState(() {
+      _filesFuture = widget.repository.loadLessonFiles(lessonId: _lesson.id);
+    });
+  }
+
+  Future<void> _openLessonFile(LessonFile file) async {
+    final uri = Uri.tryParse(file.fileUrl);
+    var opened = false;
+    if (uri != null) {
+      try {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        opened = false;
+      }
+    }
+    if (opened || !mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذّر فتح الملف. حاول مرة أخرى',
+            textAlign: TextAlign.center,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   void _reloadQuizzes() {
@@ -125,6 +159,9 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     setState(() {
       _selectedIndex = index;
       _resetTracking();
+      _filesFuture = widget.repository.loadLessonFiles(
+        lessonId: _lessons[index].id,
+      );
     });
   }
 
@@ -403,61 +440,23 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
                 ],
               ),
               const SizedBox(height: 28),
-              Text(
-                'دروس الكورس',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              FutureBuilder<List<LessonFile>>(
+                future: _filesFuture,
+                builder: (context, snapshot) {
+                  return LessonFilesSection(
+                    files: snapshot.data ?? const <LessonFile>[],
+                    loading:
+                        snapshot.connectionState != ConnectionState.done,
+                    errorMessage: snapshot.hasError
+                        ? snapshot.error is LearningFailure
+                              ? snapshot.error.toString()
+                              : 'تعذّر تحميل ملفات الدرس'
+                        : null,
+                    onRetry: _reloadFiles,
+                    onOpen: _openLessonFile,
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: QmColors.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: QmColors.border),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (var index = 0; index < _lessons.length; index++) ...[
-                      _PlayerLessonTile(
-                        lesson: _lessons[index],
-                        number: index + 1,
-                        selected: index == _selectedIndex,
-                        canOpen: _canOpenLesson(_lessons[index]),
-                        onTap: () => _selectLesson(_lessons[index]),
-                        onLockedTap: _showLockedLessonMessage,
-                      ),
-                      if (index != _lessons.length - 1)
-                        const Divider(indent: 70, endIndent: 16),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'ملخص الدرس',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: QmColors.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: QmColors.border),
-                ),
-                child: Text(
-                  _lesson.description.isEmpty
-                      ? 'لم يُضف ملخص لهذا الدرس بعد.'
-                      : _lesson.description,
-                  style: TextStyle(color: QmColors.textSecondary, height: 1.7),
-                ),
-              ),
-              const SizedBox(height: 28),
               FutureBuilder<List<StudentQuiz>>(
                 future: _quizzesFuture,
                 builder: (context, snapshot) {
@@ -809,98 +808,5 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
 </body>
 </html>
 ''';
-  }
-}
-
-class _PlayerLessonTile extends StatelessWidget {
-  const _PlayerLessonTile({
-    required this.lesson,
-    required this.number,
-    required this.selected,
-    required this.canOpen,
-    required this.onTap,
-    required this.onLockedTap,
-  });
-
-  final CourseLesson lesson;
-  final int number;
-  final bool selected;
-  final bool canOpen;
-  final VoidCallback onTap;
-  final VoidCallback onLockedTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? QmColors.lavender : Colors.transparent,
-      child: InkWell(
-        onTap: lesson.hasVideo ? (canOpen ? onTap : onLockedTap) : null,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: selected ? QmGradients.brand : null,
-                  color: selected ? null : QmColors.surfaceSoft,
-                  shape: BoxShape.circle,
-                  border: selected ? null : Border.all(color: QmColors.border),
-                ),
-                child: Icon(
-                  !canOpen
-                      ? Icons.lock_outline_rounded
-                      : lesson.progress.completed
-                      ? Icons.check_rounded
-                      : Icons.play_arrow_rounded,
-                  color: selected ? Colors.white : QmColors.purple,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lesson.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: QmColors.textPrimary,
-                        fontWeight: selected
-                            ? FontWeight.w900
-                            : FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      lesson.durationMinutes == null
-                          ? 'الدرس $number'
-                          : 'الدرس $number • ${lesson.durationMinutes} دقيقة',
-                      style: TextStyle(
-                        color: QmColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (lesson.progress.watchPercentage > 0)
-                Text(
-                  '${lesson.progress.watchPercentage}%',
-                  style: TextStyle(
-                    color: lesson.progress.completed
-                        ? QmColors.success
-                        : QmColors.pink,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

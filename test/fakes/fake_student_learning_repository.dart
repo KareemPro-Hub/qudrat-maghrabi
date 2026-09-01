@@ -57,6 +57,15 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
     );
   }
 
+  List<LessonFile> lessonFiles = const <LessonFile>[];
+  int lessonFilesCalls = 0;
+
+  @override
+  Future<List<LessonFile>> loadLessonFiles({required String lessonId}) async {
+    lessonFilesCalls += 1;
+    return lessonFiles.where((file) => file.lessonId == lessonId).toList();
+  }
+
   @override
   Future<LessonProgress> saveProgress({
     required String studentId,

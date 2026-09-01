@@ -125,6 +125,29 @@ class CourseLesson {
   }
 }
 
+/// ملف مرفق بالدرس (PDF أو ورقة عمل) يظهر تحت الفيديو في التطبيق.
+class LessonFile {
+  const LessonFile({
+    required this.id,
+    required this.lessonId,
+    required this.title,
+    required this.fileUrl,
+    this.sizeLabel,
+    this.fileType,
+    this.orderIndex = 0,
+  });
+
+  final String id;
+  final String lessonId;
+  final String title;
+  final String fileUrl;
+  final String? sizeLabel;
+  final String? fileType;
+  final int orderIndex;
+
+  bool get isPdf => (fileType ?? '').toLowerCase() == 'pdf';
+}
+
 class LessonProgress {
   const LessonProgress({
     required this.watchPercentage,
