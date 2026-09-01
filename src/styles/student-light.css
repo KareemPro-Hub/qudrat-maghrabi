@@ -101,6 +101,9 @@
 .bundle-free{color:#149a5b;font-weight:900}
 .bundle-go{display:flex;align-items:center;justify-content:center;height:38px;margin-top:3px;border:1px solid #e7dcf5;border-radius:13px;background:#faf7ff;color:#7530d5;font-size:13.5px;font-weight:800;transition:.2s ease}
 .bundle-kid:hover .bundle-go{border-color:transparent;background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
+.bundle-subscribe{display:flex;align-items:center;justify-content:center;height:38px;margin-top:6px;border-radius:13px;background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff;font-size:13.5px;font-weight:800;box-shadow:0 10px 22px rgba(121,53,235,.26);transition:.2s ease}
+.bundle-subscribe:hover{filter:brightness(1.06);box-shadow:0 14px 28px rgba(121,53,235,.34)}
+.bundle-solo .bundle-subscribe{height:42px;font-size:14.5px}
 @media(max-width:470px){.bundle-kids{grid-template-columns:1fr;gap:12px}.bundle-tree .bundle-branch{height:44px}.bundle-showcase{padding-top:16px}.bundle-parent-row{flex-wrap:wrap;gap:8px}}
 
 .student-toast{position:fixed;z-index:60;left:28px;bottom:28px;min-width:290px;display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #dcefe6;border-radius:17px;background:rgba(255,255,255,.96);box-shadow:0 20px 48px rgba(48,23,66,.18);opacity:0;pointer-events:none;transform:translateY(18px);transition:.28s ease;backdrop-filter:blur(12px)}.student-toast.show{opacity:1;transform:translateY(0)}.student-toast>span{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#def7ed;color:#238c66;font-weight:900}.student-toast p{margin:0}.student-toast b,.student-toast small{display:block}.student-toast b{font-size:16px}.student-toast small{margin-top:3px;color:#96899e;font-size:15px}

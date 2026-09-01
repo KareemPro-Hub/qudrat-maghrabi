@@ -617,6 +617,26 @@ export default function Dashboard() {
   )
 }
 
+/**
+ * أقصر طريق للطالب: كورس التأسيس بيفتح صفحة دروسه مباشرة (أول الدروس مجانية
+ * والباقي مقفول)، وأي كورس تاني بيروح لصفحة الباقة عشان يشترك.
+ */
+function courseEntryPath(course: any, bundleId: string) {
+  return course.id === FOUNDATION_COURSE_ID ? `/learn/${course.id}` : `/courses/${bundleId}`
+}
+
+function CourseCardActions({ course, bundleId }: { course: any; bundleId: string }) {
+  if (course.id === FOUNDATION_COURSE_ID) {
+    return (
+      <>
+        <Link to={`/learn/${course.id}`} className="bundle-go">ابدأ الدروس المجانية ←</Link>
+        <Link to={`/courses/${bundleId}`} className="bundle-subscribe">اشترك لفتح كل الحصص</Link>
+      </>
+    )
+  }
+  return <Link to={`/courses/${bundleId}`} className="bundle-subscribe">اشترك الآن</Link>
+}
+
 /** الباقة الرئيسية وكورساتها — بتظهر للطالب غير المشترك بدل الشاشة الفاضية. */
 function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
   if (bundles.length === 0) {
@@ -625,12 +645,13 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
 
   // تبويب كورس بعينه: كارت واحد كبير بدون الباقة الأم ولا خط التفرّع.
   if (only) {
-    const course = bundles.flatMap((b: any) => b.children).find((c: any) => c.id === only)
-    if (!course) return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
+    const parent = bundles.find((b: any) => b.children.some((c: any) => c.id === only))
+    const course = parent?.children.find((c: any) => c.id === only)
+    if (!parent || !course) return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
     return (
       <div className="bundle-showcase">
         <article className="bundle-tree bundle-solo">
-          <Link to={`/courses/${course.id}`} className="bundle-cover" aria-label={course.title}>
+          <Link to={courseEntryPath(course, parent.id)} className="bundle-cover" aria-label={course.title}>
             {course.thumbnail_url && <img src={course.thumbnail_url} alt="" loading="lazy" />}
           </Link>
           <div className="bundle-parent-body">
@@ -638,7 +659,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
             {BUNDLE_CHILD_NOTES[course.id] && (
               <div className="bundle-meta"><span>{BUNDLE_CHILD_NOTES[course.id]}</span></div>
             )}
-            <Link to={`/courses/${course.id}`} className="bundle-go">ابدأ الكورس ←</Link>
+            <CourseCardActions course={course} bundleId={parent.id} />
           </div>
         </article>
       </div>
@@ -676,7 +697,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
               <div className="bundle-kids">
                 {bundle.children.map((child: any) => (
                   <article className="bundle-kid" key={child.id}>
-                    <Link to={`/courses/${child.id}`} className="bundle-cover" aria-label={child.title}>
+                    <Link to={courseEntryPath(child, bundle.id)} className="bundle-cover" aria-label={child.title}>
                       {child.thumbnail_url && <img src={child.thumbnail_url} alt="" loading="lazy" />}
                     </Link>
                     <div className="bundle-kid-body">
@@ -684,7 +705,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
                       {BUNDLE_CHILD_NOTES[child.id] && (
                         <small className="bundle-kid-note">{BUNDLE_CHILD_NOTES[child.id]}</small>
                       )}
-                      <Link to={`/courses/${child.id}`} className="bundle-go">ابدأ الكورس ←</Link>
+                      <CourseCardActions course={child} bundleId={bundle.id} />
                     </div>
                   </article>
                 ))}
