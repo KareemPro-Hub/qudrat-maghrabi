@@ -67,7 +67,29 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     .eq('id', safeCourseId)
     .maybeSingle()
 
-  if (!lesson || !course?.is_published) {
+  // فيديو "عرفني الإجابة الصحيحة" مش درس، فلو مالقيناهوش في الدروس بندوّر
+  // عليه في أسئلة اختبارات نفس الكورس قبل ما نرفض التوقيع.
+  let isExplanationVideo = false
+  if (!lesson) {
+    const { data: courseQuizzes } = await supabase
+      .from('quizzes')
+      .select('id')
+      .eq('course_id', safeCourseId)
+
+    const quizIds = (courseQuizzes ?? []).map((quiz: { id: string }) => quiz.id)
+    if (quizIds.length > 0) {
+      const { data: question } = await supabase
+        .from('quiz_questions')
+        .select('id')
+        .eq('explanation_video_id', safeVideoId)
+        .in('quiz_id', quizIds)
+        .limit(1)
+        .maybeSingle()
+      isExplanationVideo = Boolean(question)
+    }
+  }
+
+  if ((!lesson && !isExplanationVideo) || !course?.is_published) {
     return res.status(404).json({ error: 'Video is not available' })
   }
 
@@ -81,7 +103,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(500).json({ error: 'Failed to verify course access' })
   }
 
-  const isFreePreview = lesson.is_free_preview === true
+  // فيديو الشرح متاح للمشترك بس؛ مفيش معاينة مجانية ليه.
+  const isFreePreview = lesson?.is_free_preview === true
   if (hasCourseAccess !== true && !isFreePreview) {
     return res.status(403).json({ error: 'Not enrolled in this course' })
   }
