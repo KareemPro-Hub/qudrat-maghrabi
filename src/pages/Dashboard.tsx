@@ -45,14 +45,15 @@ const ROLE_LABEL: Record<string, string> = {
   admin: 'مدير المنصة', content_manager: 'مسؤول محتوى', student_manager: 'مسؤول طلاب',
 }
 
+const FOUNDATION_COURSE_ID = '40176e62-f9e8-4a85-82ce-5cfb8e65c15c'
+const QUESTION_BANK_COURSE_ID = '6aab68b7-eab2-401f-b98e-8f7e9689835e'
+
 // سطر ثابت تحت عنوان كل كورس داخل الباقة، بنص محدّد من صاحب المنصة.
 const BUNDLE_CHILD_NOTES: Record<string, JSX.Element> = {
-  // دورة تأسيس 2027
-  '40176e62-f9e8-4a85-82ce-5cfb8e65c15c': (
+  [FOUNDATION_COURSE_ID]: (
     <>30 حصة - <b className="bundle-free">أول 3 حصص مجاني</b></>
   ),
-  // بنوك الأسئلة والاختبارات
-  '6aab68b7-eab2-401f-b98e-8f7e9689835e': <>120 بنوك أسئلة</>,
+  [QUESTION_BANK_COURSE_ID]: <>120 بنوك أسئلة</>,
 }
 
 export default function Dashboard() {
@@ -488,7 +489,7 @@ export default function Dashboard() {
         <section className={`student-panel simple-view${panel === 'learning' ? ' active' : ''}`} data-panel="learning">
           <div className="simple-view-head"><div><h2>دورة التأسيس</h2><p>مسارك واضح؛ درس واحد في كل مرة.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg></span></div>
           {courses.length === 0 ? (
-            <BundleShowcase bundles={bundles} />
+            <BundleShowcase bundles={bundles} only={FOUNDATION_COURSE_ID} />
           ) : (
             <div className="course-accordion-stack">
               {courses.map((c) => {
@@ -553,6 +554,9 @@ export default function Dashboard() {
         {/* ===== بنوك الأسئلة ===== */}
         <section className={`student-panel simple-view${panel === 'tests' ? ' active' : ''}`} data-panel="tests">
           <div className="simple-view-head"><div><h2>بنوك الأسئلة</h2><p>اختبارك القادم ونتيجتك الأخيرة، بدون تشتيت.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="3" /><path d="M9 4V3h6v1M9 10h6M9 14h4" /></svg></span></div>
+          {courses.length === 0 ? (
+            <BundleShowcase bundles={bundles} only={QUESTION_BANK_COURSE_ID} />
+          ) : (
           <div className="test-focus-row">
             <article>
               <small>القادم</small>
@@ -584,6 +588,7 @@ export default function Dashboard() {
               )}
             </article>
           </div>
+          )}
         </section>
 
         {/* ===== حسابي ===== */}
@@ -613,10 +618,33 @@ export default function Dashboard() {
 }
 
 /** الباقة الرئيسية وكورساتها — بتظهر للطالب غير المشترك بدل الشاشة الفاضية. */
-function BundleShowcase({ bundles }: { bundles: any[] }) {
+function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
   if (bundles.length === 0) {
     return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
   }
+
+  // تبويب كورس بعينه: كارت واحد كبير بدون الباقة الأم ولا خط التفرّع.
+  if (only) {
+    const course = bundles.flatMap((b: any) => b.children).find((c: any) => c.id === only)
+    if (!course) return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
+    return (
+      <div className="bundle-showcase">
+        <article className="bundle-tree bundle-solo">
+          <Link to={`/courses/${course.id}`} className="bundle-cover" aria-label={course.title}>
+            {course.thumbnail_url && <img src={course.thumbnail_url} alt="" loading="lazy" />}
+          </Link>
+          <div className="bundle-parent-body">
+            <div className="bundle-parent-row"><h2>{course.title}</h2></div>
+            {BUNDLE_CHILD_NOTES[course.id] && (
+              <div className="bundle-meta"><span>{BUNDLE_CHILD_NOTES[course.id]}</span></div>
+            )}
+            <Link to={`/courses/${course.id}`} className="bundle-go">ابدأ الكورس ←</Link>
+          </div>
+        </article>
+      </div>
+    )
+  }
+
   return (
     <div className="bundle-showcase">
       {bundles.map((bundle) => (
