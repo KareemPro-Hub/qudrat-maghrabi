@@ -50,12 +50,6 @@ export default function LearnChapterLessons() {
   }
 
   // نفس منطق القفل الموجود في صفحة الدرس: الدرس مقفول لو اختبار الدرس اللي قبله لسه ما اتجازش
-  function isBlockedByQuiz(index: number): boolean {
-    if (index === 0) return false
-    const prevQuiz = quizByLesson[lessons[index - 1]?.id]
-    if (!prevQuiz) return false
-    return !passedQuizIds.has(prevQuiz.id)
-  }
 
   const initial = (profile?.full_name || 'ط').charAt(0)
   const completedCount = lessons.filter((l) => progress[l.id]).length
@@ -103,14 +97,11 @@ export default function LearnChapterLessons() {
         <div className="chapters-gallery">
           {lessons.map((lesson, i) => {
             const isCompleted = !!progress[lesson.id]
-            const isQuizLocked = isBlockedByQuiz(i)
             // الدرس غير المجاني بيظهر لغير المشترك عادي بس بقفل ودعوة للاشتراك
             const isSubscriptionLocked = !enrolled && !lesson.is_free_preview
-            const isLocked = isQuizLocked || isSubscriptionLocked
+            const isLocked = isSubscriptionLocked
             const meta = isSubscriptionLocked
               ? 'متاح للمشتركين في الباقة'
-              : isQuizLocked
-              ? 'اجتز اختبار الدرس السابق الأول'
               : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'
 
             const inner = (
@@ -126,8 +117,6 @@ export default function LearnChapterLessons() {
                   <em>
                     {isSubscriptionLocked
                       ? <><Lock size={14} /> اشترك لفتح الدرس</>
-                      : isQuizLocked
-                      ? <><Lock size={14} /> مقفول</>
                       : <>{isCompleted ? 'أعد المشاهدة' : 'ابدأ الدرس'} <ArrowLeft size={15} /></>}
                   </em>
                 </div>
@@ -141,8 +130,6 @@ export default function LearnChapterLessons() {
               <Fragment key={lesson.id}>
                 {isSubscriptionLocked ? (
                   <Link to={`/courses/${courseId}`} className="chapter-gallery-card is-locked">{inner}</Link>
-                ) : isQuizLocked ? (
-                  <div className="chapter-gallery-card is-locked" aria-disabled="true">{inner}</div>
                 ) : (
                   <Link to={`/learn/${courseId}/${chapterId}/${lesson.id}`} className="chapter-gallery-card">{inner}</Link>
                 )}

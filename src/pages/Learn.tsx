@@ -168,17 +168,11 @@ export default function Learn() {
     }
 
     if (l.length > 0) {
-      // قفل الواجب كان متطبّق على قائمة الدروس بس، أما الدرس اللي بيتفتح تلقائيًا
-      // فكان بيتشغّل حتى لو واجب الدرس اللي قبله لسه ما اتحلش. القفل بيتطبّق على
-      // المشترك بس؛ غير المشترك مش بيشوف واجبات أصلًا والدروس المجانية تفضل مفتوحة.
+      // القفل الوحيد على الدروس هو الاشتراك؛ الواجب مابيقفلش الدرس اللي بعده.
       const isEnrolled = e === true
       const blockedAt = (index: number) => {
         // الدرس غير المجاني مقفول على غير المشترك، فما نفتحوش تلقائيًا
-        if (!isEnrolled && !l[index]?.is_free_preview) return true
-        if (!isEnrolled || index <= 0) return false
-        const prevQuiz = quizMap[l[index - 1]?.id]
-        if (!prevQuiz) return false
-        return !passed.has(prevQuiz.id)
+        return !isEnrolled && !l[index]?.is_free_preview
       }
 
       // الدرس المختار من شبكة دروس الباب له الأولوية، وإلا نفتح أول درس غير مكتمل
@@ -209,14 +203,6 @@ export default function Learn() {
     supabase.rpc('get_quiz_questions_for_student', { p_quiz_id: quiz.id })
       .then(({ data }) => setQuestionCount(data?.length || 0))
   }, [currentLesson?.id, quizByLesson])
-
-  function isBlockedByQuiz(index: number): boolean {
-    if (index === 0) return false
-    const prevLesson = lessons[index - 1]
-    const prevQuiz = quizByLesson[prevLesson?.id]
-    if (!prevQuiz) return false
-    return !passedQuizIds.has(prevQuiz.id)
-  }
 
   async function markComplete(lessonId: string) {
     const { data: existing } = await supabase
@@ -278,7 +264,6 @@ export default function Learn() {
   // فالنسبة كانت ممكن تعدّي 100% أول ما يتضاف أي درس في باب تاني.
   const completedCount = lessons.filter((l: any) => progress[l.id]).length
   const progressPct = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0
-  const currentIndex = lessons.findIndex(l => l.id === currentLesson?.id)
   const currentQuiz = currentLesson ? quizByLesson[currentLesson.id] : null
   const quizPassed = currentQuiz ? passedQuizIds.has(currentQuiz.id) : false
   const isCurrentCompleted = currentLesson ? !!progress[currentLesson.id] : false
@@ -305,22 +290,6 @@ export default function Learn() {
         <p className="text-gray-500 mb-6">اشترك الآن للوصول لجميع الدروس والاختبارات</p>
         <Link to={`/courses/${courseId}`} className="btn-primary inline-block py-3 px-8">
           اشترك الآن ←
-        </Link>
-      </div>
-    </div>
-  )
-  // الدرس المقفول بواجب الدرس السابق كان بيتفتح ويتشغّل عادي لو الطالب جه عليه
-  // برابط مباشر، رغم إنه بيظهر "مقفول" في قائمة الدروس. القفل بيتطبّق على
-  // المشترك بس، عشان الدروس المجانية تفضل مفتوحة لغير المشترك زي ما هي.
-  const prevQuizOfCurrent = enrolled && currentIndex > 0 ? quizByLesson[lessons[currentIndex - 1]?.id] : null
-  if (prevQuizOfCurrent && !passedQuizIds.has(prevQuizOfCurrent.id)) return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center max-w-sm">
-        <Lock size={48} className="mx-auto text-gray-300 mb-4" />
-        <h2 className="text-2xl font-black text-brand-navy mb-2">الدرس مقفول</h2>
-        <p className="text-gray-500 mb-6">لازم تجتاز واجب الدرس السابق الأول عشان يفتح لك الدرس ده</p>
-        <Link to={`/quiz/${prevQuizOfCurrent.id}`} className="btn-primary inline-block py-3 px-8">
-          ابدأ الواجب ←
         </Link>
       </div>
     </div>
@@ -543,25 +512,22 @@ export default function Learn() {
             const isCompleted = progress[lesson.id]
             const isCurrent = currentLesson?.id === lesson.id
             const isNotEnrolled = !enrolled && !lesson.is_free_preview
-            const isQuizBlocked = isBlockedByQuiz(i)
-            const isLocked = isNotEnrolled || isQuizBlocked
+            const isLocked = isNotEnrolled
             const stateClass = isCurrent ? 'current' : isCompleted ? 'done' : isLocked ? 'locked' : ''
             return (
               <button
                 key={lesson.id}
                 className={stateClass}
                 // الدرس المقفول بالاشتراك بيفضل قابل للضغط عشان تظهر للطالب
-                // دعوة الاشتراك، أما المقفول بالواجب فبيفضل معطّل زي ما هو.
-                disabled={isQuizBlocked}
+                // دعوة الاشتراك.
                 onClick={() => {
-                  if (isQuizBlocked) return
                   setCurrentLesson(lesson)
                   setDrawerOpen(false)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
               >
                 <span>{isCompleted ? '✓' : isCurrent ? '▶' : isLocked ? '⌁' : i + 1}</span>
-                <p><b>{lesson.title}</b><small>{isCompleted ? 'مكتمل' : isCurrent ? 'تشاهد الآن' : isQuizBlocked ? 'اجتز اختبار الدرس السابق' : isNotEnrolled ? 'متاح للمشتركين' : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}</small></p>
+                <p><b>{lesson.title}</b><small>{isCompleted ? 'مكتمل' : isCurrent ? 'تشاهد الآن' : isNotEnrolled ? 'متاح للمشتركين' : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}</small></p>
               </button>
             )
           })}
