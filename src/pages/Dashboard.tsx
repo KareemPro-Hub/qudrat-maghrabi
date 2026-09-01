@@ -71,6 +71,8 @@ export default function Dashboard() {
   const [unreadCount, setUnreadCount] = useState(0)
   // الباقات المتاحة — بتتعرض للطالب غير المشترك بدل شاشة «لم تشترك في أي كورس»
   const [bundles, setBundles] = useState<any[]>([])
+  // باب دورة التأسيس اللي فيه الدروس — عشان زر «ابدأ الدروس المجانية» يفتح قائمة الدروس مباشرة
+  const [foundationChapterId, setFoundationChapterId] = useState('')
   // تقدّم كل درس على حدة، عشان نرسم دائرة صغيرة جنب كل درس في قائمة "دورة التأسيس"
   const [lessonProgress, setLessonProgress] = useState<Record<string, any>>({})
   const [openCourseId, setOpenCourseId] = useState<string>('')
@@ -91,12 +93,21 @@ export default function Dashboard() {
     if (fetching || courses.length > 0 || bundles.length > 0) return
     let cancelled = false
     ;(async () => {
-      const { data: all } = await supabase
-        .from('courses')
-        .select('id, title, thumbnail_url, parent_course_id, order_index')
-        .eq('is_published', true)
-        .order('order_index', { ascending: true })
+      const [{ data: all }, { data: outline }] = await Promise.all([
+        supabase
+          .from('courses')
+          .select('id, title, thumbnail_url, parent_course_id, order_index')
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('lesson_public_outline')
+          .select('chapter_id')
+          .eq('course_id', FOUNDATION_COURSE_ID)
+          .order('order_index', { ascending: true })
+          .limit(1),
+      ])
       if (cancelled) return
+      setFoundationChapterId((outline || [])[0]?.chapter_id || '')
       const list = all || []
       setBundles(
         list
@@ -481,7 +492,7 @@ export default function Dashboard() {
               </div>
             </>
           ) : (
-            <BundleShowcase bundles={bundles} />
+            <BundleShowcase bundles={bundles} chapterId={foundationChapterId} />
           )}
         </section>
 
@@ -489,7 +500,7 @@ export default function Dashboard() {
         <section className={`student-panel simple-view${panel === 'learning' ? ' active' : ''}`} data-panel="learning">
           <div className="simple-view-head"><div><h2>دورة التأسيس</h2><p>مسارك واضح؛ درس واحد في كل مرة.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg></span></div>
           {courses.length === 0 ? (
-            <BundleShowcase bundles={bundles} only={FOUNDATION_COURSE_ID} />
+            <BundleShowcase bundles={bundles} chapterId={foundationChapterId} only={FOUNDATION_COURSE_ID} />
           ) : (
             <div className="course-accordion-stack">
               {courses.map((c) => {
@@ -555,7 +566,7 @@ export default function Dashboard() {
         <section className={`student-panel simple-view${panel === 'tests' ? ' active' : ''}`} data-panel="tests">
           <div className="simple-view-head"><div><h2>بنوك الأسئلة</h2><p>اختبارك القادم ونتيجتك الأخيرة، بدون تشتيت.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="3" /><path d="M9 4V3h6v1M9 10h6M9 14h4" /></svg></span></div>
           {courses.length === 0 ? (
-            <BundleShowcase bundles={bundles} only={QUESTION_BANK_COURSE_ID} />
+            <BundleShowcase bundles={bundles} chapterId={foundationChapterId} only={QUESTION_BANK_COURSE_ID} />
           ) : (
           <div className="test-focus-row">
             <article>
@@ -617,28 +628,37 @@ export default function Dashboard() {
   )
 }
 
+// بطاقات الأسعار على الصفحة الرئيسية — أقصر طريق للاشتراك بدون صفحات وسيطة.
+const PRICING_PATH = '/#qm-prices'
+
 /**
  * أقصر طريق للطالب: كورس التأسيس بيفتح صفحة دروسه مباشرة (أول الدروس مجانية
- * والباقي مقفول)، وأي كورس تاني بيروح لصفحة الباقة عشان يشترك.
+ * والباقي مقفول)، وأي كورس تاني بيروح لبطاقات الأسعار عشان يشترك.
  */
-function courseEntryPath(course: any, bundleId: string) {
-  return course.id === FOUNDATION_COURSE_ID ? `/learn/${course.id}` : `/courses/${bundleId}`
+function foundationLessonsPath(chapterId: string) {
+  return chapterId
+    ? `/learn/${FOUNDATION_COURSE_ID}/${chapterId}`
+    : `/learn/${FOUNDATION_COURSE_ID}`
 }
 
-function CourseCardActions({ course, bundleId }: { course: any; bundleId: string }) {
+function courseEntryPath(course: any, chapterId: string) {
+  return course.id === FOUNDATION_COURSE_ID ? foundationLessonsPath(chapterId) : PRICING_PATH
+}
+
+function CourseCardActions({ course, chapterId }: { course: any; chapterId: string }) {
   if (course.id === FOUNDATION_COURSE_ID) {
     return (
       <>
-        <Link to={`/learn/${course.id}`} className="bundle-go">ابدأ الدروس المجانية ←</Link>
-        <Link to={`/courses/${bundleId}`} className="bundle-subscribe">اشترك لفتح كل الحصص</Link>
+        <Link to={foundationLessonsPath(chapterId)} className="bundle-go">ابدأ الدروس المجانية ←</Link>
+        <Link to={PRICING_PATH} className="bundle-subscribe">اشترك لفتح كل الحصص</Link>
       </>
     )
   }
-  return <Link to={`/courses/${bundleId}`} className="bundle-subscribe">اشترك الآن</Link>
+  return <Link to={PRICING_PATH} className="bundle-subscribe">اشترك الآن</Link>
 }
 
 /** الباقة الرئيسية وكورساتها — بتظهر للطالب غير المشترك بدل الشاشة الفاضية. */
-function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
+function BundleShowcase({ bundles, chapterId, only }: { bundles: any[]; chapterId: string; only?: string }) {
   if (bundles.length === 0) {
     return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
   }
@@ -651,7 +671,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
     return (
       <div className="bundle-showcase">
         <article className="bundle-tree bundle-solo">
-          <Link to={courseEntryPath(course, parent.id)} className="bundle-cover" aria-label={course.title}>
+          <Link to={courseEntryPath(course, chapterId)} className="bundle-cover" aria-label={course.title}>
             {course.thumbnail_url && <img src={course.thumbnail_url} alt="" loading="lazy" />}
           </Link>
           <div className="bundle-parent-body">
@@ -659,7 +679,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
             {BUNDLE_CHILD_NOTES[course.id] && (
               <div className="bundle-meta"><span>{BUNDLE_CHILD_NOTES[course.id]}</span></div>
             )}
-            <CourseCardActions course={course} bundleId={parent.id} />
+            <CourseCardActions course={course} chapterId={chapterId} />
           </div>
         </article>
       </div>
@@ -671,7 +691,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
       {bundles.map((bundle) => (
         <div className="bundle-tree" key={bundle.id}>
           <article className="bundle-parent">
-            <Link to={`/courses/${bundle.id}`} className="bundle-cover" aria-label={bundle.title}>
+            <Link to={PRICING_PATH} className="bundle-cover" aria-label={bundle.title}>
               {bundle.thumbnail_url && <img src={bundle.thumbnail_url} alt="" loading="lazy" />}
             </Link>
             <div className="bundle-parent-body">
@@ -697,7 +717,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
               <div className="bundle-kids">
                 {bundle.children.map((child: any) => (
                   <article className="bundle-kid" key={child.id}>
-                    <Link to={courseEntryPath(child, bundle.id)} className="bundle-cover" aria-label={child.title}>
+                    <Link to={courseEntryPath(child, chapterId)} className="bundle-cover" aria-label={child.title}>
                       {child.thumbnail_url && <img src={child.thumbnail_url} alt="" loading="lazy" />}
                     </Link>
                     <div className="bundle-kid-body">
@@ -705,7 +725,7 @@ function BundleShowcase({ bundles, only }: { bundles: any[]; only?: string }) {
                       {BUNDLE_CHILD_NOTES[child.id] && (
                         <small className="bundle-kid-note">{BUNDLE_CHILD_NOTES[child.id]}</small>
                       )}
-                      <CourseCardActions course={child} bundleId={bundle.id} />
+                      <CourseCardActions course={child} chapterId={chapterId} />
                     </div>
                   </article>
                 ))}
