@@ -172,10 +172,16 @@ export default function AdminQuizzes() {
     setLoading(true)
     const [{ data: q }, { data: allCourses }] = await Promise.all([
       supabase.from('quizzes').select('*, courses(title)').order('created_at', { ascending: false }),
-      supabase.from('courses').select('id, title').order('title'),
+      supabase.from('courses').select('id, title, parent_course_id').order('title'),
     ])
     setQuizzes(q || [])
-    setCourses(allCourses || [])
+    // الكورس الأب (زي «دورة القدرات») مجرد حاوية للكورسات المتفرّعة منه، والاختبار
+    // لازم يترتبط بكورس فيه محتوى فعلي — فبنشيله من قائمة الاختيار.
+    const courseList = allCourses || []
+    const parentIds = new Set(
+      courseList.map((c: any) => c.parent_course_id).filter(Boolean) as string[],
+    )
+    setCourses(courseList.filter((c: any) => !parentIds.has(c.id)))
 
     if (q && q.length) {
       const { data: results } = await supabase.from('quiz_results').select('quiz_id, score, total_marks').in('quiz_id', q.map((x: any) => x.id))
