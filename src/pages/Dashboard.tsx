@@ -96,9 +96,11 @@ export default function Dashboard() {
         list
           .filter((c: any) => !c.parent_course_id)
           .map((root: any) => {
-            const children = list.filter((c: any) => c.parent_course_id === root.id)
+            const children = list
+              .filter((c: any) => c.parent_course_id === root.id)
+              .map((c: any) => ({ ...c, lessons: lessonsByCourse[c.id] || 0 }))
             const lessons = (lessonsByCourse[root.id] || 0)
-              + children.reduce((sum: number, c: any) => sum + (lessonsByCourse[c.id] || 0), 0)
+              + children.reduce((sum: number, c: any) => sum + c.lessons, 0)
             return { ...root, children, lessons }
           }),
       )
@@ -616,41 +618,59 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
   }
   return (
     <div className="bundle-showcase">
-      <p className="bundle-showcase-lead">ابدأ من هنا — كل المحتوى تحت الباقة دي</p>
-      <div className="bundle-grid">
-        {bundles.map((bundle) => (
-          <article className="bundle-card" key={bundle.id}>
+      <p className="bundle-showcase-lead">ابدأ من هنا — الباقة الشاملة وكل ما بداخلها</p>
+      {bundles.map((bundle) => (
+        <div className="bundle-tree" key={bundle.id}>
+          <article className="bundle-parent">
             <Link to={`/courses/${bundle.id}`} className="bundle-cover" aria-label={bundle.title}>
-              {bundle.thumbnail_url
-                ? <img src={bundle.thumbnail_url} alt="" loading="lazy" />
-                : <span className="bundle-cover-fallback">{bundle.title}</span>}
-              {bundle.children.length > 0 && (
-                <em className="bundle-badge">باقة · {bundle.children.length} كورس</em>
-              )}
+              {bundle.thumbnail_url && <img src={bundle.thumbnail_url} alt="" loading="lazy" />}
             </Link>
-            <div className="bundle-body">
-              <h3>{bundle.title}</h3>
-              <small>{bundle.lessons} درس داخل الباقة</small>
-              {bundle.children.length > 0 && (
-                <ul className="bundle-children">
-                  {bundle.children.map((child: any) => (
-                    <li key={child.id}>
-                      <Link to={`/courses/${child.id}`}>{child.title}</Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Link
-                to={`/courses/${bundle.id}`}
-                className="primary-study-button primary-study-button--alternate compact"
-                style={{ background: 'linear-gradient(135deg,#7935EB,#D946C6)', color: '#fff' }}
-              >
-                {bundle.children.length > 0 ? 'استعرض الباقة' : 'ابدأ الآن'}
-              </Link>
+            <div className="bundle-parent-body">
+              <div className="bundle-parent-row">
+                <h2>{bundle.title}</h2>
+                {bundle.children.length > 0 && <span className="bundle-pill">الباقة الشاملة</span>}
+              </div>
+              <div className="bundle-meta">
+                {bundle.children.length > 0 && (
+                  <span>{bundle.children.map((c: any) => c.title).join(' · ')}</span>
+                )}
+                {bundle.lessons > 0 && (
+                  <>
+                    <i className="bundle-dot" />
+                    <span>{bundle.lessons} درس</span>
+                  </>
+                )}
+              </div>
             </div>
           </article>
-        ))}
-      </div>
+
+          {bundle.children.length > 0 && (
+            <>
+              <svg className="bundle-branch" viewBox="0 0 560 64" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M280 0 V22" />
+                <path d="M280 22 H420 Q436 22 436 38 V60" />
+                <path d="M280 22 H140 Q124 22 124 38 V60" />
+                <circle cx="280" cy="22" r="4.5" />
+              </svg>
+
+              <div className="bundle-kids">
+                {bundle.children.map((child: any) => (
+                  <article className="bundle-kid" key={child.id}>
+                    <Link to={`/courses/${child.id}`} className="bundle-cover" aria-label={child.title}>
+                      {child.thumbnail_url && <img src={child.thumbnail_url} alt="" loading="lazy" />}
+                    </Link>
+                    <div className="bundle-kid-body">
+                      <h3>{child.title}</h3>
+                      {child.lessons > 0 && <small>{child.lessons} درس</small>}
+                      <Link to={`/courses/${child.id}`} className="bundle-go">ابدأ الكورس ←</Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

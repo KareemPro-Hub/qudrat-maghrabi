@@ -72,26 +72,34 @@
 .single-course,.account-card{min-height:270px;display:flex;align-items:center;gap:32px;padding:36px;border:1px solid var(--line);border-radius:27px;background:#fff;box-shadow:var(--shadow)}.single-course-progress{width:165px;height:165px;display:grid;align-content:center;justify-items:center;flex:0 0 165px;border-radius:50%;color:#fff;box-shadow:0 16px 34px rgba(108,47,195,.18);outline:10px solid #f7f2ff}.single-course-progress strong{font-size:41px}.single-course-progress span{font-size:15px}.single-course>div:last-child small{color:#9c90a1}.single-course h3{margin:7px 0;font-size:29px}.single-course p{margin:0 0 21px;color:#8d8195}.primary-study-button.compact{min-width:180px;height:49px;font-size:17px}.test-focus-row{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.test-focus-row article{min-height:255px;padding:33px;border:1px solid var(--line);border-radius:26px;background:#fff;box-shadow:var(--shadow)}.test-focus-row small{color:#9d91a3}.test-focus-row h3{margin:10px 0 8px;font-size:27px}.test-focus-row p{color:#837687}.last-result{display:grid;align-content:center;justify-items:center;text-align:center}.last-result strong{margin:9px 0 0;color:#7833dc;font-size:58.5px}.account-card{min-height:200px}.account-avatar{width:94px;height:94px;display:grid;place-items:center;border-radius:28px;background:linear-gradient(145deg,#7532db,#db42a4);color:#fff;font-size:38px;font-weight:900}.account-card h3{margin:0;font-size:25px}.account-card p{margin:6px 0;color:#7f7288}.account-card small{color:#9c90a2}.secondary-button{margin-right:auto;height:45px;padding:0 19px;border:1px solid #dacbe7;border-radius:13px;background:#faf7ff;color:#7030d0;font-weight:700}
 .empty-panel{display:grid;justify-items:center;text-align:center;gap:10px;padding:60px 20px;color:#9c90a2}.empty-panel svg{width:44px;height:44px;color:#d9c8e7}.empty-panel p{margin:0;font-weight:700;color:#7d7088}
 
-/* الباقة الرئيسية للطالب غير المشترك — كارت مصغّر بغلاف 16:9 */
-.bundle-showcase{padding:26px 0 12px}
-.bundle-showcase-lead{margin:0 0 18px;text-align:center;color:#8b7f92;font-size:16px;font-weight:700}
-.bundle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,332px));justify-content:center;gap:18px}
-.bundle-card{overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow);transition:transform .3s cubic-bezier(.22,.9,.3,1),box-shadow .3s ease}
-.bundle-card:hover{transform:translateY(-5px);box-shadow:0 20px 38px rgba(58,30,76,.14)}
-.bundle-cover{position:relative;display:block;aspect-ratio:16/9;background:#150c22}
+/* الباقة الرئيسية للطالب غير المشترك — كارت الباقة فوق وكورساتها متفرّعة تحته */
+.bundle-showcase{padding:26px 0 14px}
+.bundle-showcase-lead{margin:0 0 24px;text-align:center;color:#8b7f92;font-size:15.5px;font-weight:700}
+.bundle-tree{max-width:560px;margin:0 auto}
+.bundle-cover{position:relative;display:block;aspect-ratio:16/9;background:#150c22;overflow:hidden}
 .bundle-cover img{width:100%;height:100%;object-fit:cover;display:block}
-.bundle-cover-fallback{position:absolute;inset:0;display:grid;place-items:center;padding:14px;background:linear-gradient(145deg,#7935eb,#d946c6);color:#fff;font-weight:900;text-align:center}
-.bundle-badge{position:absolute;top:10px;inset-inline-end:10px;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.94);color:#7530d5;font-size:12.5px;font-weight:800;font-style:normal}
-.bundle-body{display:grid;gap:9px;padding:16px 18px 18px}
-.bundle-body h3{margin:0;font-size:19px}
-.bundle-body>small{color:#9c90a2;font-size:14px}
-.bundle-children{display:grid;gap:7px;margin:2px 0 4px;padding:0;list-style:none}
-.bundle-children li{position:relative;padding-inline-start:16px}
-.bundle-children li::before{content:"";position:absolute;inset-inline-start:5px;top:9px;width:6px;height:6px;border-radius:50%;background:#c9a9f2}
-.bundle-children a{display:block;padding:9px 12px;border:1px solid #eee7f1;border-radius:13px;background:#fbf9ff;color:#5c4a6b;font-size:15px;font-weight:700;transition:.2s ease}
-.bundle-children a:hover{border-color:#d9c8e7;background:#f6efff;color:#7530d5}
-.bundle-body .primary-study-button{width:100%;min-width:0;margin-top:4px}
-@media(max-width:460px){.bundle-grid{grid-template-columns:1fr}.bundle-showcase{padding-top:16px}}
+.bundle-parent{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.22,.9,.3,1),box-shadow .35s ease}
+.bundle-parent:hover{transform:translateY(-5px);box-shadow:0 24px 46px rgba(58,30,76,.16)}
+.bundle-parent::before{content:"";position:absolute;inset:0;z-index:2;padding:1.5px;border-radius:24px;pointer-events:none;background:linear-gradient(135deg,#7935eb,#d946c6,#ffb347);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.bundle-parent-body{display:grid;gap:12px;padding:18px 20px 20px}
+.bundle-parent-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bundle-parent-row h2{margin:0;font-size:22px;font-weight:900}
+.bundle-pill{flex:none;padding:6px 13px;border-radius:99px;background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff;font-size:12.5px;font-weight:800;box-shadow:0 8px 18px rgba(121,53,235,.28)}
+.bundle-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;color:#8b7f92;font-size:14px;font-weight:700}
+.bundle-dot{width:5px;height:5px;border-radius:50%;background:#d6c4ea}
+.bundle-branch{display:block;width:100%;height:64px}
+.bundle-branch path{fill:none;stroke:#d9c8ec;stroke-width:2.5;stroke-linecap:round}
+.bundle-branch circle{fill:#fff;stroke:#c9a9f2;stroke-width:2.5}
+.bundle-kids{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bundle-kid{overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:var(--shadow);transition:transform .3s cubic-bezier(.22,.9,.3,1),box-shadow .3s ease,border-color .3s ease}
+.bundle-kid:hover{transform:translateY(-4px);border-color:#dcc9f2;box-shadow:0 20px 38px rgba(58,30,76,.15)}
+.bundle-kid-body{display:grid;gap:8px;padding:14px 15px 16px}
+.bundle-kid-body h3{margin:0;font-size:16.5px;font-weight:900;line-height:1.4}
+.bundle-kid-body small{color:#8b7f92;font-size:13.5px;font-weight:700}
+.bundle-go{display:flex;align-items:center;justify-content:center;height:42px;margin-top:4px;border:1px solid #e7dcf5;border-radius:13px;background:#faf7ff;color:#7530d5;font-size:14.5px;font-weight:800;transition:.2s ease}
+.bundle-kid:hover .bundle-go{border-color:transparent;background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
+@media(max-width:560px){.bundle-kids{grid-template-columns:1fr;gap:12px}.bundle-branch{height:44px}.bundle-showcase{padding-top:16px}.bundle-parent-row{flex-wrap:wrap;gap:8px}}
+
 .student-toast{position:fixed;z-index:60;left:28px;bottom:28px;min-width:290px;display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #dcefe6;border-radius:17px;background:rgba(255,255,255,.96);box-shadow:0 20px 48px rgba(48,23,66,.18);opacity:0;pointer-events:none;transform:translateY(18px);transition:.28s ease;backdrop-filter:blur(12px)}.student-toast.show{opacity:1;transform:translateY(0)}.student-toast>span{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#def7ed;color:#238c66;font-weight:900}.student-toast p{margin:0}.student-toast b,.student-toast small{display:block}.student-toast b{font-size:16px}.student-toast small{margin-top:3px;color:#96899e;font-size:15px}
 @keyframes panelIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes buttonShine{0%,58%{left:-35%}78%,100%{left:125%}}@keyframes ringPulse{0%{opacity:.5;transform:scale(.96)}70%,100%{opacity:0;transform:scale(1.12)}}
 @media(max-width:1080px){.student-shell{--sidebar:205px}.student-main{padding-inline:25px}.student-sidebar{padding-inline:15px}.continue-card{padding-inline:38px}.student-lower-grid{grid-template-columns:1fr}.student-side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.next-test{min-height:190px}.weekly-streak{display:grid;align-content:center;justify-content:center;text-align:center}.student-stats{padding-inline:17px}}
