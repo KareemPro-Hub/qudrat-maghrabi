@@ -188,6 +188,39 @@
 .lesson-hub-page .chapters-gallery-head h1{margin:0;font-size:32px;font-weight:900;line-height:1.25}
 .lesson-hub-page .chapters-gallery-head p{margin:8px 0 0;color:#80748a;font-size:16px;font-weight:300}
 .lesson-hub-page .chapters-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+
+/* شبكة دروس الباب — الواجب جوّه كارت درسه بدل شريط عريض بيكسر الصفوف */
+.lesson-hub-page .lesson-tiles-progress{max-width:340px;height:7px;margin-top:14px;border-radius:99px;background:#ece4f3;overflow:hidden}
+.lesson-hub-page .lesson-tiles-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7935eb,#d946c6)}
+.lesson-hub-page .lesson-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;align-items:start}
+.lesson-hub-page .lesson-tile{display:flex;flex-direction:column;overflow:hidden;border:1px solid #ece4f3;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(58,30,76,.09);transition:transform .3s cubic-bezier(.22,.9,.3,1),box-shadow .3s ease,border-color .3s ease}
+.lesson-hub-page .lesson-tile:hover{transform:translateY(-5px);border-color:#dcc9f2;box-shadow:0 22px 40px rgba(58,30,76,.15)}
+.lesson-hub-page .lesson-tile-cover{position:relative;display:grid;place-items:center;aspect-ratio:16/9;background:#1a0f28;color:#fff;overflow:hidden}
+.lesson-hub-page .lesson-tile-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.lesson-hub-page .lesson-tile-num{position:absolute;top:10px;inset-inline-start:10px;min-width:26px;height:26px;display:grid;place-items:center;padding:0 7px;border-radius:9px;background:rgba(255,255,255,.94);color:#7530d5;font-size:13px;font-weight:900}
+.lesson-hub-page .lesson-tile-flag{position:absolute;top:10px;inset-inline-end:10px;display:flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:99px;color:#fff;font-size:11.5px;font-weight:800}
+.lesson-hub-page .lesson-tile-flag.is-free{background:#149a5b}
+.lesson-hub-page .lesson-tile-flag.is-done{background:rgba(31,143,99,.94)}
+.lesson-hub-page .lesson-tile.is-locked .lesson-tile-cover img{filter:grayscale(.65) brightness(.72)}
+.lesson-hub-page .lesson-tile-lock{position:absolute;inset:0;display:grid;place-items:center}
+.lesson-hub-page .lesson-tile-lock svg{width:40px;height:40px;padding:11px;border-radius:50%;background:rgba(20,10,32,.55);color:#fff}
+.lesson-hub-page .lesson-tile-body{display:grid;gap:5px;padding:13px 15px 0}
+.lesson-hub-page .lesson-tile-body h3{margin:0;font-size:16px;font-weight:900;line-height:1.45}
+.lesson-hub-page .lesson-tile-body small{color:#80748a;font-size:13px;font-weight:600}
+.lesson-hub-page .lesson-tile-cta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:11px 15px 0;padding:10px 12px;border-radius:12px;background:#faf7ff;color:#7530d5;font-size:14px;font-weight:800;transition:.2s ease}
+.lesson-hub-page .lesson-tile:hover .lesson-tile-cta{background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
+.lesson-hub-page .lesson-tile.is-locked .lesson-tile-cta{background:#f4f1f7;color:#8b7f92}
+.lesson-hub-page .lesson-tile.is-locked:hover .lesson-tile-cta{background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
+.lesson-hub-page .lesson-tile-hw{display:flex;align-items:center;gap:9px;margin-top:12px;padding:11px 15px;border-top:1px dashed #e8dff1;background:#fdfcff;color:#5c4a6b;font-size:13px;font-weight:700;transition:background .2s ease}
+.lesson-hub-page a.lesson-tile-hw:hover{background:#f6efff}
+.lesson-hub-page .lesson-tile-hw i{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:8px;background:#f0e7fd;color:#7530d5}
+.lesson-hub-page .lesson-tile-hw b{font-weight:800}
+.lesson-hub-page .lesson-tile-hw em{margin-inline-start:auto;color:#7530d5;font-style:normal;font-weight:800;white-space:nowrap}
+.lesson-hub-page .lesson-tile-hw.is-done i{background:#e4f8ee;color:#149a5b}
+.lesson-hub-page .lesson-tile-hw.is-done em{color:#149a5b}
+.lesson-hub-page .lesson-tile-hw.is-off{color:#a196ab}
+.lesson-hub-page .lesson-tile-hw.is-off i{background:#f1eef4;color:#a196ab}
+.lesson-hub-page .lesson-tile-hw.is-off em{color:#a196ab}
 .lesson-hub-page .chapter-gallery-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid #e1d8ea;border-radius:22px;background:#fff;box-shadow:0 12px 38px rgba(48,23,79,.035);transition:transform .22s ease,box-shadow .22s ease}
 .lesson-hub-page .chapter-gallery-card:hover{transform:translateY(-4px);box-shadow:0 22px 48px rgba(60,27,94,.12)}
 .lesson-hub-page .chapter-gallery-cover{position:relative;width:100%;aspect-ratio:16/9;display:grid;place-items:center;background:linear-gradient(145deg,#7131d7,#b03fd1);color:#fff;overflow:hidden}

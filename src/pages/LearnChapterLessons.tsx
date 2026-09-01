@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { Lock, BookOpen, ArrowLeft, Play, Check, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -91,62 +91,61 @@ export default function LearnChapterLessons() {
         <div className="chapters-gallery-head">
           <h1>{chapter?.title}</h1>
           <p>{completedCount} من {lessons.length} {lessons.length === 1 ? 'درس' : 'دروس'} مكتملة — اختر الدرس اللي عايز تبدأ بيه.</p>
+          {lessons.length > 0 && (
+            <div className="lesson-tiles-progress">
+              <i style={{ width: `${Math.round((completedCount / lessons.length) * 100)}%` }} />
+            </div>
+          )}
         </div>
-        <div className="chapters-gallery">
+        <div className="lesson-tiles">
           {lessons.map((lesson, i) => {
             const isCompleted = !!progress[lesson.id]
             // الدرس غير المجاني بيظهر لغير المشترك عادي بس بقفل ودعوة للاشتراك
-            const isSubscriptionLocked = !enrolled && !lesson.is_free_preview
-            const isLocked = isSubscriptionLocked
-            const meta = isSubscriptionLocked
-              ? 'متاح للمشتركين في الباقة'
-              : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'
-
-            const inner = (
-              <>
-                <span className="chapter-gallery-cover">
-                  {lesson.thumbnail_url ? <img src={lesson.thumbnail_url} alt="" /> : <Play size={30} />}
-                  <b className="lesson-card-index">{i + 1}</b>
-                  {isCompleted && <b className="lesson-card-done"><Check size={13} /> مكتمل</b>}
-                </span>
-                <div>
-                  <h3>{lesson.title}</h3>
-                  <p>{meta}</p>
-                  <em>
-                    {isSubscriptionLocked
-                      ? <><Lock size={14} /> اشترك لفتح الدرس</>
-                      : <>{isCompleted ? 'أعد المشاهدة' : 'ابدأ الدرس'} <ArrowLeft size={15} /></>}
-                  </em>
-                </div>
-              </>
-            )
-
+            const isLocked = !enrolled && !lesson.is_free_preview
+            const lessonTo = isLocked
+              ? `/courses/${courseId}`
+              : `/learn/${courseId}/${chapterId}/${lesson.id}`
             const quiz = quizByLesson[lesson.id]
             const quizPassed = quiz ? passedQuizIds.has(quiz.id) : false
 
             return (
-              <Fragment key={lesson.id}>
-                {isSubscriptionLocked ? (
-                  <Link to={`/courses/${courseId}`} className="chapter-gallery-card is-locked">{inner}</Link>
-                ) : (
-                  <Link to={`/learn/${courseId}/${chapterId}/${lesson.id}`} className="chapter-gallery-card">{inner}</Link>
-                )}
+              <article className={`lesson-tile${isLocked ? ' is-locked' : ''}`} key={lesson.id}>
+                <Link to={lessonTo} className="lesson-tile-cover" aria-label={lesson.title}>
+                  {lesson.thumbnail_url ? <img src={lesson.thumbnail_url} alt="" loading="lazy" /> : <Play size={30} />}
+                  <b className="lesson-tile-num">{i + 1}</b>
+                  {isCompleted
+                    ? <b className="lesson-tile-flag is-done"><Check size={12} /> مكتمل</b>
+                    : (!isLocked && lesson.is_free_preview) ? <b className="lesson-tile-flag is-free">مجاني</b> : null}
+                  {isLocked && <span className="lesson-tile-lock"><Lock size={18} /></span>}
+                </Link>
+                <div className="lesson-tile-body">
+                  <h3>{lesson.title}</h3>
+                  <small>
+                    {isLocked
+                      ? 'متاح للمشتركين في الباقة'
+                      : lesson.duration_minutes ? `${lesson.duration_minutes} دقيقة` : 'مدة غير محددة'}
+                  </small>
+                </div>
+                <Link to={lessonTo} className="lesson-tile-cta">
+                  <span>{isLocked ? 'اشترك لفتح الدرس' : isCompleted ? 'أعد المشاهدة' : 'ابدأ الدرس'}</span>
+                  <ArrowLeft size={15} />
+                </Link>
                 {quiz && (
                   isLocked ? (
-                    <div className="lesson-homework-row is-locked" aria-disabled="true">
-                      <span className="lesson-homework-icon"><ClipboardList size={18} /></span>
-                      <div><b>واجب {lesson.title}</b><small>يفتح بعد فك قفل الدرس</small></div>
-                      <em><Lock size={14} /> مقفول</em>
+                    <div className="lesson-tile-hw is-off" aria-disabled="true">
+                      <i><ClipboardList size={14} /></i>
+                      <span><b>الواجب</b> · يفتح مع الدرس</span>
+                      <em>مقفول</em>
                     </div>
                   ) : (
-                    <Link to={`/quiz/${quiz.id}`} className="lesson-homework-row">
-                      <span className="lesson-homework-icon"><ClipboardList size={18} /></span>
-                      <div><b>واجب {lesson.title}</b><small>{quizPassed ? 'تم الحل — راجع الواجب' : 'اختبر نفسك بعد مشاهدة الدرس'}</small></div>
-                      <em>{quizPassed ? 'مراجعة الواجب' : 'ابدأ الواجب'} <ArrowLeft size={14} /></em>
+                    <Link to={`/quiz/${quiz.id}`} className={`lesson-tile-hw${quizPassed ? ' is-done' : ''}`}>
+                      <i>{quizPassed ? <Check size={14} /> : <ClipboardList size={14} />}</i>
+                      <span><b>الواجب</b> · {quizPassed ? 'تم الحل' : 'اختبر نفسك'}</span>
+                      <em>{quizPassed ? 'مراجعة ←' : 'ابدأ ←'}</em>
                     </Link>
                   )
                 )}
-              </Fragment>
+              </article>
             )
           })}
         </div>
