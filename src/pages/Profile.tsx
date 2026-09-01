@@ -152,7 +152,26 @@ export default function Profile() {
     if (!passwords.newPass || !passwords.confirm) return toast.error('يرجى تعبئة جميع الحقول')
     if (passwords.newPass !== passwords.confirm) return toast.error('كلمتا المرور غير متطابقتين')
     if (passwords.newPass.length < 8) return toast.error('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
-    setSavingPass(true)
+
+    // كلمة المرور الحالية كانت بتتكتب من غير ما تتحقق، فأي حد يلاقي الجهاز
+    // مفتوح كان يقدر يغيّرها ويستولي على الحساب. بنتحقق منها الأول.
+    const email = user?.email || profile?.email
+    if (needsPassword) {
+      if (!passwords.current) return toast.error('يرجى إدخال كلمة المرور الحالية')
+      if (!email) return toast.error('تعذّر تحديد البريد المرتبط بالحساب')
+      setSavingPass(true)
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: passwords.current,
+      })
+      if (authError) {
+        setSavingPass(false)
+        return toast.error('كلمة المرور الحالية غير صحيحة')
+      }
+    } else {
+      setSavingPass(true)
+    }
+
     const { error } = await supabase.auth.updateUser({ password: passwords.newPass })
     if (error) toast.error('حدث خطأ في تغيير كلمة المرور')
     else {
@@ -296,6 +315,23 @@ export default function Profile() {
         <div className="card">
           <h2 className="text-lg font-black text-brand-navy mb-5">تغيير كلمة المرور</h2>
           <form onSubmit={handleChangePassword} className="space-y-4">
+            {needsPassword && (
+              <div>
+                <label className="block text-sm font-bold text-brand-navy mb-2">كلمة المرور الحالية</label>
+                <div className="relative">
+                  <Lock size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={passwords.current}
+                    onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                    className="input-field pr-10"
+                    placeholder="كلمة المرور الحالية"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-bold text-brand-navy mb-2">كلمة المرور الجديدة</label>
               <div className="relative">
