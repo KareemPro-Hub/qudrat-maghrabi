@@ -209,6 +209,7 @@
 .lesson-hub-page .lesson-tile-body small{color:#80748a;font-size:13px;font-weight:600}
 .lesson-hub-page .lesson-tile-cta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:11px 15px 0;padding:10px 12px;border-radius:12px;background:#faf7ff;color:#7530d5;font-size:14px;font-weight:800;transition:.2s ease}
 .lesson-hub-page .lesson-tile:hover .lesson-tile-cta{background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
+.lesson-hub-page .lesson-tile-cta:last-child{margin-bottom:15px}
 .lesson-hub-page .lesson-tile.is-locked .lesson-tile-cta{background:#f4f1f7;color:#8b7f92}
 .lesson-hub-page .lesson-tile.is-locked:hover .lesson-tile-cta{background:linear-gradient(135deg,#7935eb,#d946c6);color:#fff}
 .lesson-hub-page .lesson-tile-hw{display:flex;align-items:center;gap:9px;margin-top:12px;padding:11px 15px;border-top:1px dashed #e8dff1;background:#fdfcff;color:#5c4a6b;font-size:13px;font-weight:700;transition:background .2s ease}
