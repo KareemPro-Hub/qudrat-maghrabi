@@ -58,6 +58,8 @@ export default function Dashboard() {
   const [learningDays, setLearningDays] = useState(0)
   const [weekActivity, setWeekActivity] = useState<boolean[]>(new Array(7).fill(false))
   const [unreadCount, setUnreadCount] = useState(0)
+  // الباقات المتاحة — بتتعرض للطالب غير المشترك بدل شاشة «لم تشترك في أي كورس»
+  const [bundles, setBundles] = useState<any[]>([])
   // تقدّم كل درس على حدة، عشان نرسم دائرة صغيرة جنب كل درس في قائمة "دورة التأسيس"
   const [lessonProgress, setLessonProgress] = useState<Record<string, any>>({})
   const [openCourseId, setOpenCourseId] = useState<string>('')
@@ -71,6 +73,38 @@ export default function Dashboard() {
   useEffect(() => {
     if (courses.length > 0) setOpenCourseId(courses[0].enrollment.id)
   }, [courses])
+
+  // الطالب غير المشترك كان بيشوف شاشة فاضية ويلف كتير عشان يوصل للمحتوى،
+  // فبنجيب له الباقة الرئيسية وكورساتها ونعرضها مكان الشاشة الفاضية.
+  useEffect(() => {
+    if (fetching || courses.length > 0 || bundles.length > 0) return
+    let cancelled = false
+    ;(async () => {
+      const [{ data: all }, { data: stats }] = await Promise.all([
+        supabase
+          .from('courses')
+          .select('id, title, description, thumbnail_url, parent_course_id, order_index')
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+        supabase.from('course_public_stats').select('course_id, lessons_count'),
+      ])
+      if (cancelled) return
+      const lessonsByCourse: Record<string, number> = {}
+      ;(stats || []).forEach((row: any) => { lessonsByCourse[row.course_id] = row.lessons_count || 0 })
+      const list = all || []
+      setBundles(
+        list
+          .filter((c: any) => !c.parent_course_id)
+          .map((root: any) => {
+            const children = list.filter((c: any) => c.parent_course_id === root.id)
+            const lessons = (lessonsByCourse[root.id] || 0)
+              + children.reduce((sum: number, c: any) => sum + (lessonsByCourse[c.id] || 0), 0)
+            return { ...root, children, lessons }
+          }),
+      )
+    })()
+    return () => { cancelled = true }
+  }, [fetching, courses.length, bundles.length])
 
   function lessonPct(lesson: any) {
     const row = lessonProgress[lesson.id]
@@ -443,7 +477,7 @@ export default function Dashboard() {
               </div>
             </>
           ) : (
-            <EmptyPanel text="لم تشترك في أي كورس بعد" cta={{ label: 'استعرض الكورسات', to: '/courses' }} />
+            <BundleShowcase bundles={bundles} />
           )}
         </section>
 
@@ -451,7 +485,7 @@ export default function Dashboard() {
         <section className={`student-panel simple-view${panel === 'learning' ? ' active' : ''}`} data-panel="learning">
           <div className="simple-view-head"><div><h2>دورة التأسيس</h2><p>مسارك واضح؛ درس واحد في كل مرة.</p></div><span className="simple-view-icon"><svg viewBox="0 0 24 24"><path d="M4 5.2c3.2-.8 5.8-.2 8 1.6v12c-2.2-1.8-4.8-2.4-8-1.6z" /><path d="M20 5.2c-3.2-.8-5.8-.2-8 1.6v12c2.2-1.8 4.8-2.4 8-1.6z" /></svg></span></div>
           {courses.length === 0 ? (
-            <EmptyPanel text="لم تشترك في أي كورس بعد" cta={{ label: 'استعرض الكورسات', to: '/courses' }} />
+            <BundleShowcase bundles={bundles} />
           ) : (
             <div className="course-accordion-stack">
               {courses.map((c) => {
@@ -570,6 +604,52 @@ export default function Dashboard() {
       <div className={`student-toast${toastMsg ? ' show' : ''}`} role="status" aria-live="polite">
         <span>✓</span>
         {toastMsg && <p><b>{toastMsg.title}</b><small>{toastMsg.body}</small></p>}
+      </div>
+    </div>
+  )
+}
+
+/** الباقة الرئيسية وكورساتها — بتظهر للطالب غير المشترك بدل الشاشة الفاضية. */
+function BundleShowcase({ bundles }: { bundles: any[] }) {
+  if (bundles.length === 0) {
+    return <EmptyPanel text="لا توجد كورسات متاحة حاليًا" />
+  }
+  return (
+    <div className="bundle-showcase">
+      <p className="bundle-showcase-lead">ابدأ من هنا — كل المحتوى تحت الباقة دي</p>
+      <div className="bundle-grid">
+        {bundles.map((bundle) => (
+          <article className="bundle-card" key={bundle.id}>
+            <Link to={`/courses/${bundle.id}`} className="bundle-cover" aria-label={bundle.title}>
+              {bundle.thumbnail_url
+                ? <img src={bundle.thumbnail_url} alt="" loading="lazy" />
+                : <span className="bundle-cover-fallback">{bundle.title}</span>}
+              {bundle.children.length > 0 && (
+                <em className="bundle-badge">باقة · {bundle.children.length} كورس</em>
+              )}
+            </Link>
+            <div className="bundle-body">
+              <h3>{bundle.title}</h3>
+              <small>{bundle.lessons} درس داخل الباقة</small>
+              {bundle.children.length > 0 && (
+                <ul className="bundle-children">
+                  {bundle.children.map((child: any) => (
+                    <li key={child.id}>
+                      <Link to={`/courses/${child.id}`}>{child.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Link
+                to={`/courses/${bundle.id}`}
+                className="primary-study-button primary-study-button--alternate compact"
+                style={{ background: 'linear-gradient(135deg,#7935EB,#D946C6)', color: '#fff' }}
+              >
+                {bundle.children.length > 0 ? 'استعرض الباقة' : 'ابدأ الآن'}
+              </Link>
+            </div>
+          </article>
+        ))}
       </div>
     </div>
   )
