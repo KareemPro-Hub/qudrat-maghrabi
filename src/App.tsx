@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import SiteNav from './components/SiteNav'
 import Footer from './components/Footer'
@@ -8,7 +8,6 @@ import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Auth from './pages/Auth'
 import Courses from './pages/Courses'
-import CourseDetail from './pages/CourseDetail'
 import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentFailed from './pages/PaymentFailed'
@@ -148,7 +147,8 @@ export default function App() {
         {/* Public */}
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/courses" element={<Layout><Courses /></Layout>} />
-        <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
+        {/* صفحة تفاصيل الكورس اتشالت — أي رابط قديم بيروح لباقات الاشتراك مباشرة */}
+        <Route path="/courses/:id" element={<Navigate to="/#qm-prices" replace />} />
 
         {/* Auth */}
         <Route path="/login" element={<Auth />} />
