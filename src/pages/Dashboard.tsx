@@ -80,29 +80,20 @@ export default function Dashboard() {
     if (fetching || courses.length > 0 || bundles.length > 0) return
     let cancelled = false
     ;(async () => {
-      const [{ data: all }, { data: stats }] = await Promise.all([
-        supabase
-          .from('courses')
-          .select('id, title, description, thumbnail_url, parent_course_id, order_index')
-          .eq('is_published', true)
-          .order('order_index', { ascending: true }),
-        supabase.from('course_public_stats').select('course_id, lessons_count'),
-      ])
+      const { data: all } = await supabase
+        .from('courses')
+        .select('id, title, thumbnail_url, parent_course_id, order_index')
+        .eq('is_published', true)
+        .order('order_index', { ascending: true })
       if (cancelled) return
-      const lessonsByCourse: Record<string, number> = {}
-      ;(stats || []).forEach((row: any) => { lessonsByCourse[row.course_id] = row.lessons_count || 0 })
       const list = all || []
       setBundles(
         list
           .filter((c: any) => !c.parent_course_id)
-          .map((root: any) => {
-            const children = list
-              .filter((c: any) => c.parent_course_id === root.id)
-              .map((c: any) => ({ ...c, lessons: lessonsByCourse[c.id] || 0 }))
-            const lessons = (lessonsByCourse[root.id] || 0)
-              + children.reduce((sum: number, c: any) => sum + c.lessons, 0)
-            return { ...root, children, lessons }
-          }),
+          .map((root: any) => ({
+            ...root,
+            children: list.filter((c: any) => c.parent_course_id === root.id),
+          })),
       )
     })()
     return () => { cancelled = true }
@@ -629,17 +620,9 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
                 <h2>{bundle.title}</h2>
                 {bundle.children.length > 0 && <span className="bundle-pill">الباقة الشاملة</span>}
               </div>
-              <div className="bundle-meta">
-                {bundle.children.length > 0 && (
-                  <span>{bundle.children.map((c: any) => c.title).join(' · ')}</span>
-                )}
-                {bundle.lessons > 0 && (
-                  <>
-                    <i className="bundle-dot" />
-                    <span>{bundle.lessons} درس</span>
-                  </>
-                )}
-              </div>
+              {bundle.children.length > 0 && (
+                <div className="bundle-meta"><span>دورة تأسيس - بنوك أسئلة</span></div>
+              )}
             </div>
           </article>
 
