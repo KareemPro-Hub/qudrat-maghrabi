@@ -64,28 +64,6 @@ export function buildStudentCompletionEmail(studentName: string, courseName: str
     </div>`
 }
 
-export function buildParentCompletionEmail(studentName: string, courseName: string) {
-  const safeStudent = escapeHtml(studentName)
-  const safeCourse = escapeHtml(courseName)
-
-  return `
-    <div dir="rtl" style="${baseStyle}">
-      ${header}
-      <div style="background:white;padding:28px;border-radius:10px;border-right:4px solid #3D1070;">
-        <h2 style="color:#1B1B5E;">ابنك أنهى الكورس بالكامل 👏</h2>
-        <p style="color:#444;line-height:1.9;">
-          عزيزي ولي الأمر،<br/>
-          نبشّرك أن <strong>${safeStudent}</strong> أنهى كورس <strong>${safeCourse}</strong> كاملًا بالتزام يستحق الثناء.<br/>
-          الانتظام حتى النهاية ليس أمرًا سهلًا في هذا العمر، ودعمكم له كان جزءًا أساسيًا من ذلك.<br/>
-          كلمة تشجيع منكم اليوم تساوي عنده أكثر مما تتصورون 🌟
-        </p>
-        ${ctaButton('تابع تقدّمه من هنا ←', `${PLATFORM_URL}/parent`)}
-        <p style="color:#888;font-size:13px;text-align:center;">فريق قدرات المغربي</p>
-      </div>
-      ${footer}
-    </div>`
-}
-
 async function sendEmail(to: string, subject: string, html: string) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -140,10 +118,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   if (!process.env.RESEND_API_KEY) return res.status(500).json({ error: 'Email service not configured' })
 
-  const [{ data: student }, { data: course }, { data: links }] = await Promise.all([
+  const [{ data: student }, { data: course }] = await Promise.all([
     supabase.from('profiles').select('full_name, email').eq('id', user.id).maybeSingle(),
     supabase.from('courses').select('title').eq('id', courseId).maybeSingle(),
-    supabase.from('parent_student').select('parent_id').eq('student_id', user.id),
   ])
 
   const studentName = student?.full_name?.trim() || 'طالبنا العزيز'
@@ -161,7 +138,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!claimed) return res.status(200).json({ sent: false, reason: 'already_sent' })
 
   let studentEmailSent = false
-  let parentEmailsSent = 0
 
   if (student?.email) {
     studentEmailSent = await sendEmail(
@@ -171,29 +147,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     )
   }
 
-  const parentIds = (links || []).map((link) => link.parent_id).filter(Boolean)
-  if (parentIds.length > 0) {
-    const { data: parents } = await supabase
-      .from('profiles')
-      .select('email')
-      .in('id', parentIds)
-
-    for (const parent of parents || []) {
-      if (!parent.email) continue
-      const ok = await sendEmail(
-        parent.email,
-        'ابنك أنهى الكورس بالكامل 👏 — قدرات المغربي',
-        buildParentCompletionEmail(studentName, courseName),
-      )
-      if (ok) parentEmailsSent++
-    }
-  }
-
   // لو فشل الإرسال بالكامل نُعيد فتح السجل حتى تُعاد المحاولة لاحقًا
-  if (!studentEmailSent && parentEmailsSent === 0) {
+  if (!studentEmailSent) {
     await supabase.from('course_completions').update({ emails_sent_at: null }).eq('id', completion.id)
     return res.status(502).json({ sent: false, error: 'تعذّر إرسال إيميلات إتمام الكورس' })
   }
 
-  return res.status(200).json({ sent: true, studentEmailSent, parentEmailsSent })
+  return res.status(200).json({ sent: true, studentEmailSent })
 }
