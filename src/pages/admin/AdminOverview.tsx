@@ -391,20 +391,6 @@ export default function AdminOverview() {
               ))
             )}
           </article>
-
-          <article className="stats-summary-card">
-            <div>
-              <div className="stats-summary-label">متوسط الإيراد الشهري</div>
-              <div className="stats-summary-value">{fmtMoney(totalRevenue6mo / 6)} <CurrencySymbol /></div>
-              <div className="stats-summary-note">عبر آخر 6 أشهر نشطة</div>
-              <div className="stats-summary-divider">
-                <div>
-                  <span>إجمالي الطلاب</span>
-                  <strong>{stats.students.toLocaleString('en')}</strong>
-                </div>
-              </div>
-            </div>
-          </article>
         </div>
       </div>
 
