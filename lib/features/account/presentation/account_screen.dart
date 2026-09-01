@@ -299,9 +299,15 @@ class _AccountScreenState extends State<AccountScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF4F5),
+                color: QmColors.useDarkPalette
+                    ? QmColors.surface
+                    : const Color(0xFFFFF4F5),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFFFD3D8)),
+                border: Border.all(
+                  color: QmColors.useDarkPalette
+                      ? QmColors.error.withValues(alpha: .45)
+                      : const Color(0xFFFFD3D8),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1029,7 +1035,9 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF5DF),
+              color: QmColors.useDarkPalette
+                  ? QmColors.surface
+                  : const Color(0xFFFFF5DF),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Text(
@@ -1218,7 +1226,7 @@ class LegalDocumentScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: QmColors.surface,
                 borderRadius: BorderRadius.circular(21),
                 border: Border.all(color: QmColors.border),
               ),
@@ -1412,7 +1420,7 @@ class _SupportOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: QmColors.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -1489,7 +1497,7 @@ class AboutApplicationScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: QmColors.surface,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: QmColors.border),
               ),
@@ -1615,7 +1623,7 @@ InputDecoration _inputDecoration({
     labelText: label,
     prefixIcon: Icon(icon, color: QmColors.purple),
     filled: true,
-    fillColor: Colors.white,
+    fillColor: QmColors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
       borderSide: BorderSide(color: QmColors.border),

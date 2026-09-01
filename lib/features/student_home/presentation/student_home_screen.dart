@@ -410,7 +410,7 @@ class _SubscriptionStatusCard extends StatelessWidget {
               : '${subscription!.planName} • متبقّي ${subscription!.remainingDays} يومًا'
         : 'اختر شهرًا أو 3 أو 6 أشهر وافتح كل المحتوى';
     return Material(
-      color: Colors.white.withValues(alpha: .88),
+      color: QmColors.surface.withValues(alpha: .88),
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         key: const Key('subscription-status-card'),
