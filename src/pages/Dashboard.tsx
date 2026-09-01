@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
 type PanelKey = 'home' | 'learning' | 'tests' | 'account'
+const PANEL_KEYS = new Set<PanelKey>(['home', 'learning', 'tests', 'account'])
 
 const WEEK_LABELS = ['س', 'ح', 'ن', 'ث', 'ر', 'خ', 'ج'] // Sat -> Fri
 
@@ -59,7 +60,13 @@ const BUNDLE_CHILD_NOTES: Record<string, JSX.Element> = {
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth()
   const navigate = useNavigate()
-  const [panel, setPanel] = useState<PanelKey>('home')
+  // التبويب متسجّل في الرابط عشان الرجوع من صفحة الدروس يرجّع الطالب لنفس التبويب
+  const [searchParams, setSearchParams] = useSearchParams()
+  const panelParam = searchParams.get('tab') as PanelKey | null
+  const panel: PanelKey = panelParam && PANEL_KEYS.has(panelParam) ? panelParam : 'home'
+  const setPanel = (key: PanelKey) => {
+    setSearchParams(key === 'home' ? {} : { tab: key }, { replace: false })
+  }
   const [fetching, setFetching] = useState(true)
   const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null)
 

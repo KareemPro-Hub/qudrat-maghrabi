@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Navigate, Link } from 'react-router-dom'
+import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
 import { Lock, BookOpen, ArrowLeft, Play, Check, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 export default function LearnChapterLessons() {
   const { courseId, chapterId } = useParams<{ courseId: string; chapterId: string }>()
   const { user, profile, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
   const [course, setCourse] = useState<any>(null)
   const [chapter, setChapter] = useState<any>(null)
   const [lessons, setLessons] = useState<any[]>([])
@@ -81,9 +82,17 @@ export default function LearnChapterLessons() {
         </nav>
         <div className="hub-user-actions">
           <div className="hub-profile"><span>{initial}</span><p><b>{profile?.full_name}</b><small>طالب</small></p></div>
-          <Link className="back-dashboard" to={`/learn/${courseId}/chapters`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round"><path d="m14 7-5 5 5 5"></path></svg>رجوع للأبواب
-          </Link>
+          {/* الرجوع للمكان اللي الطالب جه منه (تبويب لوحته أو صفحة الأبواب) */}
+          <button
+            type="button"
+            className="back-dashboard"
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1)
+              else navigate(`/learn/${courseId}/chapters`)
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round"><path d="m14 7-5 5 5 5"></path></svg>رجوع
+          </button>
         </div>
       </header>
 
