@@ -70,22 +70,40 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   // فيديو "عرفني الإجابة الصحيحة" مش درس، فلو مالقيناهوش في الدروس بندوّر
   // عليه في أسئلة اختبارات نفس الكورس قبل ما نرفض التوقيع.
   let isExplanationVideo = false
+  let explanationBelongsToFreeLesson = false
   if (!lesson) {
     const { data: courseQuizzes } = await supabase
       .from('quizzes')
-      .select('id')
+      .select('id, lesson_id')
       .eq('course_id', safeCourseId)
 
-    const quizIds = (courseQuizzes ?? []).map((quiz: { id: string }) => quiz.id)
+    type CourseQuiz = { id: string, lesson_id: string | null }
+    const quizzes = (courseQuizzes ?? []) as CourseQuiz[]
+    const quizIds = quizzes.map((quiz) => quiz.id)
     if (quizIds.length > 0) {
       const { data: question } = await supabase
         .from('quiz_questions')
-        .select('id')
+        .select('quiz_id')
         .eq('explanation_video_id', safeVideoId)
         .in('quiz_id', quizIds)
         .limit(1)
         .maybeSingle()
       isExplanationVideo = Boolean(question)
+
+      // واجب الدرس المجاني مفتوح لغير المشترك، فشرح إجابته يتبع نفس القاعدة.
+      const owningLessonId = question
+        ? quizzes.find((quiz) => quiz.id === question.quiz_id)?.lesson_id ?? null
+        : null
+      if (owningLessonId) {
+        const { data: quizLesson } = await supabase
+          .from('lessons')
+          .select('is_free_preview, is_published')
+          .eq('id', owningLessonId)
+          .eq('course_id', safeCourseId)
+          .maybeSingle()
+        explanationBelongsToFreeLesson =
+          quizLesson?.is_free_preview === true && quizLesson?.is_published === true
+      }
     }
   }
 
@@ -103,8 +121,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(500).json({ error: 'Failed to verify course access' })
   }
 
-  // فيديو الشرح متاح للمشترك بس؛ مفيش معاينة مجانية ليه.
-  const isFreePreview = lesson?.is_free_preview === true
+  // فيديو الشرح بياخد نفس صلاحية الدرس اللي واجبه تابع له.
+  const isFreePreview = lesson?.is_free_preview === true || explanationBelongsToFreeLesson
   if (hasCourseAccess !== true && !isFreePreview) {
     return res.status(403).json({ error: 'Not enrolled in this course' })
   }
