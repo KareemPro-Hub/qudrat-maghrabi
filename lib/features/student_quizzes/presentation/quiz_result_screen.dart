@@ -4,6 +4,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_screen.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class QuizResultScreen extends StatefulWidget {
   const QuizResultScreen({
@@ -69,6 +70,22 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
           }
           return _buildReview(snapshot.data!);
         },
+      ),
+    );
+  }
+
+  void _openExplanationVideo({
+    required String courseId,
+    required String videoId,
+  }) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _ExplanationVideoScreen(
+          repository: widget.repository,
+          courseId: courseId,
+          videoId: videoId,
+        ),
       ),
     );
   }
@@ -144,6 +161,10 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               question: review.questions[index],
               number: index + 1,
               studentAnswer: review.result.answers[review.questions[index].id],
+              onExplain: () => _openExplanationVideo(
+                courseId: review.quiz.courseId,
+                videoId: review.questions[index].explanationVideoId!,
+              ),
             ),
           ),
       ],
@@ -290,11 +311,13 @@ class _ReviewQuestionCard extends StatelessWidget {
     required this.question,
     required this.number,
     required this.studentAnswer,
+    required this.onExplain,
   });
 
   final QuizReviewQuestion question;
   final int number;
   final String? studentAnswer;
+  final VoidCallback onExplain;
 
   @override
   Widget build(BuildContext context) {
@@ -380,7 +403,168 @@ class _ReviewQuestionCard extends StatelessWidget {
               ),
             ),
           ],
+          if (question.explanationVideoId != null) ...[
+            const SizedBox(height: 9),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onExplain,
+                icon: const Icon(Icons.play_circle_fill_rounded),
+                label: const Text('عرفني الإجابة الصحيحة'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: QmColors.purple,
+                  minimumSize: const Size.fromHeight(46),
+                ),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// شاشة فيديو شرح الإجابة (Bunny) — نفس أسلوب مشغّل الدرس: توكن مؤقت من
+/// الخادم ثم تشغيل داخل WebView بدون كشف رابط الفيديو.
+class _ExplanationVideoScreen extends StatefulWidget {
+  const _ExplanationVideoScreen({
+    required this.repository,
+    required this.courseId,
+    required this.videoId,
+  });
+
+  final StudentQuizRepository repository;
+  final String courseId;
+  final String videoId;
+
+  @override
+  State<_ExplanationVideoScreen> createState() =>
+      _ExplanationVideoScreenState();
+}
+
+class _ExplanationVideoScreenState extends State<_ExplanationVideoScreen> {
+  WebViewController? _controller;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepare();
+  }
+
+  Future<void> _prepare() async {
+    try {
+      final credentials = await widget.repository.requestExplanationVideo(
+        courseId: widget.courseId,
+        videoId: widget.videoId,
+      );
+      final controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.black)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onNavigationRequest: (request) {
+              if (!request.isMainFrame) return NavigationDecision.navigate;
+              final uri = Uri.tryParse(request.url);
+              if (uri == null ||
+                  uri.scheme == 'about' ||
+                  uri.host == 'www.qudratmaghrabi.com') {
+                return NavigationDecision.navigate;
+              }
+              return NavigationDecision.prevent;
+            },
+            onWebResourceError: (error) {
+              if (error.isForMainFrame == false) return;
+              if (mounted) {
+                setState(() => _error = 'تعذّر تحميل مشغّل الفيديو');
+              }
+            },
+          ),
+        );
+      await controller.loadHtmlString(
+        _playerHtml(
+          libraryId: credentials.libraryId,
+          token: credentials.token,
+          expires: credentials.expires,
+        ),
+        baseUrl: 'https://www.qudratmaghrabi.com',
+      );
+      if (!mounted) return;
+      setState(() => _controller = controller);
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _error = error is QuizFailure
+            ? error.toString()
+            : 'تعذّر تشغيل فيديو الشرح. حاول مرة أخرى',
+      );
+    }
+  }
+
+  String _playerHtml({
+    required String libraryId,
+    required String token,
+    required int expires,
+  }) {
+    final source =
+        'https://iframe.mediadelivery.net/embed/$libraryId/${widget.videoId}'
+        '?token=${Uri.encodeQueryComponent(token)}&expires=$expires'
+        '&autoplay=false&preload=true&responsive=true'
+        '&playsinline=true&disableIosPlayer=true';
+    return '''
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <style>
+    html, body { width:100%; height:100%; margin:0; background:#000; overflow:hidden; }
+    iframe { width:100%; height:100%; border:0; }
+  </style>
+</head>
+<body>
+  <iframe src="$source" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>
+  <script>document.addEventListener('contextmenu', (event) => event.preventDefault());</script>
+</body>
+</html>
+''';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _controller;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'شرح الإجابة',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close_rounded),
+        ),
+      ),
+      body: Center(
+        child: _error != null
+            ? Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              )
+            : controller == null
+            ? const CircularProgressIndicator(color: QmColors.pink)
+            : AspectRatio(
+                aspectRatio: 16 / 9,
+                child: WebViewWidget(controller: controller),
+              ),
       ),
     );
   }

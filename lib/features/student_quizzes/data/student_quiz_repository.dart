@@ -1,3 +1,4 @@
+import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 
 abstract interface class StudentQuizRepository {
@@ -15,6 +16,12 @@ abstract interface class StudentQuizRepository {
   Future<QuizReview> loadReview({
     required StudentQuiz quiz,
     required QuizAttemptResult result,
+  });
+
+  /// بيانات تشغيل فيديو شرح الإجابة المرفوع على Bunny لسؤال معيّن.
+  Future<BunnyEmbedCredentials> requestExplanationVideo({
+    required String courseId,
+    required String videoId,
   });
 }
 

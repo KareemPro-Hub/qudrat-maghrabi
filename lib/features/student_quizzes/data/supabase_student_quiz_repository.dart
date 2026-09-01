@@ -1,11 +1,18 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:qudrat_maghrabi_app/core/config/app_environment.dart';
+import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseStudentQuizRepository implements StudentQuizRepository {
-  const SupabaseStudentQuizRepository(this._client);
+  SupabaseStudentQuizRepository(this._client, {http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   final SupabaseClient _client;
+  final http.Client _httpClient;
 
   @override
   Future<List<StudentQuiz>> loadAvailableQuizzes() async {
@@ -113,6 +120,52 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
           ? null
           : _int(row['best_percentage']).clamp(0, 100),
       lastResult: result,
+    );
+  }
+
+  @override
+  Future<BunnyEmbedCredentials> requestExplanationVideo({
+    required String courseId,
+    required String videoId,
+  }) async {
+    final session = _client.auth.currentSession;
+    if (session == null) {
+      throw const QuizFailure('انتهت جلسة الدخول. سجّل دخولك مرة أخرى');
+    }
+    final http.Response response;
+    try {
+      response = await _httpClient.post(
+        Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
+        headers: {
+          'Authorization': 'Bearer ${session.accessToken}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
+      );
+    } catch (_) {
+      throw const QuizFailure('تعذّر الاتصال بالخادم. تأكد من الإنترنت');
+    }
+    if (response.statusCode != 200) {
+      throw QuizFailure(
+        response.statusCode == 403
+            ? 'الفيديو متاح للمشتركين في الكورس فقط'
+            : 'تعذّر تجهيز فيديو الشرح. حاول مرة أخرى',
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    final body = decoded is Map<String, dynamic>
+        ? decoded
+        : <String, dynamic>{};
+    final libraryId = body['libraryId']?.toString();
+    final token = body['token']?.toString();
+    final expires = _int(body['expires']);
+    if (libraryId == null || token == null || expires == 0) {
+      throw const QuizFailure('تعذّر تجهيز فيديو الشرح. حاول مرة أخرى');
+    }
+    return BunnyEmbedCredentials(
+      libraryId: libraryId,
+      token: token,
+      expires: expires,
     );
   }
 

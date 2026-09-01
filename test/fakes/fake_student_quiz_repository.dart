@@ -1,3 +1,4 @@
+import 'package:qudrat_maghrabi_app/features/student_learning/domain/course_learning_content.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
 
@@ -38,6 +39,7 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
   List<StudentQuiz> quizzes = const [sampleQuiz];
   int loadCalls = 0;
   int submitCalls = 0;
+  int explanationVideoCalls = 0;
 
   List<QuizAttemptHistoryEntry> history = [
     QuizAttemptHistoryEntry(
@@ -120,6 +122,19 @@ class FakeStudentQuizRepository implements StudentQuizRepository {
           explanation: 'تسعة أعشار أكبر من بقية الخيارات.',
         ),
       ],
+    );
+  }
+
+  @override
+  Future<BunnyEmbedCredentials> requestExplanationVideo({
+    required String courseId,
+    required String videoId,
+  }) async {
+    explanationVideoCalls += 1;
+    return const BunnyEmbedCredentials(
+      libraryId: '706043',
+      token: 'fake-token',
+      expires: 1,
     );
   }
 }
