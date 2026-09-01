@@ -618,7 +618,6 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
   }
   return (
     <div className="bundle-showcase">
-      <p className="bundle-showcase-lead">ابدأ من هنا — الباقة الشاملة وكل ما بداخلها</p>
       {bundles.map((bundle) => (
         <div className="bundle-tree" key={bundle.id}>
           <article className="bundle-parent">
@@ -646,11 +645,11 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
 
           {bundle.children.length > 0 && (
             <>
-              <svg className="bundle-branch" viewBox="0 0 560 64" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M280 0 V22" />
-                <path d="M280 22 H420 Q436 22 436 38 V60" />
-                <path d="M280 22 H140 Q124 22 124 38 V60" />
-                <circle cx="280" cy="22" r="4.5" />
+              <svg className="bundle-branch" viewBox="0 0 560 62" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M280 0 V20" />
+                <path d="M280 20 H408 Q424 20 424 36 V62" />
+                <path d="M280 20 H152 Q136 20 136 36 V62" />
+                <circle cx="280" cy="20" r="5" />
               </svg>
 
               <div className="bundle-kids">
@@ -661,7 +660,6 @@ function BundleShowcase({ bundles }: { bundles: any[] }) {
                     </Link>
                     <div className="bundle-kid-body">
                       <h3>{child.title}</h3>
-                      {child.lessons > 0 && <small>{child.lessons} درس</small>}
                       <Link to={`/courses/${child.id}`} className="bundle-go">ابدأ الكورس ←</Link>
                     </div>
                   </article>
