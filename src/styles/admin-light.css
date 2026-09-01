@@ -68,6 +68,24 @@
 .kpi-sub{margin-top:10px;font-size:12.5px;font-weight:600}
 .kpi-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--kpi-icon-bg);color:var(--kpi-icon-fg)}
 
+/* حركة بسيطة عند تمرير المؤشر على بطاقات المؤشرات */
+.kpi-card{transition:transform .35s cubic-bezier(.22,.9,.3,1),box-shadow .35s ease,border-color .35s ease}
+.kpi-blob{transition:transform .55s cubic-bezier(.22,.9,.3,1),opacity .35s ease}
+.kpi-icon{transition:transform .35s cubic-bezier(.34,1.4,.5,1)}
+.kpi-value{transition:transform .35s cubic-bezier(.22,.9,.3,1)}
+.kpi-card::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transform:translateX(-130%);background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.6) 50%,transparent 62%)}
+.kpi-card:hover{transform:translateY(-6px);box-shadow:0 22px 42px -24px rgba(60,30,110,.5);border-color:var(--kpi-blob)}
+.kpi-card:hover .kpi-blob{transform:scale(1.35) translate(-6px,6px);opacity:.75}
+.kpi-card:hover .kpi-icon{transform:translateY(-2px) scale(1.08) rotate(-6deg)}
+.kpi-card:hover .kpi-value{transform:translateY(-2px)}
+.kpi-card:hover::after{animation:kpi-sheen .85s ease forwards}
+@keyframes kpi-sheen{0%{opacity:0;transform:translateX(-130%)}25%{opacity:1}100%{opacity:0;transform:translateX(130%)}}
+@media (prefers-reduced-motion:reduce){
+  .kpi-card,.kpi-blob,.kpi-icon,.kpi-value{transition:none}
+  .kpi-card:hover,.kpi-card:hover .kpi-blob,.kpi-card:hover .kpi-icon,.kpi-card:hover .kpi-value{transform:none}
+  .kpi-card:hover::after{animation:none}
+}
+
 /* Revenue chart card */
 .revenue-card{position:relative;padding:28px 28px 24px;border-radius:22px}
 .revenue-head-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:22px}

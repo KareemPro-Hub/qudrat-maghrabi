@@ -70,7 +70,7 @@ export default function AdminOverview() {
 
       const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
-        supabase.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
+        supabase.from('courses').select('id, parent_course_id').eq('is_published', true),
         supabase.from('lessons').select('id', { count: 'exact', head: true }),
         supabase.from('quizzes').select('id', { count: 'exact', head: true }),
         supabase.from('enrollments').select('amount_paid, enrolled_at, course_id, courses(title)').eq('payment_status', 'paid').gte('enrolled_at', sixMonthsAgo.toISOString()),
@@ -135,13 +135,21 @@ export default function AdminOverview() {
       const sliceData: SliceDatum[] = top.map((c, i) => ({ label: c.title, count: c.count, color: SLICE_COLORS[i] }))
       if (restCount > 0) sliceData.push({ label: 'أخرى', count: restCount, color: SLICE_COLORS[3] })
 
+      // الكورس الأب (زي «دورة القدرات») مجرد حاوية للكورسات المتفرّعة منه،
+      // فبنعدّ الكورسات المتفرّعة والمستقلة بس من غيره.
+      const publishedCourses = (coursesRes.data || []) as { id: string, parent_course_id: string | null }[]
+      const parentCourseIds = new Set(
+        publishedCourses.map((c) => c.parent_course_id).filter(Boolean) as string[],
+      )
+      const coursesCount = publishedCourses.filter((c) => !parentCourseIds.has(c.id)).length
+
       // --- performance score from quiz pass rate ---
       const results = resultsRes.data || []
       const passRate = results.length ? Math.round((results.filter((r: any) => r.passed).length / results.length) * 100) : 0
 
       setStats({
         students: studentsRes.count || 0,
-        courses: coursesRes.count || 0,
+        courses: coursesCount,
         lessons: lessonsRes.count || 0,
         quizzes: quizzesRes.count || 0,
         revenueMonth,
@@ -214,19 +222,6 @@ export default function AdminOverview() {
       </div>
 
       <div className="kpi-grid">
-        <article className="kpi-card gold">
-          <span className="kpi-blob" />
-          <div className="kpi-card-row">
-            <div>
-              <div className="kpi-label">إيرادات هذا الشهر</div>
-              <div className="kpi-value">{loading ? '…' : <>{fmtMoney(stats.revenueMonth)} <CurrencySymbol /></>}</div>
-              <div className="kpi-sub" style={{ color: stats.revenueMonthGrowth >= 0 ? '#149a5b' : '#c17a12' }}>
-                {stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي
-              </div>
-            </div>
-            <span className="kpi-icon"><Wallet size={20} /></span>
-          </div>
-        </article>
         <article className="kpi-card purple">
           <span className="kpi-blob" />
           <div className="kpi-card-row">
@@ -258,6 +253,19 @@ export default function AdminOverview() {
               <div className="kpi-sub" style={{ color: '#8b7fa3' }}>في كل الكورسات</div>
             </div>
             <span className="kpi-icon"><PlayCircle size={20} /></span>
+          </div>
+        </article>
+        <article className="kpi-card gold">
+          <span className="kpi-blob" />
+          <div className="kpi-card-row">
+            <div>
+              <div className="kpi-label">إيرادات هذا الشهر</div>
+              <div className="kpi-value">{loading ? '…' : <>{fmtMoney(stats.revenueMonth)} <CurrencySymbol /></>}</div>
+              <div className="kpi-sub" style={{ color: stats.revenueMonthGrowth >= 0 ? '#149a5b' : '#c17a12' }}>
+                {stats.revenueMonthGrowth >= 0 ? '+' : ''}{stats.revenueMonthGrowth}% عن الشهر الماضي
+              </div>
+            </div>
+            <span className="kpi-icon"><Wallet size={20} /></span>
           </div>
         </article>
       </div>
