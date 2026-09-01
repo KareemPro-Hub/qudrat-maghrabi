@@ -49,8 +49,6 @@ export default function LearnChapterLessons() {
     setLoading(false)
   }
 
-  // نفس منطق القفل الموجود في صفحة الدرس: الدرس مقفول لو اختبار الدرس اللي قبله لسه ما اتجازش
-
   const initial = (profile?.full_name || 'ط').charAt(0)
   const completedCount = lessons.filter((l) => progress[l.id]).length
 
