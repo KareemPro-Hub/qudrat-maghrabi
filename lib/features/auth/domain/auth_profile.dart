@@ -8,7 +8,6 @@ class AuthProfile {
     required this.phone,
     required this.role,
     required this.primaryRole,
-    required this.canUseParentPortal,
     required this.isActive,
   });
 
@@ -18,7 +17,6 @@ class AuthProfile {
   final String phone;
   final AccountRole role;
   final AccountRole primaryRole;
-  final bool canUseParentPortal;
   final bool isActive;
 
   AuthProfile copyWith({
@@ -27,7 +25,6 @@ class AuthProfile {
     String? phone,
     AccountRole? role,
     AccountRole? primaryRole,
-    bool? canUseParentPortal,
     bool? isActive,
   }) {
     return AuthProfile(
@@ -37,7 +34,6 @@ class AuthProfile {
       phone: phone ?? this.phone,
       role: role ?? this.role,
       primaryRole: primaryRole ?? this.primaryRole,
-      canUseParentPortal: canUseParentPortal ?? this.canUseParentPortal,
       isActive: isActive ?? this.isActive,
     );
   }

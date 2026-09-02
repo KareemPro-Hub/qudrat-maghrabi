@@ -22,7 +22,6 @@ class FakeAuthRepository implements AuthRepository {
     phone: '0500000000',
     role: AccountRole.student,
     primaryRole: AccountRole.student,
-    canUseParentPortal: true,
     isActive: true,
   );
 
@@ -33,7 +32,6 @@ class FakeAuthRepository implements AuthRepository {
     phone: '0500000000',
     role: AccountRole.parent,
     primaryRole: AccountRole.parent,
-    canUseParentPortal: true,
     isActive: true,
   );
 

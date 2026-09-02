@@ -275,7 +275,6 @@ class SupabaseAuthRepository implements AuthRepository {
       phone: (data['phone'] as String?)?.trim() ?? '',
       role: role,
       primaryRole: primaryRole,
-      canUseParentPortal: data['can_use_parent_portal'] as bool? ?? false,
       isActive: data['is_active'] as bool? ?? true,
     );
   }
