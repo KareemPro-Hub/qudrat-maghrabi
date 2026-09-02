@@ -7,6 +7,7 @@ import UIKit
   // فورًا لحد ما التسجيل يقف. الغطاء بيتحط فوق النافذة نفسها عشان يشمل كل
   // الشاشات من غير أي تعديل في كود Flutter.
   private var captureOverlay: UIView?
+  private var overlayRetries = 0
 
   override func application(
     _ application: UIApplication,
@@ -34,8 +35,35 @@ import UIKit
     }
   }
 
+  /// في دورة حياة UIScene (اللي التطبيق بيستخدمها — شوف SceneDelegate.swift و
+  /// UIApplicationSceneManifest في Info.plist) بترجع `self.window` **nil** لأن
+  /// النافذة بتخص الـ SceneDelegate مش الـ AppDelegate. ده كان بيخلّي الغطاء
+  /// ما يظهرش خالص، فكشف تسجيل الشاشة على iOS كان بلا أي أثر.
+  private func activeWindow() -> UIWindow? {
+    if let window = self.window { return window }
+    let windowScenes = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+    if let key = windowScenes
+      .first(where: { $0.activationState == .foregroundActive })?
+      .windows.first(where: { $0.isKeyWindow }) {
+      return key
+    }
+    return windowScenes.flatMap { $0.windows }.first
+  }
+
   private func showCaptureOverlay() {
-    guard captureOverlay == nil, let window = self.window else { return }
+    guard captureOverlay == nil else { return }
+    guard let window = activeWindow() else {
+      // النافذة لسه ما اتجهّزتش (بيحصل لو التسجيل شغّال وقت الإقلاع) — نعيد
+      // المحاولة بعد لحظة بدل ما نسيب الشاشة مكشوفة، بحد أقصى 10 محاولات.
+      guard overlayRetries < 10 else { return }
+      overlayRetries += 1
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        self?.handleScreenCaptureChange()
+      }
+      return
+    }
+    overlayRetries = 0
 
     let overlay = UIView(frame: window.bounds)
     overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -57,6 +85,7 @@ import UIKit
     ])
 
     window.addSubview(overlay)
+    window.bringSubviewToFront(overlay)
     captureOverlay = overlay
   }
 
