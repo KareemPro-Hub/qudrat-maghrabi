@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -134,14 +135,19 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
     }
     final http.Response response;
     try {
-      response = await _httpClient.post(
-        Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
-      );
+      // من غير مهلة، لو الشبكة علّقت كانت الشاشة تفضل بتحمّل بلا نهاية.
+      response = await _httpClient
+          .post(
+            Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
+            headers: {
+              'Authorization': 'Bearer ${session.accessToken}',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw const QuizFailure('الاتصال بطيء. تأكد من الإنترنت وحاول مرة أخرى');
     } catch (_) {
       throw const QuizFailure('تعذّر الاتصال بالخادم. تأكد من الإنترنت');
     }

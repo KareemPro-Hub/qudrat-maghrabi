@@ -28,6 +28,29 @@ abstract final class ErrorMonitoring {
       options.sendDefaultPii = false;
       // رصد أخطاء فقط: مفيش تتبع أداء ولا تسجيل شاشة
       options.tracesSampleRate = 0.0;
+      // انقطاع النت عن الطالب مش عطل في التطبيق — الجلسة بتترجع لوحدها
+      // (اتصلح في 1.0.9). من غير الفلتر ده Sentry كان بيسجّله fatal ويغرق
+      // التنبيهات بضجيج. أي خطأ شبكة تاني بيتبعت زي ما هو.
+      options.beforeSend = (event, hint) {
+        return _isOfflineNoise(event) ? null : event;
+      };
     }, appRunner: appRunner);
+  }
+
+  /// بيرجّع true بس لخطأ فقدان الاتصال المعروف: فشل تجديد جلسة Supabase
+  /// (`AuthRetryableFetchException`) أو فشل تحويل اسم النطاق
+  /// (`SocketException: Failed host lookup`).
+  static bool _isOfflineNoise(SentryEvent event) {
+    final values = event.exceptions;
+    if (values == null || values.isEmpty) return false;
+    for (final exception in values) {
+      final type = exception.type ?? '';
+      final value = exception.value ?? '';
+      if (type == 'AuthRetryableFetchException') return true;
+      if (type == 'SocketException' && value.contains('Failed host lookup')) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -265,14 +266,24 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
       throw const LearningFailure('انتهت جلسة الدخول. سجّل دخولك مرة أخرى');
     }
 
-    final response = await _httpClient.post(
-      Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
-      headers: {
-        'Authorization': 'Bearer ${session.accessToken}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
-    );
+    // من غير مهلة، لو الشبكة علّقت كان المشغّل يفضل بيلف بلا نهاية وبلا رسالة.
+    final http.Response response;
+    try {
+      response = await _httpClient
+          .post(
+            Uri.parse('${AppEnvironment.platformBaseUrl}/api/bunny-token'),
+            headers: {
+              'Authorization': 'Bearer ${session.accessToken}',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'videoId': videoId, 'courseId': courseId}),
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw const LearningFailure('الاتصال بطيء. تأكد من الإنترنت وحاول مرة أخرى');
+    } catch (_) {
+      throw const LearningFailure('تعذّر الاتصال بالخادم. تأكد من الإنترنت');
+    }
     final body = _decodeObject(response.body);
     if (response.statusCode != 200) {
       throw LearningFailure(_videoErrorMessage(response.statusCode, body));
