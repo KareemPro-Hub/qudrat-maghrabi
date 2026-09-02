@@ -4,10 +4,18 @@ import { Lock, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
-function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, courseId: string, sessionToken: string }) {
+function BunnyPlayer({ videoId, courseId, sessionToken, watermark }: { videoId: string, courseId: string, sessionToken: string, watermark: string }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [src, setSrc] = useState('')
+  // العلامة المائية بتتنقّل بين أربع زوايا كل 12 ثانية عشان ما تتقصّش من الصورة.
+  const [wmSpot, setWmSpot] = useState(0)
+
+  useEffect(() => {
+    if (!watermark) return
+    const timer = setInterval(() => setWmSpot((spot) => (spot + 1) % 4), 12000)
+    return () => clearInterval(timer)
+  }, [watermark])
 
   useEffect(() => {
     // لسه بنستنى توكن الجلسة يوصل من الأب (أول تحميل للصفحة أحيانًا بياخد لحظة)؛
@@ -65,9 +73,36 @@ function BunnyPlayer({ videoId, courseId, sessionToken }: { videoId: string, cou
           allowFullScreen
         />
       )}
+      {src && !error && watermark && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            ...WM_SPOTS[wmSpot],
+            pointerEvents: 'none',
+            userSelect: 'none',
+            color: 'rgba(255,255,255,.42)',
+            fontSize: 12,
+            fontWeight: 700,
+            textShadow: '0 1px 3px rgba(0,0,0,.85)',
+            whiteSpace: 'nowrap',
+            transition: 'top .8s ease, left .8s ease',
+            zIndex: 5,
+          }}
+        >
+          {watermark}
+        </span>
+      )}
     </div>
   )
 }
+
+const WM_SPOTS = [
+  { top: '8%', left: '6%' },
+  { top: '8%', left: '58%' },
+  { top: '78%', left: '58%' },
+  { top: '78%', left: '6%' },
+] as const
 
 function fmtCount(n: number, one: string, many: string) {
   return `${n} ${n === 1 ? one : many}`
@@ -269,6 +304,8 @@ export default function Learn() {
   const isCurrentCompleted = currentLesson ? !!progress[currentLesson.id] : false
   const summaryPoints = (currentLesson?.description || '').split('\n').map((s: string) => s.trim()).filter(Boolean)
   const initial = (profile?.full_name || 'ط').charAt(0)
+  // بريد الطالب (أو رقمه) فوق الفيديو: مايمنعش التصوير، بس يخلّي أي تسريب معروف مصدره.
+  const watermarkLabel = (user?.email || profile?.email || profile?.phone || '').trim()
 
   // لازم يتحقق من تسجيل الدخول قبل شاشة التحميل: الزائر غير المسجّل مكانش بيوصل
   // للسطر ده أصلاً فكان بيفضل على شاشة تحميل بلا نهاية بدل ما يتحوّل لصفحة الدخول.
@@ -394,7 +431,7 @@ export default function Learn() {
           <article className="hub-video-player">
             <div className="hub-video-stage">
               {currentLesson.video_id ? (
-                <BunnyPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} />
+                <BunnyPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} watermark={watermarkLabel} />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.55)' }}>
                   <svg style={{ width: 56, height: 56, marginBottom: 12 }} viewBox="0 0 32 32"><use href="#icon-video"></use></svg>
