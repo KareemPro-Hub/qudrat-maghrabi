@@ -61,3 +61,12 @@ done
 - Chrome (`claude-in-chrome`) هو المفضّل. حسابات Google المسجَّلة فيه: `/u/0` egy.kareem.pro · `/u/1` egy.kareem.ai · `/u/2` **qudrat.maghrabi.pro (حساب Play Console)**.
 - App Store Connect غالبًا **غير مسجَّل دخول** في Chrome — يُطلب من كريم يسجّل قبل أي شغل عليه.
 - لوحة Supabase أحيانًا بتطلع صفحة بيضا فاضية؛ البديل هو الـ API من سياق الصفحة (شوف [store_purchase_failure](store_purchase_failure.md)).
+
+## حذف الملفات على جهاز كريم — الحل الجذري
+الـVM ممنوع من الحذف افتراضيًا، فأي `rm` بيرجّع `Operation not permitted` وgit بيفشل بـ`unable to unlink old`.
+**الترتيب الصحيح للحل:**
+1. **اطلب صلاحية الحذف** بـ`device_request_delete_permission` على المجلدات الموصّلة — كريم يوافق مرة واحدة وتشتغل لباقي الجلسة. ده الحل الأنضف.
+2. لو رُفض أو مش متاح: انقل الملف المعترض بـ`mv` بدل ما تحذفه (`.git/_stale/` للأقفال، `_to_delete/` لملفات العمل)، وقول لكريم مكانها.
+3. آخر حل: أمر `rm` جاهز للّصق يشغّله كريم في Terminal بنفسه.
+
+⚠️ **متكتبش فوق ملف متتبَّع في Git من غير ما تعمل commit**، وإلا الـ`git pull` على الجهاز التاني هيفشل بـ`local changes would be overwritten`. الحل وقتها: `git checkout -- <الملف>` ثم إعادة الدمج. (حصل فعلًا 2026-09-02.)
