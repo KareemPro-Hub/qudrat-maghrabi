@@ -60,3 +60,6 @@ app.*.map.json
 # Generated locally from the ignored release configuration.
 /ios/Flutter/Secrets.xcconfig
 _to_delete/
+
+# مخرجات فحص محلية
+analyze.txt

@@ -12,6 +12,10 @@ analyzer:
     - build/**
     - android/**
     - ios/**
+    # مجلد زبالة محلي (مُستبعَد في .gitignore أصلًا) بتتحط فيه الملفات المحذوفة
+    # لأن بيئة الوكيل مش قادرة تمسح ملفات. مش جزء من التطبيق، ومن غير الاستبعاد
+    # ده كان flutter analyze بيرجّع عشرات الأخطاء الوهمية منه.
+    - _to_delete/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
