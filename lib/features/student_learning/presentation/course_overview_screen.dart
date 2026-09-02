@@ -10,6 +10,7 @@ class CourseOverviewScreen extends StatefulWidget {
   const CourseOverviewScreen({
     required this.courseId,
     required this.studentId,
+    required this.watermark,
     required this.repository,
     required this.quizRepository,
     this.onSubscribe,
@@ -18,6 +19,9 @@ class CourseOverviewScreen extends StatefulWidget {
 
   final String courseId;
   final String studentId;
+
+  /// نص يُكتب فوق الفيديو لتتبّع مصدر أي تسريب (بريد الطالب عادةً).
+  final String watermark;
   final StudentLearningRepository repository;
   final StudentQuizRepository quizRepository;
 
@@ -79,6 +83,7 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
           content: content,
           initialLessonId: lesson.id,
           studentId: widget.studentId,
+          watermark: widget.watermark,
           repository: widget.repository,
           quizRepository: widget.quizRepository,
           onSubscribe: widget.onSubscribe,

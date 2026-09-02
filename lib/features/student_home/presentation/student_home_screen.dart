@@ -398,12 +398,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         builder: (_) => CourseOverviewScreen(
           courseId: course.id,
           studentId: widget.profile.id,
+          watermark: _watermarkLabel,
           repository: widget.learningRepository,
           quizRepository: widget.quizRepository,
           onSubscribe: _showSubscriptions,
         ),
       ),
     );
+  }
+
+  /// العلامة المائية اللي بتتكتب فوق الفيديو: بريد الطالب، وبديله رقمه، وبديلهما
+  /// أول 8 حروف من معرّفه. الغرض إن أي تسريب يبقى معروف مصدره.
+  String get _watermarkLabel {
+    final email = widget.profile.email.trim();
+    if (email.isNotEmpty) return email;
+    final phone = widget.profile.phone.trim();
+    if (phone.isNotEmpty) return phone;
+    final id = widget.profile.id;
+    return id.length > 8 ? id.substring(0, 8) : id;
   }
 
   Future<void> _showSubscriptions() async {
