@@ -7,18 +7,59 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/shared/widgets/qm_gradient_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// أيقونة دعم صغيرة تُستخدم أعلى شاشات الدخول/التسجيل لفتح نموذج
-/// الإبلاغ عن مشكلة والتواصل المباشر مع الدعم عبر واتساب.
+/// زر الدعم أعلى شاشات الدخول/التسجيل: يفتح نموذج الإبلاغ عن مشكلة
+/// والتواصل المباشر مع الدعم عبر واتساب.
+/// كان أيقونة 24px مكتومة في ركن الشاشة فالطالب مكانش بيلاحظها؛ بقى زر
+/// واضح بخلفية وحدود ونص «الدعم» جنب الأيقونة.
 class SupportIconButton extends StatelessWidget {
   const SupportIconButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      key: const Key('support-report-problem-button'),
-      tooltip: 'الإبلاغ عن مشكلة',
-      onPressed: () => showReportProblemSheet(context),
-      icon: const Icon(Icons.support_agent_rounded),
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 12, top: 6, bottom: 6),
+      child: Material(
+        color: QmColors.surface,
+        borderRadius: BorderRadius.circular(99),
+        child: InkWell(
+          key: const Key('support-report-problem-button'),
+          onTap: () => showReportProblemSheet(context),
+          borderRadius: BorderRadius.circular(99),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(color: QmColors.border),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x140F0520),
+                  blurRadius: 14,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.support_agent_rounded,
+                  size: 24,
+                  color: QmColors.purple,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  'الدعم',
+                  style: TextStyle(
+                    color: QmColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
