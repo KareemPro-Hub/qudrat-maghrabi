@@ -330,7 +330,9 @@ class _SubscriptionHero extends StatelessWidget {
   }
 
   String _activeSubtitle(StudentSubscription value) {
-    final expiry = value.expiresAt;
+    // التاريخ بييجي من الخادم بتوقيت UTC؛ نعرضه بتوقيت جهاز الطالب عشان
+    // ما يظهرش يوم أقل من الحقيقي (السعودية UTC+3).
+    final expiry = value.expiresAt?.toLocal();
     if (expiry == null) return '${value.planName} • وصول مستمر';
     return '${value.planName} • ينتهي في ${expiry.day}/${expiry.month}/${expiry.year}';
   }
