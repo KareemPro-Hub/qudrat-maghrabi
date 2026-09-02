@@ -1,8 +1,12 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.106.2'
+import {
+  createClient,
+  type SupabaseClient,
+} from 'npm:@supabase/supabase-js@2.106.2'
 import {
   isEntitled,
   StoreConfigurationError,
   StoreVerificationError,
+  type StorePlatform,
   verifyAppleSubscription,
   verifyGoogleSubscription,
 } from '../_shared/store_verification.ts'
@@ -27,9 +31,107 @@ function json(body: unknown, status = 200) {
   })
 }
 
+async function failedAttemptId(
+  studentId: string,
+  productId: string,
+  purchaseId: string,
+) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${studentId}:${productId}:${purchaseId}`),
+  )
+  return `failed:${Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')}`
+}
+
+// نفس المعالجة للمتجرين: أي عملية شراء بتفشل لازم تتسجّل ويتنبّه عليها الأدمن،
+// عشان ما يحصلش تاني إن طالب يدفع ومحدش ياخد باله غير لما يشتكي.
+const STORE_LABELS: Record<StorePlatform, string> = {
+  apple: 'App Store',
+  google: 'Google Play',
+}
+
+async function recordStoreVerificationFailure(
+  admin: SupabaseClient,
+  details: {
+    platform: StorePlatform
+    studentId: string
+    studentEmail?: string
+    productId: string
+    purchaseId: string
+    stage: 'verification' | 'activation'
+    message: string
+  },
+) {
+  try {
+    const externalEventId = await failedAttemptId(
+      details.studentId,
+      details.productId,
+      details.purchaseId,
+    )
+    const { error: auditError } = await admin.from('store_purchase_events').insert({
+      platform: details.platform,
+      event_type: 'client_verification_failed',
+      external_event_id: externalEventId,
+      payload: {
+        student_id: details.studentId,
+        student_email: details.studentEmail,
+        product_id: details.productId,
+        purchase_id: details.purchaseId,
+        stage: details.stage,
+      },
+      processed: false,
+      processing_error: details.message.slice(0, 500),
+    })
+    if (auditError) {
+      if (auditError.code !== '23505') {
+        console.error('Could not save failed store purchase attempt', auditError)
+      }
+      return
+    }
+
+    const { data: admins, error: adminLookupError } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin')
+      .eq('is_active', true)
+    if (adminLookupError) {
+      console.error('Could not locate admins for purchase alert', adminLookupError)
+      return
+    }
+    if (!admins?.length) return
+
+    const studentLabel = details.studentEmail || details.studentId
+    const storeLabel = STORE_LABELS[details.platform]
+    const { error: notificationError } = await admin.from('notifications').insert(
+      admins.map(({ id }) => ({
+        user_id: id,
+        title: 'تعذّر تفعيل اشتراك من المتجر تلقائيًا',
+        body:
+          `دفع الطالب ${studentLabel} عبر ${storeLabel}، لكن التفعيل لم يكتمل. ` +
+          'راجع سجل محاولات الشراء الفاشلة.',
+        type: 'warning',
+      })),
+    )
+    if (notificationError) {
+      console.error('Could not notify admins about store purchase failure', notificationError)
+    }
+  } catch (failureLoggingError) {
+    console.error('Could not log store purchase verification failure', failureLoggingError)
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
+
+  let admin: SupabaseClient | null = null
+  let studentId = ''
+  let studentEmail: string | undefined
+  let attemptedPlatform = ''
+  let attemptedProductId = ''
+  let attemptedPurchaseId = ''
 
   try {
     const authHeader = req.headers.get('Authorization') ?? ''
@@ -43,7 +145,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'إعدادات الخدمة غير مكتملة.' }, 500)
     }
 
-    const admin = createClient(supabaseUrl, serviceRoleKey, {
+    admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -58,6 +160,8 @@ Deno.serve(async (req: Request) => {
     if (userError || !user) {
       return json({ error: 'انتهت الجلسة، سجّل الدخول من جديد.' }, 401)
     }
+    studentId = user.id
+    studentEmail = user.email
     const { data: profile, error: profileError } = await admin
       .from('profiles')
       .select('role, is_active')
@@ -74,6 +178,9 @@ Deno.serve(async (req: Request) => {
     const serverVerificationData = String(
       body?.server_verification_data ?? '',
     ).trim()
+    attemptedPlatform = platform
+    attemptedProductId = productId
+    attemptedPurchaseId = purchaseId
     if (!PRODUCT_IDS.has(productId)) {
       return json({ error: 'باقة الاشتراك غير معروفة.' }, 400)
     }
@@ -112,6 +219,15 @@ Deno.serve(async (req: Request) => {
     )
     if (recordError) {
       console.error('Could not record verified subscription', recordError)
+      await recordStoreVerificationFailure(admin, {
+        platform,
+        studentId: user.id,
+        studentEmail: user.email,
+        productId,
+        purchaseId,
+        stage: 'activation',
+        message: recordError.message,
+      })
       const linkedElsewhere = recordError.message?.includes(
         'already linked to another account',
       )
@@ -154,6 +270,23 @@ Deno.serve(async (req: Request) => {
       auto_renew: verified.autoRenew,
     })
   } catch (error) {
+    if (
+      admin &&
+      studentId &&
+      (attemptedPlatform === 'apple' || attemptedPlatform === 'google') &&
+      attemptedProductId &&
+      attemptedPurchaseId
+    ) {
+      await recordStoreVerificationFailure(admin, {
+        platform: attemptedPlatform,
+        studentId,
+        studentEmail,
+        productId: attemptedProductId,
+        purchaseId: attemptedPurchaseId,
+        stage: 'verification',
+        message: error instanceof Error ? error.message : String(error),
+      })
+    }
     if (error instanceof StoreConfigurationError) {
       console.error('Store configuration error', error.message)
       return json(

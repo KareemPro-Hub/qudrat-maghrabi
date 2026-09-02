@@ -49,15 +49,19 @@ Deno.serve(async (req: Request) => {
     let externalEventId: string | undefined
     if (typeof body?.signedPayload === 'string') {
       const outer = decodeJwtPayload(body.signedPayload)
+      eventType = String(outer.notificationType ?? 'apple_notification')
+      externalEventId = outer.notificationUUID
+        ? String(outer.notificationUUID)
+        : undefined
+      if (eventType === 'TEST') {
+        console.log('Accepted Apple test notification', { externalEventId })
+        return json({ accepted: true, test: true })
+      }
       const data = outer.data as Record<string, unknown> | undefined
       const signedTransaction = String(data?.signedTransactionInfo ?? '')
       const transaction = decodeJwtPayload(signedTransaction)
       const transactionId = String(transaction.transactionId ?? '')
       verified = await verifyAppleSubscription(transactionId)
-      eventType = String(outer.notificationType ?? 'apple_notification')
-      externalEventId = outer.notificationUUID
-        ? String(outer.notificationUUID)
-        : undefined
     } else if (typeof body?.message?.data === 'string') {
       const message = decodeBase64Json(body.message.data)
       const subscriptionNotification = message.subscriptionNotification as
