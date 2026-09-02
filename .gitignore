@@ -11,3 +11,7 @@ _to_delete/
 vite.config.ts.timestamp-*.mjs
 Icon*
 auth_callback_fix.bundle
+
+# مخلّفات نقل ومجلدات نسخ احتياطية محلية
+_old_*/
+_stale/
