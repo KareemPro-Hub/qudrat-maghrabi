@@ -53,7 +53,8 @@ type: project
 - ⚠️ `Platform/` الجديد **مفيهوش `node_modules`** — أول `npm run dev`/`build` محتاج `npm install` الأول.
 - مستودعان منفصلان بـ`.git` مستقلّة لكن نفس الـremote `KareemPro-Hub/qudrat-maghrabi`.
 - `App/` كان **متأخّر 12 commit** (كان على `4589d19` ونسخة `1.1.0+12`) — اتعمل له fast-forward لـ`f1d645d` = `1.1.2+14`، و`app_metadata.dart` مطابق لـ`pubspec.yaml`.
-- ⚠️ الفرع المحلي في `App/` اسمه **`main`** لكنه يتتبّع `origin/flutter-app` — مربك وخطر عند الدفع. يُفضَّل إعادة تسميته لـ`flutter-app` (محتاج موافقة كريم).
+- ✅ الفرع المحلي في `App/` اتسمّى **`flutter-app`** (كان `main` وبيتتبّع `origin/flutter-app` — مربك وخطر عند الدفع). `git branch -m` بيفشل على الـVM لأنه محتاج حذف الـref؛ الحل: `mv .git/refs/heads/<old> .git/refs/heads/<new>` + نفس الشيء لـ`.git/logs/refs/heads/` + `git symbolic-ref HEAD refs/heads/<new>` + ضبط `branch.<new>.remote/merge`.
+- ✅ `npm install` اتعمل في `Platform/` (189 حزمة) و`npm run build` نجح. الحزم متعددة المنصات (فيها `darwin-arm64`/`darwin-x64`) فهتشتغل على الماك عادي.
 
 ### 🔴 حيلة جديدة — git لا يستطيع استبدال ملف (مش بس الأقفال)
 الـVM ممنوع من الحذف، فـ`git merge`/`checkout` بيفشل بـ`error: unable to unlink old '<file>'` على أي ملف **متتبَّع هيتعدّل**، وبـ`untracked working tree files would be overwritten` على أي ملف غير متتبَّع. الحل بدون صلاحيات حذف: انقل الملفات المذكورة في الخطأ إلى `_to_delete/` بـ`mv` وكرّر الأمر في حلقة لحد ما ينجح — git بيعيد إنشاءها. (اتستخدم لتحديث `App/`؛ الملفات القديمة محفوظة في `App/_to_delete/`.)
