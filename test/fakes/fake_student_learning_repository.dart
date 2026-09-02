@@ -57,6 +57,17 @@ class FakeStudentLearningRepository implements StudentLearningRepository {
     );
   }
 
+  int screenshotLogs = 0;
+
+  @override
+  Future<void> logScreenshot({
+    required String studentId,
+    String? lessonId,
+    required String platform,
+  }) async {
+    screenshotLogs += 1;
+  }
+
   List<LessonFile> lessonFiles = const <LessonFile>[];
   int lessonFilesCalls = 0;
 

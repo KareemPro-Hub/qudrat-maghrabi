@@ -224,6 +224,23 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
   }
 
   @override
+  Future<void> logScreenshot({
+    required String studentId,
+    String? lessonId,
+    required String platform,
+  }) async {
+    try {
+      await _client.from('screenshot_events').insert({
+        'student_id': studentId,
+        'lesson_id': lessonId,
+        'platform': platform,
+      });
+    } catch (_) {
+      // التسجيل للمساءلة بس؛ فشله مايقطعش المشاهدة على الطالب.
+    }
+  }
+
+  @override
   Future<List<LessonFile>> loadLessonFiles({required String lessonId}) async {
     try {
       final rows = await _client

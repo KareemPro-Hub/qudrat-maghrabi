@@ -8,6 +8,7 @@ import UIKit
   // الشاشات من غير أي تعديل في كود Flutter.
   private var captureOverlay: UIView?
   private var overlayRetries = 0
+  private var screenCaptureChannel: FlutterMethodChannel?
 
   override func application(
     _ application: UIApplication,
@@ -17,6 +18,14 @@ import UIKit
       self,
       selector: #selector(handleScreenCaptureChange),
       name: UIScreen.capturedDidChangeNotification,
+      object: nil
+    )
+    // أبل مابتتيحش منع لقطة الشاشة، بس بتبلّغنا بعد حدوثها — فبنمرّرها لـ Flutter
+    // عشان يحذّر الطالب ويسجّل الواقعة باسمه.
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleScreenshotTaken),
+      name: UIApplication.userDidTakeScreenshotNotification,
       object: nil
     )
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -94,7 +103,20 @@ import UIKit
     captureOverlay = nil
   }
 
+  @objc private func handleScreenshotTaken() {
+    screenCaptureChannel?.invokeMethod("screenshotTaken", arguments: nil)
+  }
+
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // بناخد الـ messenger من الـ registrar لأنه المسار الموثّق والمستقر.
+    if let registrar = engineBridge.pluginRegistry.registrar(
+      forPlugin: "QudratScreenCapture"
+    ) {
+      screenCaptureChannel = FlutterMethodChannel(
+        name: "qudrat/screen_capture",
+        binaryMessenger: registrar.messenger()
+      )
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_learning/data/student_learning_repository.dart';
@@ -57,6 +58,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   late Future<List<StudentQuiz>> _quizzesFuture;
   late Future<List<LessonFile>> _filesFuture;
 
+  /// قناة الجانب الأصلي: iOS بيبلّغنا بعد ما الطالب ياخد لقطة شاشة (أبل مابتتيحش
+  /// منعها). أندرويد مابيوصلش هنا أصلًا لأن FLAG_SECURE بيمنع اللقطة من الأساس.
+  static const _screenCaptureChannel = MethodChannel('qudrat/screen_capture');
+
   CourseLesson get _lesson => _lessons[_selectedIndex];
 
   @override
@@ -75,6 +80,32 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     _resetTracking();
     _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
     _filesFuture = widget.repository.loadLessonFiles(lessonId: _lesson.id);
+    _screenCaptureChannel.setMethodCallHandler(_handleScreenCaptureCall);
+  }
+
+  Future<void> _handleScreenCaptureCall(MethodCall call) async {
+    if (call.method != 'screenshotTaken') return;
+    final lessonId = _lesson.id;
+    unawaited(
+      widget.repository.logScreenshot(
+        studentId: widget.studentId,
+        lessonId: lessonId,
+        platform: 'ios',
+      ),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تم تسجيل لقطة الشاشة باسم حسابك. المحتوى محمي بحقوق الملكية.',
+            textAlign: TextAlign.center,
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 4),
+        ),
+      );
   }
 
   void _reloadFiles() {
@@ -142,6 +173,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _screenCaptureChannel.setMethodCallHandler(null);
     super.dispose();
   }
 

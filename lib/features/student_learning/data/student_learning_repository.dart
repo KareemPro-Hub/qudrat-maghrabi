@@ -11,6 +11,13 @@ abstract interface class StudentLearningRepository {
     required String videoId,
   });
 
+  /// تسجيل واقعة لقطة شاشة باسم الطالب. فشلها مايأثرش على المشاهدة.
+  Future<void> logScreenshot({
+    required String studentId,
+    String? lessonId,
+    required String platform,
+  });
+
   /// ملفات الدرس المرفقة (PDF / أوراق عمل). ترجع فاضية لو مفيش ملفات.
   Future<List<LessonFile>> loadLessonFiles({required String lessonId});
 
