@@ -365,6 +365,11 @@ export default function Checkout() {
                     سيُخصم عبر Paymob مبلغ <b className="text-brand-purple">{formatPrice(processingPrice)} {processingCurrencyLabel}</b>، بما يعادل {formatPrice(paymentQuote.displayAmountMinor / 100)} <CurrencySymbol currency={paymentQuote.displayCurrency} />.
                   </span>
                 )}
+                {!quoteLoading && paymentQuote && processingPrice !== null && paymentQuote.processingCurrency !== paymentQuote.displayCurrency && (
+                  <span className="mt-1 block text-xs font-bold text-gray-500">
+                    نفس السعر تمامًا — بوابة الدفع تعالج المبلغ بالجنيه المصري بسعر صرف اليوم، ولن تدفع أي زيادة.
+                  </span>
+                )}
                 {!quoteLoading && quoteError && <span className="text-red-600">تعذّر حساب المبلغ بالجنيه المصري. حدّث الصفحة ثم حاول مرة أخرى.</span>}
               </div>
             </div>
@@ -390,6 +395,11 @@ export default function Checkout() {
                     <span className="font-black text-brand-purple whitespace-nowrap">{formatPrice(processingPrice)} {processingCurrencyLabel}</span>
                     <span className="text-xs font-bold text-brand-navy">المبلغ الفعلي الذي سيُخصم عبر Paymob</span>
                   </div>
+                )}
+                {paymentQuote && processingPrice !== null && paymentQuote.processingCurrency !== paymentQuote.displayCurrency && (
+                  <p className="text-xs font-bold text-gray-500 leading-6">
+                    بوابة Paymob تعالج المدفوعات بالجنيه المصري، فيظهر المبلغ محوَّلًا بسعر صرف اليوم. القيمة واحدة ولا توجد رسوم إضافية من المنصة.
+                  </p>
                 )}
               </div>
               <div className="mt-5 flex items-center gap-2 text-gray-400 text-xs justify-center"><ShieldCheck size={14} /><span>مدفوعات آمنة عبر Paymob</span></div>
