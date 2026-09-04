@@ -14,23 +14,45 @@ export default function AdminEnrollments() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const [storePrices, setStorePrices] = useState<Record<string, number>>({})
+
   useEffect(() => {
-    supabase.from('enrollments').select('*, profiles(full_name, email), courses(title, price)').order('enrolled_at', { ascending: false })
-      .then(({ data }) => { setEnrollments(data || []); setLoading(false) })
+    void (async () => {
+      const [{ data: rows }, { data: subs }, { data: plans }] = await Promise.all([
+        supabase.from('enrollments').select('*, profiles(full_name, email), courses(title, price)').order('enrolled_at', { ascending: false }),
+        supabase.from('store_subscriptions').select('latest_transaction_id, original_transaction_id, product_id'),
+        supabase.from('store_subscription_plans').select('product_id, web_price_minor'),
+      ])
+      const planPrice: Record<string, number> = {}
+      for (const plan of plans || []) planPrice[plan.product_id] = (plan.web_price_minor || 0) / 100
+      const byTransaction: Record<string, number> = {}
+      for (const sub of subs || []) {
+        const price = planPrice[sub.product_id]
+        if (price === undefined) continue
+        if (sub.latest_transaction_id) byTransaction[sub.latest_transaction_id] = price
+        if (sub.original_transaction_id) byTransaction[sub.original_transaction_id] = price
+      }
+      setStorePrices(byTransaction)
+      setEnrollments(rows || [])
+      setLoading(false)
+    })()
   }, [])
+
+  // شراء المتجر لا يرسل المبلغ في الإيصال، فنعرض سعر الباقة بدل صفر.
+  const amountOf = (e: any) => e.amount_paid ?? storePrices[e.payment_reference] ?? e.courses?.price ?? 0
 
   const q = search.toLowerCase()
   const filtered = enrollments.filter((e) => e.profiles?.full_name?.toLowerCase().includes(q) || e.courses?.title?.toLowerCase().includes(q))
 
   const paid = enrollments.filter((e) => e.payment_status === 'paid')
-  const totalRevenue = paid.reduce((s, e) => s + (e.amount_paid || e.courses?.price || 0), 0)
+  const totalRevenue = paid.reduce((s, e) => s + amountOf(e), 0)
 
   const now = new Date()
   const thisMonth = paid.filter((e) => new Date(e.enrolled_at).getMonth() === now.getMonth() && new Date(e.enrolled_at).getFullYear() === now.getFullYear())
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const lastMonth = paid.filter((e) => { const d = new Date(e.enrolled_at); return d.getMonth() === lastMonthDate.getMonth() && d.getFullYear() === lastMonthDate.getFullYear() })
-  const thisMonthRevenue = thisMonth.reduce((s, e) => s + (e.amount_paid || e.courses?.price || 0), 0)
-  const lastMonthRevenue = lastMonth.reduce((s, e) => s + (e.amount_paid || e.courses?.price || 0), 0)
+  const thisMonthRevenue = thisMonth.reduce((s, e) => s + amountOf(e), 0)
+  const lastMonthRevenue = lastMonth.reduce((s, e) => s + amountOf(e), 0)
   const growth = lastMonthRevenue > 0 ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100) : (thisMonthRevenue > 0 ? 100 : 0)
 
   // Per-course package breakdown (top 3 by paid enrollment count)
@@ -47,7 +69,7 @@ export default function AdminEnrollments() {
   // Simple 7-bar sparkline from last 7 enrollment-days revenue
   const sparkDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(now); d.setDate(d.getDate() - (6 - i))
-    const dayRevenue = paid.filter((e) => { const ed = new Date(e.enrolled_at); return ed.toDateString() === d.toDateString() }).reduce((s, e) => s + (e.amount_paid || e.courses?.price || 0), 0)
+    const dayRevenue = paid.filter((e) => { const ed = new Date(e.enrolled_at); return ed.toDateString() === d.toDateString() }).reduce((s, e) => s + amountOf(e), 0)
     return dayRevenue
   })
   const maxSpark = Math.max(...sparkDays, 1)
@@ -97,7 +119,7 @@ export default function AdminEnrollments() {
                       <td><span className={`person-avatar ${avatarClass(i)}`}>{initials(e.profiles?.full_name)}</span><b>{e.profiles?.full_name || '—'}</b></td>
                       <td>{e.courses?.title || '—'}</td>
                       <td>{new Date(e.enrolled_at).toLocaleDateString('ar-SA')}</td>
-                      <td><strong>{formatMoney(e.amount_paid || e.courses?.price || 0)} <CurrencySymbol /></strong></td>
+                      <td><strong>{formatMoney(amountOf(e))} <CurrencySymbol /></strong></td>
                       <td>{e.payment_method || '—'}</td>
                       <td><StatusBadge variant={statusVariant[e.payment_status] || 'neutral'}>{statusLabels[e.payment_status] || e.payment_status}</StatusBadge></td>
                     </tr>
