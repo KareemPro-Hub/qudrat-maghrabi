@@ -355,6 +355,20 @@ class _ReviewQuestionCard extends StatelessWidget {
               ),
             ],
           ),
+          // صورة السؤال: في هذه الاختبارات السؤال نفسه صورة (كسور وجذور مرصوصة)،
+          // فبدونها لا يعرف الطالب ما الذي كان يُسأل عنه أثناء المراجعة.
+          if (question.imageUrl != null) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                question.imageUrl!,
+                fit: BoxFit.contain,
+                cacheWidth: 1080,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
           const SizedBox(height: 13),
           for (final entry in question.options.entries)
             if (entry.key == studentAnswer ||

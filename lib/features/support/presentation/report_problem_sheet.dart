@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,44 +19,50 @@ class SupportIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 12, top: 6, bottom: 6),
-      child: Material(
-        color: QmColors.surface,
+      // زجاجي شفاف بدل الأبيض الصريح: الأبيض الكامل فوق الخلفية المتدرّجة كان
+      // يبدو ملصوقًا/مقصوصًا. نفس المقاس والأيقونة والنص، اختلف السطح فقط.
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(99),
-        child: InkWell(
-          key: const Key('support-report-problem-button'),
-          onTap: () => showReportProblemSheet(context),
-          borderRadius: BorderRadius.circular(99),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            decoration: BoxDecoration(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Material(
+            color: QmColors.surface.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(99),
+            child: InkWell(
+              key: const Key('support-report-problem-button'),
+              onTap: () => showReportProblemSheet(context),
               borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: QmColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x140F0520),
-                  blurRadius: 14,
-                  offset: Offset(0, 5),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 9,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.support_agent_rounded,
-                  size: 24,
-                  color: QmColors.purple,
-                ),
-                const SizedBox(width: 7),
-                Text(
-                  'الدعم',
-                  style: TextStyle(
-                    color: QmColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.65),
                   ),
                 ),
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.support_agent_rounded,
+                      size: 24,
+                      color: QmColors.purple,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'الدعم',
+                      style: TextStyle(
+                        color: QmColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
