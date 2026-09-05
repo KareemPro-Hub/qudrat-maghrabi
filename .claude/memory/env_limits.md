@@ -33,6 +33,32 @@ cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter ana
 - الحاوية السحابية كذلك بلا dart.
 - **بناء iOS:** `./tool/build_ios_release.sh` — مش `flutter build ipa` لوحده (السكربت بيحط `--dart-define-from-file` وبيتحقق إن إعدادات Supabase دخلت البناء).
 
+### ✅ بيئة الماك بوك اير — اتثبتت كاملة 2026-09-05 (`flutter doctor` = No issues found)
+| | المكان |
+|---|---|
+| Flutter 3.47.2 | `/Volumes/MacBook SSD/Kareem-AI/dev/flutter` (على الهارد الخارجي) |
+| Xcode 26.6 | `/Volumes/MacBook SSD/Applications/Xcode.app` — **مش في `/Applications`** |
+| Android SDK 36 | `~/Library/Android/sdk` (+ `cmdline-tools/latest` اتنزّلت يدويًا) |
+| Java 17 (Temurin) | `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home` |
+| CocoaPods 1.17 · Homebrew | `/opt/homebrew` |
+
+كل الـ`export`ات (PATH وANDROID_HOME وJAVA_HOME وbrew shellenv) في `~/.zprofile`.
+
+### 🔴 استخدم `dart analyze` لا `flutter analyze`
+`flutter analyze` **بيقع دايمًا** على هذا المشروع بـ`analysis server exited with code 255` +
+`FormatException: Unterminated string`. السبب: مسار المشروع فيه حروف عربية، وخادم التحليل في
+3.47.2 بيحسب طول رسالة LSP بالحروف بدل البايتات فبتتقطع. مش مشكلة في الكود.
+**السيملينك الإنجليزي لا يحل المشكلة** (جُرّب — Flutter بيرجع للمسار الأصلي).
+```
+cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && dart analyze
+cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter test
+```
+`flutter test` يعمل بلا مشاكل (51 اختبارًا، كلها ناجحة 2026-09-05).
+
+### ملاحظات تثبيت (لو اتكرر على جهاز تاني)
+- `sudo gem install cocoapods` **بيفشل** لأن مسار Xcode فيه مسافة (`MacBook SSD`) و`make` بيتكسر. الحل: Homebrew ثم `brew install cocoapods`.
+- الصق أمرًا واحدًا في المرة: لصق أوامر طويلة في Terminal بيسيب مخلّفات (`[200~`، `16`، `¨`) — والكيبورد العربي بيضيف `¨`. الحل: نافذة Terminal جديدة (⌘N) ثم اللصق.
+
 ## Git — يعمل ✅
 الدفع شغّال من `device_bash` باستخدام ملف الاعتماد المخزَّن:
 ```
