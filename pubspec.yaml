@@ -2,7 +2,7 @@ name: qudrat_maghrabi_app
 description: "تطبيق قدرات المغربي للطلاب وأولياء الأمور."
 publish_to: 'none'
 
-version: 1.1.2+14
+version: 1.1.3+15
 
 environment:
   sdk: ^3.12.2
