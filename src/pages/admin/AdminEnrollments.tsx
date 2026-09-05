@@ -12,6 +12,7 @@ const packageClass = ['', 'featured', 'pro']
 export default function AdminEnrollments() {
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [search, setSearch] = useState('')
+  const [showIncomplete, setShowIncomplete] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const [storePrices, setStorePrices] = useState<Record<string, number>>({})
@@ -41,8 +42,14 @@ export default function AdminEnrollments() {
   // شراء المتجر لا يرسل المبلغ في الإيصال، فنعرض سعر الباقة بدل صفر.
   const amountOf = (e: any) => e.amount_paid ?? storePrices[e.payment_reference] ?? e.courses?.price ?? 0
 
+  // محاولات الدفع غير المكتملة تُخفى افتراضيًا ولا تُحذف: الـwebhook يحتاج صفها
+  // لو أكمل الطالب الدفع لاحقًا، وهي كذلك قائمة عملاء محتملين.
+  const incompleteCount = enrollments.filter((e) => e.payment_status === 'pending').length
+
   const q = search.toLowerCase()
-  const filtered = enrollments.filter((e) => e.profiles?.full_name?.toLowerCase().includes(q) || e.courses?.title?.toLowerCase().includes(q))
+  const filtered = enrollments
+    .filter((e) => (showIncomplete ? e.payment_status === 'pending' : e.payment_status !== 'pending'))
+    .filter((e) => e.profiles?.full_name?.toLowerCase().includes(q) || e.courses?.title?.toLowerCase().includes(q))
 
   const paid = enrollments.filter((e) => e.payment_status === 'paid')
   const totalRevenue = paid.reduce((s, e) => s + amountOf(e), 0)
@@ -105,11 +112,21 @@ export default function AdminEnrollments() {
 
       {loading ? null : (
         <article className="admin-card data-card" data-searchable>
-          <header className="card-head"><div><h3>أحدث الاشتراكات</h3><p>حركة الاشتراكات والمدفوعات الأخيرة</p></div></header>
+          <header className="card-head">
+            <div>
+              <h3>{showIncomplete ? 'محاولات لم تكتمل' : 'أحدث الاشتراكات'}</h3>
+              <p>{showIncomplete ? 'طلاب فتحوا صفحة الدفع ولم يكملوها — عملاء محتملون' : 'حركة الاشتراكات والمدفوعات الأخيرة'}</p>
+            </div>
+            {(incompleteCount > 0 || showIncomplete) && (
+              <button type="button" onClick={() => setShowIncomplete((v) => !v)} className="ghost-button">
+                {showIncomplete ? 'رجوع للاشتراكات' : `محاولات لم تكتمل (${incompleteCount})`}
+              </button>
+            )}
+          </header>
           <div className="filter-bar" style={{ marginBottom: 14 }}>
             <label><Search size={16} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث باسم الطالب أو الكورس..." /></label>
           </div>
-          {filtered.length === 0 ? <EmptyState text="لا يوجد اشتراكات بعد" /> : (
+          {filtered.length === 0 ? <EmptyState text={showIncomplete ? 'لا توجد محاولات غير مكتملة' : 'لا يوجد اشتراكات بعد'} /> : (
             <div className="table-wrap">
               <table>
                 <thead><tr><th>الطالب</th><th>الكورس</th><th>تاريخ الاشتراك</th><th>القيمة</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
