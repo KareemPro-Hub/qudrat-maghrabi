@@ -195,6 +195,12 @@ export default function QuizResult() {
                     </p>
                   </div>
 
+                  {q.question_image_url && (
+                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-200 bg-white">
+                      <img src={q.question_image_url} alt="صورة السؤال" loading="lazy" className="w-full max-h-72 object-contain" />
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     {(['a','b','c','d'] as const).map(opt => {
                       const isSelected = studentAnswer === opt
