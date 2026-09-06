@@ -11,11 +11,9 @@ type MonthPoint = { label: string; short: string; value: number }
 type CourseProgressRow = { title: string; students: number; pct: number; colorClass: string }
 type RecentStudent = { id: string; name: string; course: string; score?: number }
 type RecentQuiz = { id: string; title: string; course: string; created_at: string; attempts: number }
-type SliceDatum = { label: string; count: number; color: string }
 
 const MONTH_NAMES = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 const PROGRESS_COLORS = ['purple', 'pink', 'orange', 'green']
-const SLICE_COLORS = ['#7d37df', '#e83f91', '#f0a72a', '#31b979', '#3ea0e8']
 
 function fmtMoney(n: number) {
   return formatMoney(n)
@@ -57,10 +55,11 @@ export default function AdminOverview() {
   const [courseProgress, setCourseProgress] = useState<CourseProgressRow[]>([])
   const [recentStudents, setRecentStudents] = useState<RecentStudent[]>([])
   const [recentQuizzes, setRecentQuizzes] = useState<RecentQuiz[]>([])
-  const [slices, setSlices] = useState<SliceDatum[]>([])
   const [performanceScore, setPerformanceScore] = useState(0)
   const [chartStyle, setChartStyle] = useState<'bars' | 'area'>('bars')
   const [subscribers, setSubscribers] = useState({ total: 0, web: 0, apple: 0, google: 0 })
+  const [expiring, setExpiring] = useState<{ name: string; course: string; days: number }[]>([])
+  const [abandoned, setAbandoned] = useState<{ count: number; latest: string | null }>({ count: 0, latest: null })
 
   useEffect(() => {
     async function load() {
@@ -69,7 +68,7 @@ export default function AdminOverview() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-      const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes, activeRes, storeRes] = await Promise.all([
+      const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes, activeRes, storeRes, expiringRes, pendingRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('courses').select('id, parent_course_id').eq('is_published', true),
         supabase.from('lessons').select('id', { count: 'exact', head: true }),
@@ -81,6 +80,8 @@ export default function AdminOverview() {
         supabase.from('quiz_results').select('quiz_id, passed'),
         supabase.from('enrollments').select('student_id, expires_at').eq('payment_status', 'paid'),
         supabase.from('store_subscriptions').select('student_id, platform, status, current_period_end'),
+        supabase.from('enrollments').select('expires_at, profiles(full_name), courses(title)').eq('payment_status', 'paid').not('expires_at', 'is', null),
+        supabase.from('enrollments').select('enrolled_at').eq('payment_status', 'pending'),
       ])
 
       // --- monthly revenue buckets (last 6 months) ---
@@ -130,14 +131,6 @@ export default function AdminOverview() {
         .sort((a, b) => b.pct - a.pct)
         .slice(0, 4)
 
-      // --- subscription distribution (top courses by paid enrollment) ---
-      const sortedCourses = Object.values(courseCounts).sort((a, b) => b.count - a.count)
-      const total = sortedCourses.reduce((s, c) => s + c.count, 0) || 1
-      const top = sortedCourses.slice(0, 3)
-      const restCount = sortedCourses.slice(3).reduce((s, c) => s + c.count, 0)
-      const sliceData: SliceDatum[] = top.map((c, i) => ({ label: c.title, count: c.count, color: SLICE_COLORS[i] }))
-      if (restCount > 0) sliceData.push({ label: 'أخرى', count: restCount, color: SLICE_COLORS[3] })
-
       // الكورس الأب (زي «دورة القدرات») مجرد حاوية للكورسات المتفرّعة منه،
       // فبنعدّ الكورسات المتفرّعة والمستقلة بس من غيره.
       const publishedCourses = (coursesRes.data || []) as { id: string, parent_course_id: string | null }[]
@@ -175,6 +168,27 @@ export default function AdminOverview() {
         google: googleStudents.size,
       })
 
+      // --- اشتراكات تنتهي خلال 30 يومًا ---
+      const in30 = nowMs + 30 * 24 * 60 * 60 * 1000
+      const expiringRows = (expiringRes.data || [])
+        .map((e: any) => ({
+          name: e.profiles?.full_name || 'طالب',
+          course: e.courses?.title || '—',
+          ms: new Date(e.expires_at).getTime(),
+        }))
+        .filter((e) => e.ms > nowMs && e.ms <= in30)
+        .sort((a, b) => a.ms - b.ms)
+        .slice(0, 5)
+        .map((e) => ({ name: e.name, course: e.course, days: Math.max(1, Math.ceil((e.ms - nowMs) / 86400000)) }))
+      setExpiring(expiringRows)
+
+      // --- محاولات دفع لم تكتمل ---
+      const pendingRows = (pendingRes.data || []) as { enrolled_at: string }[]
+      const latestPending = pendingRows.length
+        ? pendingRows.map((r) => r.enrolled_at).sort().slice(-1)[0]
+        : null
+      setAbandoned({ count: pendingRows.length, latest: latestPending })
+
       setStats({
         students: studentsRes.count || 0,
         courses: coursesCount,
@@ -186,7 +200,6 @@ export default function AdminOverview() {
       setMonths(monthPoints)
       setActiveMonth(monthPoints.length - 1)
       setCourseProgress(progressRows)
-      setSlices(sliceData)
       setPerformanceScore(passRate)
       setRecentStudents((recentRes.data || []).map((r: any) => ({ id: r.id, name: r.profiles?.full_name || 'طالب', course: r.courses?.title || '—' })))
 
@@ -221,18 +234,6 @@ export default function AdminOverview() {
   const areaPath = areaMonths.length
     ? `${linePath} L${areaMonths[areaMonths.length - 1].x.toFixed(1)} 240 L${areaMonths[0].x.toFixed(1)} 240 Z`
     : ''
-  const donutGradient = (() => {
-    const total = slices.reduce((s, sl) => s + sl.count, 0) || 1
-    let acc = 0
-    const stops = slices.map((sl) => {
-      const from = (acc / total) * 100
-      acc += sl.count
-      const to = (acc / total) * 100
-      return `${sl.color} ${from.toFixed(1)}% ${to.toFixed(1)}%`
-    })
-    return `conic-gradient(${stops.join(',')})`
-  })()
-
   const firstName = profile?.full_name?.split(' ')[0] || ''
 
   return (
@@ -500,21 +501,48 @@ export default function AdminOverview() {
               })}
             </div>
           </article>
-          <article className="admin-card subscription-mini">
-            <div className="donut" style={{ ['--adm-donut-bg' as any]: donutGradient }}>
-              <span><strong>{stats.students.toLocaleString('en')}</strong><small>طالب</small></span>
-            </div>
-            <div>
-              <h3>توزيع الاشتراكات</h3>
-              <ul>
-                {slices.length === 0 ? <li>لا توجد بيانات بعد</li> : slices.map((sl) => {
-                  const total = slices.reduce((s, x) => s + x.count, 0) || 1
-                  return (
-                    <li key={sl.label}><i style={{ background: sl.color }} />{sl.label} <b>{Math.round((sl.count / total) * 100)}%</b></li>
-                  )
-                })}
-              </ul>
-            </div>
+          <article className="admin-card completion-card">
+            <h3>اشتراكات تنتهي قريبًا</h3>
+            <p>خلال 30 يومًا — تواصل معهم قبل الانتهاء</p>
+            {loading ? <Spinner /> : expiring.length === 0 ? (
+              <div className="empty-state">لا يوجد اشتراك ينتهي خلال 30 يومًا</div>
+            ) : (
+              <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+                {expiring.map((row, i) => (
+                  <div key={`${row.name}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                    <span style={{
+                      flex: '0 0 auto', fontSize: 12.5, fontWeight: 900, borderRadius: 8, padding: '3px 9px',
+                      background: row.days <= 7 ? '#ffeef0' : '#fff6e6',
+                      color: row.days <= 7 ? '#d33b55' : '#a9770f',
+                    }}>{row.days} يوم</span>
+                    <div style={{ textAlign: 'right', overflow: 'hidden' }}>
+                      <b style={{ display: 'block', fontSize: 14, color: '#221a33' }}>{row.name}</b>
+                      <small style={{ color: '#93889b' }}>{row.course}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="admin-card completion-card">
+            <h3>محاولات دفع لم تكتمل</h3>
+            <p>طلاب فتحوا صفحة الدفع ولم يكملوها</p>
+            {loading ? <Spinner /> : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '10px 0 12px' }}>
+                  <span style={{ fontSize: 34, fontWeight: 900, color: abandoned.count > 0 ? '#c17a12' : '#221a33', lineHeight: 1 }}>
+                    {abandoned.count.toLocaleString('en')}
+                  </span>
+                  <span style={{ fontSize: 14, color: '#93889b', fontWeight: 700 }}>
+                    {abandoned.latest ? `آخرها ${new Date(abandoned.latest).toLocaleDateString('ar-SA')}` : 'لا يوجد'}
+                  </span>
+                </div>
+                {abandoned.count > 0 && (
+                  <Link to="/admin/enrollments" className="row-action" style={{ display: 'inline-flex' }}>عرض القائمة</Link>
+                )}
+              </>
+            )}
           </article>
         </div>
       </div>
