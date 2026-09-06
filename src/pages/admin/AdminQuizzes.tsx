@@ -449,7 +449,7 @@ export default function AdminQuizzes() {
                     {expanded === quiz.id && (
                       <tr>
                         <td colSpan={isQuizManager ? 6 : 8} style={{ background: '#fbf9fd' }}>
-                          <div style={{ padding: '10px 4px', display: 'grid', gap: 10 }}>
+                          <div style={{ padding: '10px 4px', display: 'grid', gap: 8 }}>
                             {!questions[quiz.id] || questions[quiz.id].length === 0 ? (
                               <div className="empty-state">لا توجد أسئلة بعد — اضغط "+ سؤال" لإضافة أسئلة</div>
                             ) : questions[quiz.id].map((q, i) => (
@@ -462,7 +462,7 @@ export default function AdminQuizzes() {
                                     <button type="button" onClick={() => deleteQuestion(q.id, quiz.id)} aria-label="حذف السؤال"><Trash2 size={13} /></button>
                                   </div>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 6, marginTop: 8 }}>
                                   {(['a', 'b', 'c', 'd'] as const).map((opt) => (
                                     <div key={opt} className={`adm-option${q.correct_answer === opt ? ' correct' : ''}`}>
                                       {optionLabels[opt]}{q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] ? `) ${q[`option_${opt}`]}` : ''}
