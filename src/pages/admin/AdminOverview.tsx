@@ -60,6 +60,7 @@ export default function AdminOverview() {
   const [slices, setSlices] = useState<SliceDatum[]>([])
   const [performanceScore, setPerformanceScore] = useState(0)
   const [chartStyle, setChartStyle] = useState<'bars' | 'area'>('bars')
+  const [subscribers, setSubscribers] = useState({ total: 0, web: 0, apple: 0, google: 0 })
 
   useEffect(() => {
     async function load() {
@@ -68,7 +69,7 @@ export default function AdminOverview() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-      const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes] = await Promise.all([
+      const [studentsRes, coursesRes, lessonsRes, quizzesRes, paidRes, progressRes, recentRes, quizzesRecentRes, resultsRes, activeRes, storeRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('courses').select('id, parent_course_id').eq('is_published', true),
         supabase.from('lessons').select('id', { count: 'exact', head: true }),
@@ -78,6 +79,8 @@ export default function AdminOverview() {
         supabase.from('enrollments').select('id, enrolled_at, profiles(full_name), courses(title)').eq('payment_status', 'paid').order('enrolled_at', { ascending: false }).limit(5),
         supabase.from('quizzes').select('id, title, created_at, courses(title)').order('created_at', { ascending: false }).limit(3),
         supabase.from('quiz_results').select('quiz_id, passed'),
+        supabase.from('enrollments').select('student_id, expires_at').eq('payment_status', 'paid'),
+        supabase.from('store_subscriptions').select('student_id, platform, status, current_period_end'),
       ])
 
       // --- monthly revenue buckets (last 6 months) ---
@@ -146,6 +149,31 @@ export default function AdminOverview() {
       // --- performance score from quiz pass rate ---
       const results = resultsRes.data || []
       const passRate = results.length ? Math.round((results.filter((r: any) => r.passed).length / results.length) * 100) : 0
+
+      // --- المشتركون الحاليون: اشتراك مدفوع سارٍ، موزّعون حسب مصدر الشراء ---
+      const nowMs = now.getTime()
+      const activeStudents = new Set<string>()
+      ;(activeRes.data || []).forEach((e: any) => {
+        if (!e.student_id) return
+        if (e.expires_at && new Date(e.expires_at).getTime() <= nowMs) return
+        activeStudents.add(e.student_id)
+      })
+      const appleStudents = new Set<string>()
+      const googleStudents = new Set<string>()
+      ;(storeRes.data || []).forEach((sub: any) => {
+        if (!sub.student_id || sub.status !== 'active') return
+        if (sub.current_period_end && new Date(sub.current_period_end).getTime() <= nowMs) return
+        if (!activeStudents.has(sub.student_id)) return
+        if (sub.platform === 'apple') appleStudents.add(sub.student_id)
+        else if (sub.platform === 'google') googleStudents.add(sub.student_id)
+      })
+      const storeStudents = new Set<string>([...appleStudents, ...googleStudents])
+      setSubscribers({
+        total: activeStudents.size,
+        web: [...activeStudents].filter((id) => !storeStudents.has(id)).length,
+        apple: appleStudents.size,
+        google: googleStudents.size,
+      })
 
       setStats({
         students: studentsRes.count || 0,
@@ -397,6 +425,38 @@ export default function AdminOverview() {
                   <div className="completion-track"><i style={{ width: `${c.pct}%` }} /></div>
                 </div>
               ))
+            )}
+          </article>
+
+          <article className="admin-card completion-card">
+            <h3>الطلاب المشتركون</h3>
+            <p>اشتراك سارٍ الآن، حسب مصدر الشراء</p>
+            {loading ? <Spinner /> : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '10px 0 14px' }}>
+                  <span style={{ fontSize: 34, fontWeight: 900, color: '#221a33', lineHeight: 1 }}>{subscribers.total.toLocaleString('en')}</span>
+                  <span style={{ fontSize: 14, color: '#93889b', fontWeight: 700 }}>من {stats.students.toLocaleString('en')} طالب مسجّل</span>
+                </div>
+                {subscribers.total === 0 ? (
+                  <div className="empty-state">لا يوجد اشتراك سارٍ حاليًا</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {([
+                      { label: 'من الموقع', value: subscribers.web, color: '#8739db' },
+                      { label: 'App Store', value: subscribers.apple, color: '#249a6a' },
+                      { label: 'Google Play', value: subscribers.google, color: '#c17a12' },
+                    ]).map((row) => (
+                      <div key={row.label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#221a33', marginBottom: 5 }}>
+                          <span>{row.value.toLocaleString('en')}</span>
+                          <span style={{ color: '#6f6378' }}>{row.label}</span>
+                        </div>
+                        <div className="completion-track"><i style={{ width: `${Math.round((row.value / subscribers.total) * 100)}%`, background: row.color }} /></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </article>
         </div>
