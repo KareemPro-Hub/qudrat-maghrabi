@@ -443,7 +443,7 @@ export default function AdminOverview() {
                   <div style={{ display: 'grid', gap: 10 }}>
                     {([
                       { label: 'من الموقع', value: subscribers.web, color: '#8739db' },
-                      { label: 'App Store', value: subscribers.apple, color: '#249a6a' },
+                      { label: 'App Store', value: subscribers.apple, color: '#0071E3' },
                       { label: 'Google Play', value: subscribers.google, color: '#c17a12' },
                     ]).map((row) => (
                       <div key={row.label}>
