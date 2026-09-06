@@ -449,7 +449,7 @@ export default function AdminQuizzes() {
                     {expanded === quiz.id && (
                       <tr>
                         <td colSpan={isQuizManager ? 6 : 8} style={{ background: '#fbf9fd' }}>
-                          <div style={{ padding: '10px 4px', display: 'grid', gap: 8 }}>
+                          <div style={{ padding: '10px 4px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 8, alignItems: 'start' }}>
                             {!questions[quiz.id] || questions[quiz.id].length === 0 ? (
                               <div className="empty-state">لا توجد أسئلة بعد — اضغط "+ سؤال" لإضافة أسئلة</div>
                             ) : questions[quiz.id].map((q, i) => (
