@@ -462,7 +462,7 @@ export default function AdminQuizzes() {
                                     <button type="button" onClick={() => deleteQuestion(q.id, quiz.id)} aria-label="حذف السؤال"><Trash2 size={13} /></button>
                                   </div>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 6, marginTop: 8 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(64px, 1fr))', gap: 5, marginTop: 6 }}>
                                   {(['a', 'b', 'c', 'd'] as const).map((opt) => (
                                     <div key={opt} className={`adm-option${q.correct_answer === opt ? ' correct' : ''}`}>
                                       {optionLabels[opt]}{q[`option_${opt}`] && q[`option_${opt}`] !== optionLabels[opt] ? `) ${q[`option_${opt}`]}` : ''}
