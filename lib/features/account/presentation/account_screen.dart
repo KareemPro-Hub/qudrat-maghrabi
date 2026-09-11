@@ -1158,7 +1158,12 @@ Future<void> _openStoreSubscriptions(BuildContext context) async {
           'https://play.google.com/store/account/subscriptions'
           '?package=com.qudratmaghrabi.app',
         );
-  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  var opened = false;
+  try {
+    opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    opened = false;
+  }
   if (!opened && context.mounted) {
     _showError(context, 'تعذّر فتح إدارة الاشتراك. حاول مرة أخرى.');
   }
@@ -1658,9 +1663,14 @@ void _openDocument(
 
 Future<void> _launch(BuildContext context, String value) async {
   final uri = Uri.tryParse(value);
-  if (uri != null && await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-    return;
+  try {
+    if (uri != null &&
+        await canLaunchUrl(uri) &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      return;
+    }
+  } catch (_) {
+    // نكمل لرسالة التعذّر بالأسفل.
   }
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(

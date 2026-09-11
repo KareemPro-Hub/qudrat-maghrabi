@@ -239,7 +239,11 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
               );
             }
             if (snapshot.hasError) {
-              return _AttemptError(message: snapshot.error.toString());
+              return _AttemptError(
+                message: snapshot.error is QuizFailure
+                    ? snapshot.error.toString()
+                    : 'تعذّر تحميل أسئلة الاختبار. تأكد من الإنترنت وحاول مرة أخرى',
+              );
             }
             final questions = snapshot.data ?? const [];
             if (questions.isEmpty) {
@@ -381,8 +385,11 @@ class _QuestionView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () async {
                   final uri = Uri.tryParse(question.linkUrl!);
-                  if (uri != null) {
+                  if (uri == null) return;
+                  try {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (_) {
+                    // لا نُسقط الاختبار لو تعذّر فتح الرابط المرفق.
                   }
                 },
                 icon: const Icon(Icons.open_in_new_rounded, size: 18),

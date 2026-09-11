@@ -138,8 +138,14 @@ class _ReportProblemSheetState extends State<_ReportProblemSheet> {
       'https://wa.me/${AppMetadata.supportWhatsappNumber}'
       '?text=${Uri.encodeComponent(message)}',
     );
-    final canOpen = await canLaunchUrl(uri);
-    final opened = canOpen && await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      opened =
+          await canLaunchUrl(uri) &&
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
     if (!mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(

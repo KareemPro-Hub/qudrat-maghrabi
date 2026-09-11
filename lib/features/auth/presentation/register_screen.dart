@@ -111,7 +111,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _openLegalPage(String path) async {
     final uri = Uri.parse('https://www.qudratmaghrabi.com/$path');
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
     if (!opened && mounted) {
       _showMessage('تعذّر فتح الصفحة الآن', isError: true);
     }

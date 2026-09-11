@@ -218,6 +218,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       );
   }
 
+  /// نسبة تُعتبر عندها المشاهدة مكتملة. الفيديو كثيرًا ما يتوقف قبل الثانية
+  /// الأخيرة فلا يصل حدث الانتهاء، فيظل الدرس "غير مكتمل" رغم مشاهدته كاملًا.
+  static const int _completionThreshold = 95;
+
   void _onPlaybackProgress(double seconds, double duration) {
     if (duration <= 0) return;
     _durationSeconds = math.max(_durationSeconds, duration);
@@ -229,7 +233,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
       _lastSavedMilestone = milestone;
       _saveProgress(
         milestone,
-        completed: false,
+        completed: milestone >= _completionThreshold,
         positionSeconds: _latestSeconds.round(),
         durationSeconds: _durationSeconds.round(),
       );
@@ -239,7 +243,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   Future<void> _saveCurrentPosition() {
     return _saveProgress(
       _latestPercentage,
-      completed: false,
+      completed: _latestPercentage >= _completionThreshold,
       positionSeconds: _latestSeconds.round(),
       durationSeconds: _durationSeconds.round(),
     );
@@ -340,7 +344,12 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   Future<void> _close() async {
     if (_closing) return;
     _closing = true;
-    await _saveCurrentPosition();
+    // مهلة قصيرة: على شبكة بطيئة كان زر الرجوع يتجمّد إلى أن ينتهي الحفظ.
+    // الحفظ يكمل في الخلفية، والمحاولة التالية تلتقط الموضع على أي حال.
+    await _saveCurrentPosition().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {},
+    );
     if (!mounted) return;
     setState(() => _allowPop = true);
     Navigator.of(context).pop();

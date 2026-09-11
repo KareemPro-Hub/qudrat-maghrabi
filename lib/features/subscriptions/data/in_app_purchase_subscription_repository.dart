@@ -182,7 +182,13 @@ class InAppPurchaseSubscriptionRepository implements SubscriptionRepository {
         '?package=com.qudratmaghrabi.app',
       ),
     };
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened) {
       _emitError('تعذّر فتح إدارة الاشتراك. حاول مرة أخرى.');
     }
   }

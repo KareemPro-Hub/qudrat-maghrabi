@@ -75,7 +75,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Future<void> _openUpdateLink(AppUpdateInfo update) async {
     final uri = Uri.tryParse(update.url);
     if (uri == null) return;
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
     if (!opened && mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()

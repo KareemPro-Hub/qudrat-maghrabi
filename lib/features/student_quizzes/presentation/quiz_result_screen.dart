@@ -62,7 +62,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  snapshot.error?.toString() ?? 'تعذّر تحميل المراجعة',
+                  snapshot.error is QuizFailure
+                      ? snapshot.error.toString()
+                      : 'تعذّر تحميل المراجعة. تأكد من الإنترنت وحاول مرة أخرى',
                   textAlign: TextAlign.center,
                 ),
               ),

@@ -236,12 +236,16 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
   }
 
   Map<String, String> _options(Map<String, dynamic> row) {
-    return {
+    // السؤال قد يكون بثلاثة خيارات فقط؛ الخيار الفارغ كان يظهر للطالب كخيار
+    // رابع بلا نص. نُسقط أي خيار فارغ بدل عرضه.
+    final options = <String, String>{
       'a': _text(row['option_a']) ?? '',
       'b': _text(row['option_b']) ?? '',
       'c': _text(row['option_c']) ?? '',
       'd': _text(row['option_d']) ?? '',
     };
+    options.removeWhere((_, value) => value.trim().isEmpty);
+    return options;
   }
 
   List<Map<String, dynamic>> _rows(dynamic value) {
