@@ -1358,7 +1358,9 @@ class _UpdateBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final versionLabel = update.version.isEmpty ? '' : ' ${update.version}';
+    final versionLabel = update.version.isEmpty
+        ? ''
+        : ' — النسخة ${update.version}';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
@@ -1395,7 +1397,7 @@ class _UpdateBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'نزّل النسخة الأحدث للحصول على آخر التحسينات.',
+                  'يُنصح بالتحديث لضمان عمل الدروس والاختبارات بأفضل صورة.',
                   style: TextStyle(
                     color: QmColors.textSecondary,
                     fontSize: 12,
@@ -1408,7 +1410,7 @@ class _UpdateBanner extends StatelessWidget {
           TextButton(
             key: const Key('app-update-button'),
             onPressed: onUpdate,
-            child: const Text('تحديث'),
+            child: const Text('حدّث الآن'),
           ),
           IconButton(
             key: const Key('app-update-dismiss'),
