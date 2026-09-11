@@ -291,7 +291,7 @@ class _SubscriptionHero extends StatelessWidget {
                   active
                       ? Icons.verified_rounded
                       : Icons.workspace_premium_rounded,
-                  color: active ? Colors.white : QmColors.purple,
+                  color: active ? Colors.white : QmColors.accent,
                   size: 31,
                 ),
               ),

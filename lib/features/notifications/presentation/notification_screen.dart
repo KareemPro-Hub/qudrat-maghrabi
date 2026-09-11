@@ -105,7 +105,7 @@ class _NotificationCard extends StatelessWidget {
       'payment' => (Icons.workspace_premium_rounded, QmColors.pink),
       'success' => (Icons.check_circle_rounded, QmColors.success),
       'warning' => (Icons.warning_amber_rounded, const Color(0xFFB97800)),
-      'enrollment' => (Icons.school_rounded, QmColors.purple),
+      'enrollment' => (Icons.school_rounded, QmColors.accent),
       _ => (Icons.notifications_rounded, QmColors.deepPurple),
     };
     return Container(

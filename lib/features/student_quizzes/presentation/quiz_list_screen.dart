@@ -414,8 +414,8 @@ class _QuizCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: result.passed
-                            ? const Color(0xFFE6FAF1)
-                            : const Color(0xFFFFEEF0),
+                            ? QmColors.successTint
+                            : QmColors.errorTint,
                         borderRadius: BorderRadius.circular(99),
                       ),
                       child: Text(
@@ -496,7 +496,7 @@ class _QuizMeta extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: QmColors.purple),
+        Icon(icon, size: 17, color: QmColors.accent),
         const SizedBox(width: 4),
         Text(
           label,
@@ -528,9 +528,9 @@ class _EmptyQuizzesCard extends StatelessWidget {
               color: QmColors.lavender,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.assignment_outlined,
-              color: QmColors.purple,
+              color: QmColors.accent,
               size: 38,
             ),
           ),

@@ -471,7 +471,7 @@ class _SubscriptionStatusCard extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   gradient: active ? null : QmGradients.brand,
-                  color: active ? const Color(0xFFE6FAF1) : null,
+                  color: active ? QmColors.successTint : null,
                   borderRadius: BorderRadius.circular(17),
                 ),
                 child: Icon(
@@ -505,9 +505,9 @@ class _SubscriptionStatusCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: QmColors.purple,
+                color: QmColors.accent,
                 size: 18,
               ),
             ],
@@ -680,7 +680,7 @@ class _FreeCourseSurpriseCard extends StatelessWidget {
                         vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE5FFF3),
+                        color: QmColors.successTint,
                         borderRadius: BorderRadius.circular(99),
                         boxShadow: const [
                           BoxShadow(color: Color(0x22000000), blurRadius: 12),
@@ -809,8 +809,8 @@ class _SectionTitle extends StatelessWidget {
             ),
             child: Text(
               trailing!,
-              style: const TextStyle(
-                color: QmColors.purple,
+              style: TextStyle(
+                color: QmColors.accent,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
@@ -981,9 +981,9 @@ class _CourseCard extends StatelessWidget {
                             const SizedBox(height: 10),
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.menu_book_rounded,
-                                  color: QmColors.purple,
+                                  color: QmColors.accent,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 5),
@@ -1077,8 +1077,8 @@ class _CourseTypeLabel extends StatelessWidget {
     final isFree = course.isFree;
     final label = isFree ? 'كورس مجاني' : 'كورس مدفوع';
     final background = isFree
-        ? const Color(0xFFE6FAF1)
-        : const Color(0xFFFFEEF5);
+        ? QmColors.successTint
+        : QmColors.pinkTint;
     final foreground = isFree ? QmColors.success : QmColors.pink;
 
     return Container(
@@ -1150,9 +1150,9 @@ class _CourseImage extends StatelessWidget {
             height: height,
             color: QmColors.lavender,
             alignment: Alignment.center,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: QmColors.purple,
+              color: QmColors.accent,
             ),
           );
         },
@@ -1219,7 +1219,7 @@ class _GlassNavigationBar extends StatelessWidget {
                           Icon(
                             item.$1,
                             color: selected
-                                ? QmColors.purple
+                                ? QmColors.accent
                                 : QmColors.textSecondary,
                             size: 24,
                           ),
@@ -1228,7 +1228,7 @@ class _GlassNavigationBar extends StatelessWidget {
                             item.$2,
                             style: TextStyle(
                               color: selected
-                                  ? QmColors.purple
+                                  ? QmColors.accent
                                   : QmColors.textSecondary,
                               fontSize: 11,
                               fontWeight: selected
@@ -1325,9 +1325,9 @@ class _EmptyCoursesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: QmColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.auto_stories_outlined, size: 44, color: QmColors.purple),
+          Icon(Icons.auto_stories_outlined, size: 44, color: QmColors.accent),
           SizedBox(height: 12),
           Text(
             'لا توجد كورسات منشورة حاليًا',

@@ -101,9 +101,9 @@ class _ReadOnlyNotice extends StatelessWidget {
         color: QmColors.lavender,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.verified_user_outlined, color: QmColors.purple),
+          Icon(Icons.verified_user_outlined, color: QmColors.accent),
           SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -145,8 +145,8 @@ class _HistoryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: result.passed
-                  ? const Color(0xFFE6FAF1)
-                  : const Color(0xFFFFEEF2),
+                  ? QmColors.successTint
+                  : QmColors.errorTint,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
@@ -231,7 +231,7 @@ class _HistoryMessage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 54, color: QmColors.purple),
+            Icon(icon, size: 54, color: QmColors.accent),
             const SizedBox(height: 14),
             Text(
               title,

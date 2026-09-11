@@ -243,9 +243,9 @@ class _BiometricLockScreen extends StatelessWidget {
             children: [
               Image.asset('assets/brand/qudrat_maghrabi_logo.png', width: 128),
               const SizedBox(height: 28),
-              const Icon(
+              Icon(
                 Icons.fingerprint_rounded,
-                color: QmColors.purple,
+                color: QmColors.accent,
                 size: 58,
               ),
               const SizedBox(height: 14),

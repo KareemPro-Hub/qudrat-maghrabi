@@ -177,9 +177,9 @@ class _CourseOverviewScreenState extends State<CourseOverviewScreen> {
                           content.freePreviewLessonsCount > 0,
                     ),
                     const Spacer(),
-                    const Icon(
+                    Icon(
                       Icons.play_lesson_rounded,
-                      color: QmColors.purple,
+                      color: QmColors.accent,
                       size: 20,
                     ),
                     const SizedBox(width: 6),
@@ -300,7 +300,7 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: isFree ? const Color(0xFFE6FAF1) : const Color(0xFFFFEEF5),
+        color: isFree ? QmColors.successTint : QmColors.pinkTint,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
@@ -388,8 +388,8 @@ class _ProgressCard extends StatelessWidget {
               ),
               Text(
                 '${content.progressPercent}%',
-                style: const TextStyle(
-                  color: QmColors.purple,
+                style: TextStyle(
+                  color: QmColors.accent,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -461,8 +461,8 @@ class _ChapterCardState extends State<_ChapterCard> {
                     ),
                     child: Text(
                       widget.chapterNumber.toString().padLeft(2, '0'),
-                      style: const TextStyle(
-                        color: QmColors.purple,
+                      style: TextStyle(
+                        color: QmColors.accent,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -601,7 +601,7 @@ class _LessonTile extends StatelessWidget {
               Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 16,
-                color: canOpen ? QmColors.purple : QmColors.textMuted,
+                color: canOpen ? QmColors.accent : QmColors.textMuted,
               ),
           ],
         ),
@@ -687,7 +687,7 @@ class _NoLessonsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.auto_stories_rounded, color: QmColors.purple, size: 44),
+          Icon(Icons.auto_stories_rounded, color: QmColors.accent, size: 44),
           SizedBox(height: 12),
           Text(
             'يتم تجهيز دروس هذا الكورس',

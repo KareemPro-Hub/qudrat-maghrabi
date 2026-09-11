@@ -130,9 +130,9 @@ class _LessonFileCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
+              Icon(
                 Icons.download_rounded,
-                color: QmColors.purple,
+                color: QmColors.accent,
               ),
             ],
           ),
@@ -178,7 +178,7 @@ class _FilesErrorCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_rounded, color: QmColors.purple, size: 34),
+          Icon(Icons.cloud_off_rounded, color: QmColors.accent, size: 34),
           const SizedBox(height: 10),
           Text(
             message,

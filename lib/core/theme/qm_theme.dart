@@ -11,7 +11,7 @@ abstract final class QmTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: QmColors.purple,
       brightness: brightness,
-      primary: QmColors.purple,
+      primary: isDark ? const Color(0xFFB98CF5) : QmColors.purple,
       secondary: QmColors.pink,
       surface: isDark ? const Color(0xFF1B1426) : const Color(0xFFFFFFFF),
       error: QmColors.error,

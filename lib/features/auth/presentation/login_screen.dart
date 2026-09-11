@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
@@ -61,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
         identifier: _emailController.text,
         password: _passwordController.text,
       );
+      TextInput.finishAutofillContext();
       if (!mounted) return;
       widget.onSignedIn(profile);
     } on AuthFailure catch (failure) {
@@ -76,204 +78,206 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: const [SupportIconButton()],
-      ),
-      body: DecoratedBox(
-        decoration: BoxDecoration(gradient: QmGradients.softBackground),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth <= 0 || constraints.maxHeight <= 0) {
-                return const SizedBox.shrink();
-              }
-
-              return SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 22,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight > 44
-                        ? constraints.maxHeight - 44
-                        : 0,
+    return AutofillGroup(
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          actions: const [SupportIconButton()],
+        ),
+        body: DecoratedBox(
+          decoration: BoxDecoration(gradient: QmGradients.softBackground),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth <= 0 || constraints.maxHeight <= 0) {
+                  return const SizedBox.shrink();
+                }
+  
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 22,
                   ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 430),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _BrandHeader(
-                              logoWidth: constraints.maxWidth < 380 ? 138 : 154,
-                            ),
-                            const SizedBox(height: 28),
-                            TextFormField(
-                              key: const Key('email-input'),
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              autofillHints: const [AutofillHints.email],
-                              decoration: const InputDecoration(
-                                hintText: 'البريد الإلكتروني',
-                                prefixIcon: Icon(Icons.mail_outline_rounded),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight > 44
+                          ? constraints.maxHeight - 44
+                          : 0,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 430),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _BrandHeader(
+                                logoWidth: constraints.maxWidth < 380 ? 138 : 154,
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'أدخل البريد الإلكتروني';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 14),
-                            TextFormField(
-                              key: const Key('password-input'),
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              textInputAction: TextInputAction.done,
-                              autofillHints: const [AutofillHints.password],
-                              onFieldSubmitted: (_) => _submit(),
-                              decoration: InputDecoration(
-                                hintText: 'كلمة المرور',
-                                prefixIcon: const Icon(
-                                  Icons.lock_outline_rounded,
+                              const SizedBox(height: 28),
+                              TextFormField(
+                                key: const Key('email-input'),
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.email],
+                                decoration: const InputDecoration(
+                                  hintText: 'البريد الإلكتروني',
+                                  prefixIcon: Icon(Icons.mail_outline_rounded),
                                 ),
-                                suffixIcon: IconButton(
-                                  key: const Key('toggle-password'),
-                                  tooltip: _obscurePassword
-                                      ? 'إظهار كلمة المرور'
-                                      : 'إخفاء كلمة المرور',
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'أدخل البريد الإلكتروني';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+                              TextFormField(
+                                key: const Key('password-input'),
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                textInputAction: TextInputAction.done,
+                                autofillHints: const [AutofillHints.password],
+                                onFieldSubmitted: (_) => _submit(),
+                                decoration: InputDecoration(
+                                  hintText: 'كلمة المرور',
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline_rounded,
                                   ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'أدخل كلمة المرور';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: InkWell(
-                                    key: const Key('remember-me'),
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () {
+                                  suffixIcon: IconButton(
+                                    key: const Key('toggle-password'),
+                                    tooltip: _obscurePassword
+                                        ? 'إظهار كلمة المرور'
+                                        : 'إخفاء كلمة المرور',
+                                    onPressed: () {
                                       setState(() {
-                                        _rememberMe = !_rememberMe;
+                                        _obscurePassword = !_obscurePassword;
                                       });
                                     },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Checkbox(
-                                          value: _rememberMe,
-                                          activeColor: QmColors.pink,
-                                          side: BorderSide(
-                                            color: QmColors.border,
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'أدخل كلمة المرور';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: InkWell(
+                                      key: const Key('remember-me'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () {
+                                        setState(() {
+                                          _rememberMe = !_rememberMe;
+                                        });
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Checkbox(
+                                            value: _rememberMe,
+                                            activeColor: QmColors.pink,
+                                            side: BorderSide(
+                                              color: QmColors.border,
+                                            ),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _rememberMe = value ?? false;
+                                              });
+                                            },
                                           ),
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _rememberMe = value ?? false;
-                                            });
-                                          },
-                                        ),
-                                        Text(
-                                          'تذكرني',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: QmColors.textSecondary,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                TextButton(
-                                  key: const Key('forgot-password-button'),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) => ForgotPasswordScreen(
-                                          authRepository: widget.authRepository,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text('نسيت كلمة المرور ؟'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            QmGradientButton(
-                              key: const Key('login-button'),
-                              label: 'تسجيل الدخول',
-                              isLoading: _isSubmitting,
-                              onPressed: _isSubmitting ? null : _submit,
-                            ),
-                            const SizedBox(height: 22),
-                            const _OrDivider(),
-                            const SizedBox(height: 12),
-                            TextButton(
-                              key: const Key('create-account-button'),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => RegisterScreen(
-                                      authRepository: widget.authRepository,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Text.rich(
-                                TextSpan(
-                                  text: 'ليس لديك حساب ؟ ',
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: QmColors.textSecondary),
-                                  children: const [
-                                    TextSpan(
-                                      text: 'إنشاء حساب',
-                                      style: TextStyle(
-                                        color: QmColors.pink,
-                                        fontWeight: FontWeight.w700,
+                                          Text(
+                                            'تذكرني',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: QmColors.textSecondary,
+                                                ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                  TextButton(
+                                    key: const Key('forgot-password-button'),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ForgotPasswordScreen(
+                                            authRepository: widget.authRepository,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text('نسيت كلمة المرور ؟'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              QmGradientButton(
+                                key: const Key('login-button'),
+                                label: 'تسجيل الدخول',
+                                isLoading: _isSubmitting,
+                                onPressed: _isSubmitting ? null : _submit,
+                              ),
+                              const SizedBox(height: 22),
+                              const _OrDivider(),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                key: const Key('create-account-button'),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => RegisterScreen(
+                                        authRepository: widget.authRepository,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Text.rich(
+                                  TextSpan(
+                                    text: 'ليس لديك حساب ؟ ',
+                                    style: Theme.of(context).textTheme.bodyMedium
+                                        ?.copyWith(color: QmColors.textSecondary),
+                                    children: const [
+                                      TextSpan(
+                                        text: 'إنشاء حساب',
+                                        style: TextStyle(
+                                          color: QmColors.pink,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

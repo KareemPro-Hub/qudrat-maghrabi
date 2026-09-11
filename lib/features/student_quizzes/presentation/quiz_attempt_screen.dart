@@ -422,7 +422,7 @@ class _AnswerOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFFFFF0F6) : QmColors.surfaceSoft,
+      color: selected ? QmColors.pinkTint : QmColors.surfaceSoft,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -451,7 +451,7 @@ class _AnswerOption extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: selected ? Colors.white : QmColors.purple,
+                    color: selected ? Colors.white : QmColors.accent,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -531,14 +531,14 @@ class _QuestionNavigator extends StatelessWidget {
                         color: active
                             ? null
                             : answered
-                            ? const Color(0xFFE6FAF1)
+                            ? QmColors.successTint
                             : QmColors.surfaceSoft,
                         borderRadius: BorderRadius.circular(11),
                         border: Border.all(
                           color: active
                               ? Colors.transparent
                               : answered
-                              ? const Color(0xFFBCEAD6)
+                              ? QmColors.successTintStrong
                               : QmColors.border,
                         ),
                       ),
@@ -632,7 +632,7 @@ class _TimerPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: urgent ? const Color(0xFFFFE9EC) : QmColors.lavender,
+        color: urgent ? QmColors.errorTint : QmColors.lavender,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
@@ -640,14 +640,14 @@ class _TimerPill extends StatelessWidget {
           Icon(
             Icons.timer_outlined,
             size: 16,
-            color: urgent ? QmColors.error : QmColors.purple,
+            color: urgent ? QmColors.error : QmColors.accent,
           ),
           const SizedBox(width: 5),
           Text(
             '$minutes:${remainingSeconds.toString().padLeft(2, '0')}',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              color: urgent ? QmColors.error : QmColors.purple,
+              color: urgent ? QmColors.error : QmColors.accent,
               fontWeight: FontWeight.w900,
             ),
           ),

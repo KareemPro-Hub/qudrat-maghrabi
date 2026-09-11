@@ -287,7 +287,7 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: const Icon(Icons.logout_rounded),
               label: const Text('تسجيل الخروج'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: QmColors.purple,
+                foregroundColor: QmColors.accent,
                 minimumSize: const Size.fromHeight(56),
                 side: BorderSide(color: QmColors.border),
                 shape: RoundedRectangleBorder(
@@ -637,7 +637,7 @@ class _SettingTile extends StatelessWidget {
           color: QmColors.lavender,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Icon(icon, color: QmColors.purple),
+        child: Icon(icon, color: QmColors.accent),
       ),
       title: Text(
         title,
@@ -1463,9 +1463,9 @@ class _SupportOption extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.open_in_new_rounded,
-                color: QmColors.purple,
+                color: QmColors.accent,
                 size: 20,
               ),
             ],
@@ -1582,8 +1582,10 @@ class _FormIntro extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: danger
-            ? const LinearGradient(
-                colors: [Color(0xFFFFF1F3), Color(0xFFFFE4E8)],
+            ? LinearGradient(
+                colors: QmColors.useDarkPalette
+                    ? const [Color(0xFF3A1620), Color(0xFF4A1C29)]
+                    : const [Color(0xFFFFF1F3), Color(0xFFFFE4E8)],
               )
             : QmGradients.brand,
         borderRadius: BorderRadius.circular(25),
@@ -1621,7 +1623,7 @@ InputDecoration _inputDecoration({
 }) {
   return InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: QmColors.purple),
+    prefixIcon: Icon(icon, color: QmColors.accent),
     filled: true,
     fillColor: QmColors.surface,
     border: OutlineInputBorder(

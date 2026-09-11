@@ -46,10 +46,10 @@ class SupportIconButton extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.support_agent_rounded,
                       size: 24,
-                      color: QmColors.purple,
+                      color: QmColors.accent,
                     ),
                     const SizedBox(width: 7),
                     Text(
@@ -310,7 +310,7 @@ class _SourceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected
-          ? QmColors.purple.withValues(alpha: 0.12)
+          ? QmColors.accent.withValues(alpha: 0.12)
           : QmColors.lavender,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
@@ -321,7 +321,7 @@ class _SourceChip extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? QmColors.purple : Colors.transparent,
+              color: selected ? QmColors.accent : Colors.transparent,
               width: 1.4,
             ),
           ),
@@ -330,7 +330,7 @@ class _SourceChip extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: selected ? QmColors.purple : QmColors.textSecondary,
+              color: selected ? QmColors.accent : QmColors.textSecondary,
             ),
           ),
         ),
@@ -410,7 +410,7 @@ class _ScreenshotPicker extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.add_photo_alternate_outlined,
-                      color: QmColors.purple,
+                      color: QmColors.accent,
                     ),
                     const SizedBox(height: 6),
                     Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
@@ -45,6 +46,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await widget.authRepository.updateRecoveredPassword(
         password: _passwordController.text,
       );
+      TextInput.finishAutofillContext();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -80,90 +82,92 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: AuthFlowScaffold(
-        showBackButton: false,
-        title: 'عيّن كلمة مرور جديدة',
-        subtitle: 'اختر كلمة قوية لا تقل عن 8 أحرف',
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                key: const Key('new-password-input'),
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.newPassword],
-                decoration: InputDecoration(
-                  labelText: 'كلمة المرور الجديدة',
-                  prefixIcon: const Icon(Icons.lock_outline_rounded),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() => _obscurePassword = !_obscurePassword);
-                    },
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+    return AutofillGroup(
+      child: PopScope(
+        canPop: false,
+        child: AuthFlowScaffold(
+          showBackButton: false,
+          title: 'عيّن كلمة مرور جديدة',
+          subtitle: 'اختر كلمة قوية لا تقل عن 8 أحرف',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  key: const Key('new-password-input'),
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  decoration: InputDecoration(
+                    labelText: 'كلمة المرور الجديدة',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
                     ),
                   ),
+                  validator: (value) {
+                    if ((value ?? '').length < 8) {
+                      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if ((value ?? '').length < 8) {
-                    return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                key: const Key('confirm-new-password-input'),
-                controller: _confirmController,
-                obscureText: _obscureConfirmation,
-                textInputAction: TextInputAction.done,
-                autofillHints: const [AutofillHints.newPassword],
-                onFieldSubmitted: (_) => _submit(),
-                decoration: InputDecoration(
-                  labelText: 'تأكيد كلمة المرور الجديدة',
-                  prefixIcon: const Icon(Icons.lock_reset_rounded),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(
-                        () => _obscureConfirmation = !_obscureConfirmation,
-                      );
-                    },
-                    icon: Icon(
-                      _obscureConfirmation
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                const SizedBox(height: 14),
+                TextFormField(
+                  key: const Key('confirm-new-password-input'),
+                  controller: _confirmController,
+                  obscureText: _obscureConfirmation,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onFieldSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    labelText: 'تأكيد كلمة المرور الجديدة',
+                    prefixIcon: const Icon(Icons.lock_reset_rounded),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(
+                          () => _obscureConfirmation = !_obscureConfirmation,
+                        );
+                      },
+                      icon: Icon(
+                        _obscureConfirmation
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
                     ),
                   ),
+                  validator: (value) {
+                    if (value != _passwordController.text) {
+                      return 'كلمتا المرور غير متطابقتين';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value != _passwordController.text) {
-                    return 'كلمتا المرور غير متطابقتين';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 22),
-              QmGradientButton(
-                key: const Key('update-password-button'),
-                label: 'حفظ كلمة المرور',
-                icon: Icons.check_rounded,
-                isLoading: _submitting,
-                onPressed: _submitting ? null : _submit,
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                key: const Key('cancel-password-recovery-button'),
-                onPressed: _submitting ? null : widget.onCancelled,
-                child: const Text('إلغاء والعودة لتسجيل الدخول'),
-              ),
-            ],
+                const SizedBox(height: 22),
+                QmGradientButton(
+                  key: const Key('update-password-button'),
+                  label: 'حفظ كلمة المرور',
+                  icon: Icons.check_rounded,
+                  isLoading: _submitting,
+                  onPressed: _submitting ? null : _submit,
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  key: const Key('cancel-password-recovery-button'),
+                  onPressed: _submitting ? null : widget.onCancelled,
+                  child: const Text('إلغاء والعودة لتسجيل الدخول'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

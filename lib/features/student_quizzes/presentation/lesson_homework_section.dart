@@ -213,7 +213,7 @@ class _HomeworkMessageCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: QmColors.purple, size: 34),
+          Icon(icon, color: QmColors.accent, size: 34),
           const SizedBox(height: 10),
           Text(
             title,

@@ -183,16 +183,18 @@ class _ResultHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: passed
-            ? const LinearGradient(
-                colors: [Color(0xFFE9FBF3), Color(0xFFD7F6E8)],
-              )
-            : const LinearGradient(
-                colors: [Color(0xFFFFF0F3), Color(0xFFFFE1E7)],
-              ),
+        gradient: LinearGradient(
+          colors: passed
+              ? (QmColors.useDarkPalette
+                    ? const [Color(0xFF10301F), Color(0xFF16412A)]
+                    : const [Color(0xFFE9FBF3), Color(0xFFD7F6E8)])
+              : (QmColors.useDarkPalette
+                    ? const [Color(0xFF3A1620), Color(0xFF4A1C29)]
+                    : const [Color(0xFFFFF0F3), Color(0xFFFFE1E7)]),
+        ),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: passed ? const Color(0xFFBCEAD6) : const Color(0xFFFFC5CF),
+          color: passed ? QmColors.successTintStrong : QmColors.errorTintStrong,
         ),
       ),
       child: Column(
@@ -231,7 +233,7 @@ class _ResultHero extends StatelessWidget {
               _ScoreValue(
                 value: '${review.result.score}',
                 label: 'درجتك',
-                color: QmColors.purple,
+                color: QmColors.accent,
               ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 18),
@@ -329,7 +331,7 @@ class _ReviewQuestionCard extends StatelessWidget {
         color: QmColors.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: correct ? const Color(0xFFBCEAD6) : const Color(0xFFFFC5CF),
+          color: correct ? QmColors.successTintStrong : QmColors.errorTintStrong,
         ),
       ),
       child: Column(
@@ -381,8 +383,8 @@ class _ReviewQuestionCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: entry.key == question.correctAnswer
-                      ? const Color(0xFFE6FAF1)
-                      : const Color(0xFFFFEEF0),
+                      ? QmColors.successTint
+                      : QmColors.errorTint,
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Text(
