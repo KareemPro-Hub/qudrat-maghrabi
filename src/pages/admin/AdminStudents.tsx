@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { MessageSquare, Ban, UserCheck, BookOpen, X, UserPlus, Copy, Check, RefreshCw } from 'lucide-react'
+import { MessageSquare, Ban, UserCheck, BookOpen, X, UserPlus, Copy, Check, RefreshCw, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal, avatarClass, initials } from '../../components/admin/lightKit'
@@ -88,6 +88,10 @@ export default function AdminStudents() {
   const [createdStudent, setCreatedStudent] = useState<{ email: string; password: string } | null>(null)
   const [copiedCreds, setCopiedCreds] = useState(false)
 
+  const [deleteTarget, setDeleteTarget] = useState<StudentRow | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
   useEffect(() => { load() }, [])
 
   useEffect(() => {
@@ -144,6 +148,39 @@ export default function AdminStudents() {
     if (error) { toast.error('حدث خطأ'); return }
     toast.success(willBan ? 'تم حظر الطالب' : 'تم إلغاء الحظر ✅')
     setStudents((prev) => prev.map((p) => (p.id === s.id ? { ...p, is_active: !willBan } : p)))
+  }
+
+  function openDelete(s: StudentRow) {
+    setDeleteTarget(s)
+    setDeleteConfirm('')
+  }
+
+  function closeDelete() {
+    if (deleting) return
+    setDeleteTarget(null)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget || deleteConfirm.trim() !== 'حذف') return
+    setDeleting(true)
+    try {
+      const { data, error } = await supabase.functions.invoke<{ success?: boolean }>('delete-student', {
+        body: { student_id: deleteTarget.id },
+      })
+      if (error) {
+        toast.error(await functionErrorMessage(error, 'تعذّر حذف الحساب. حاول مرة أخرى.'))
+        return
+      }
+      if (!data?.success) {
+        toast.error('تعذّر حذف الحساب. حاول مرة أخرى.')
+        return
+      }
+      toast.success('تم حذف الحساب وكل بياناته نهائيًا')
+      setStudents((prev) => prev.filter((p) => p.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   function openAdd() {
@@ -316,6 +353,9 @@ export default function AdminStudents() {
                         <button className="row-action" onClick={() => toggleBan(s)} style={s.is_active ? { color: '#d33b55' } : { color: '#26a879' }}>
                           {s.is_active ? <><Ban size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />حظر</> : <><UserCheck size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تفعيل</>}
                         </button>
+                        <button className="row-action" onClick={() => openDelete(s)} style={{ color: '#d33b55' }}>
+                          <Trash2 size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />حذف
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -422,6 +462,46 @@ export default function AdminStudents() {
               ))}
             </div>
           )}
+        </Modal>
+      )}
+
+      {deleteTarget && (
+        <Modal title={`حذف حساب ${deleteTarget.full_name}`} onClose={closeDelete}>
+          <div className="admin-form">
+            <p className="adm-hint" style={{ marginTop: 0, color: '#d33b55', fontWeight: 700 }}>
+              حذف نهائي لا يمكن التراجع عنه.
+            </p>
+            <p className="adm-hint" style={{ marginTop: 0 }}>
+              سيُحذف حساب <b>{deleteTarget.email}</b> ومعه كل بياناته: الاشتراكات،
+              ونتائج الاختبارات، وتقدّم الدروس، والإشعارات، ومحاولات الدفع.
+              يستطيع الطالب بعدها إنشاء حساب جديد بنفس البريد.
+            </p>
+            <p className="adm-hint" style={{ marginTop: 0 }}>
+              لو كان مشتركًا عبر App Store أو Google Play فاشتراكه في المتجر لا
+              يُلغى بالحذف — يلغيه الطالب بنفسه من إعدادات جهازه.
+            </p>
+            <label>
+              اكتب كلمة «حذف» للتأكيد
+              <input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder="حذف"
+                autoFocus
+              />
+            </label>
+            <div className="form-row">
+              <button
+                type="button"
+                className="primary-admin"
+                onClick={confirmDelete}
+                disabled={deleting || deleteConfirm.trim() !== 'حذف'}
+                style={{ background: '#d33b55' }}
+              >
+                {deleting ? 'جاري الحذف...' : 'حذف نهائيًا'}
+              </button>
+              <button type="button" className="ghost-button" onClick={closeDelete} disabled={deleting}>إلغاء</button>
+            </div>
+          </div>
         </Modal>
       )}
     </>
