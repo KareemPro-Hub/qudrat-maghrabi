@@ -25,8 +25,8 @@ type: project
 
 ### الماك بوك اير — البنية الجديدة (المعتمدة)
 ```
-التطبيق : cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App"
-المنصة  : cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/Platform"
+التطبيق : cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App"
+المنصة  : cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/Platform"
 ```
 المسار فيه مسافات وحروف عربية ⇒ **لازم علامات اقتباس دائمًا**.
 
@@ -39,7 +39,7 @@ type: project
 **ممنوع منعًا باتًا أدّي أمر `flutter` أو `npm` أو `git` مجرَّد من غير `cd` قبله في نفس السطر.**
 مثال صح:
 ```
-cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter analyze && flutter test
+cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App" && flutter analyze && flutter test
 ```
 **ليه:** في 2026-09-02 أديته `flutter analyze && flutter test` من غير `cd` وهو واقف في `~`، فالأمر فضل شغّال **نص ساعة** بيفحص مجلد المستخدم كله وضاع وقته. علامة الغلط: `Analyzing KareemMac...` بدل اسم مجلد المشروع.
 **القاعدة الأعم:** أي أمر أديه له لازم يكون **جاهز للّصق ويشتغل من أي مكان** — مسارات كاملة ولا افتراضات عن مكانه.

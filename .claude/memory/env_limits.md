@@ -7,13 +7,18 @@ type: project
 ## 🔴 مسارات المشروع — قاعدة إلزامية
 **تحقّق من `connectedFolders` أول الجلسة لتعرف على أي جهاز أنت.**
 
-### الماك بوك اير — البنية الجديدة (المعتمدة)
+### الماك بوك اير — المسار المعتمد (اتغيّر 2026-09-14)
 ```
-المجلد الأساسي : /Volumes/MacBook SSD/Kareem-AI/قدرات المغربي
-التطبيق        : /Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App
-المنصة         : /Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/Platform
+المجلد الأساسي : /Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي
+التطبيق        : /Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App
+المنصة         : /Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/Platform
 ```
 المسار فيه مسافات وحروف عربية ⇒ **علامات اقتباس دائمًا**.
+
+⚠️ **المشروع كان على هارد خارجي اسمه `MacBook SSD` واتشال.** أي مسار يبدأ بـ
+`/Volumes/MacBook SSD/` في أي ملف قديم = **باطل**. لو `device_bash` قال إن
+المجلد «failed to mount»، فالمجلد الموصول لسه هو القديم — اطلب المسار الجديد
+بـ`device_request_folder_access`. و`Documents` محتاج موافقة قبل القراءة.
 
 ### الماك ميني (`kareem-mac-local`) — البنية القديمة
 ```
@@ -23,7 +28,7 @@ type: project
 
 **ممنوع منعًا باتًا أدّي لكريم أمر `flutter` أو `npm` أو `git` من غير `cd` للمجلد الصح قبله في نفس السطر.**
 ```
-cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter analyze && flutter test
+cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App" && flutter analyze && flutter test
 ```
 **ليه:** في 2026-09-02 أديته الأمر من غير `cd` وهو واقف في `~`، فظل يعمل **نص ساعة** ويفحص مجلد المستخدم كله.
 **علامة الغلط:** `Analyzing KareemMac...` بدل اسم مجلد المشروع.
@@ -33,11 +38,11 @@ cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter ana
 - الحاوية السحابية كذلك بلا dart.
 - **بناء iOS:** `./tool/build_ios_release.sh` — مش `flutter build ipa` لوحده (السكربت بيحط `--dart-define-from-file` وبيتحقق إن إعدادات Supabase دخلت البناء).
 
-### ✅ بيئة الماك بوك اير — اتثبتت كاملة 2026-09-05 (`flutter doctor` = No issues found)
+### ✅ بيئة الماك بوك اير (محدَّثة 2026-09-14)
 | | المكان |
 |---|---|
-| Flutter 3.47.2 | `/Volumes/MacBook SSD/Kareem-AI/dev/flutter` (على الهارد الخارجي) |
-| Xcode 26.6 | `/Volumes/MacBook SSD/Applications/Xcode.app` — **مش في `/Applications`** |
+| Flutter 3.47.2 | `~/development/flutter` — **أُعيد تثبيته 2026-09-14** بعد ضياع نسخة الهارد الخارجي |
+| Xcode 26.6 | كان `/Volumes/MacBook SSD/Applications/Xcode.app` — **تأكّد من مكانه بعد شيل الهارد** |
 | Android SDK 36 | `~/Library/Android/sdk` (+ `cmdline-tools/latest` اتنزّلت يدويًا) |
 | Java 17 (Temurin) | `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home` |
 | CocoaPods 1.17 · Homebrew | `/opt/homebrew` |
@@ -50,10 +55,16 @@ cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter ana
 3.47.2 بيحسب طول رسالة LSP بالحروف بدل البايتات فبتتقطع. مش مشكلة في الكود.
 **السيملينك الإنجليزي لا يحل المشكلة** (جُرّب — Flutter بيرجع للمسار الأصلي).
 ```
-cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && dart analyze
-cd "/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/App" && flutter test
+cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App" && dart analyze
+cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App" && flutter test
 ```
 `flutter test` يعمل بلا مشاكل (51 اختبارًا، كلها ناجحة 2026-09-05).
+
+### بعد نقل المشروع لمسار جديد
+`dart analyze` يرجّع آلاف الأخطاء الوهمية لأن الحزم غير محمّلة. الحل:
+```
+cd "/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/App" && flutter pub get
+```
 
 ### ملاحظات تثبيت (لو اتكرر على جهاز تاني)
 - `sudo gem install cocoapods` **بيفشل** لأن مسار Xcode فيه مسافة (`MacBook SSD`) و`make` بيتكسر. الحل: Homebrew ثم `brew install cocoapods`.

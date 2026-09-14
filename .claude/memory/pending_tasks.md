@@ -45,7 +45,7 @@ type: project
 
 **البنية النهائية المعتمدة:**
 ```
-/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/
+/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/
 ├── Platform/               ← مستودع المنصة (فرع main) — .git هنا
 ├── App/                    ← مستودع التطبيق (يتتبّع origin/flutter-app)
 └── _old_Platform_backup/   ← نسخة قديمة محفوظة، لا تُستخدم
@@ -140,7 +140,7 @@ type: project
 - حيلة قفل git وأوامر البناء الكاملة في [env_limits](env_limits.md) و[releases](releases.md).
 
 ## 🗑️ تذكير — نسخة احتياطية مؤقتة لازم تتمسح
-`/Volumes/MacBook SSD/Kareem-AI/قدرات المغربي/_old_Platform_backup/` — **878 ميجا**، بقايا إعادة ترتيب المجلدات في 2026-09-02.
+`/Users/KareemMacBook/Documents/Kareem-AI/قدرات المغربي/_old_Platform_backup/` — **878 ميجا**، بقايا إعادة ترتيب المجلدات في 2026-09-02.
 - **مفيش فيها أي حاجة مش موجودة في Git** — اتفحصت وقتها.
 - **الخطة المتفق عليها مع كريم:** بعد أسبوع (من ~2026-09-09) ولو كل حاجة ماشية تمام، يمسحها بنفسه من Finder.
 - **فكّره بيها** أول ما يسأل «إيه اللي فاضل؟» بعد التاريخ ده.
