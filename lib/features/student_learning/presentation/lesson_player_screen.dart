@@ -567,6 +567,21 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
     _prepare();
   }
 
+  /// إيقاف المشغّل وفصل قناة Playback قبل تدمير الشاشة.
+  /// بدون هذا كان iframe بَني يستمر في إرسال timeupdate بعد إغلاق الشاشة،
+  /// فيستدعي WebKit معالج الرسائل على كائن مدمَّر ويسقط التطبيق بـSIGABRT
+  /// (unowned reference ... already destroyed) — رُصد على iPad في 1.1.3.
+  @override
+  void dispose() {
+    final controller = _controller;
+    _controller = null;
+    if (controller != null) {
+      controller.removeJavaScriptChannel('Playback');
+      controller.loadRequest(Uri.parse('about:blank'));
+    }
+    super.dispose();
+  }
+
   Future<void> _prepare() async {
     final videoId = widget.lesson.videoId;
     if (videoId == null) {
@@ -632,6 +647,8 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
   }
 
   void _handlePlaybackMessage(JavaScriptMessage message) {
+    // رسالة وصلت بعد تدمير الشاشة تُتجاهل بدل أن تلمس حالة غير موجودة.
+    if (!mounted) return;
     try {
       final data = jsonDecode(message.message) as Map<String, dynamic>;
       switch (data['type']) {
