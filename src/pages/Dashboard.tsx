@@ -57,6 +57,28 @@ const BUNDLE_CHILD_NOTES: Record<string, JSX.Element> = {
   [QUESTION_BANK_COURSE_ID]: <>120 بنوك أسئلة</>,
 }
 
+/// تجميع دروس المسار داخل أبوابها بترتيب الباب ثم ترتيب الدرس.
+/// الدروس بلا باب (لو وُجدت) تُجمع في مجموعة أخيرة بلا عنوان باب حتى لا تختفي.
+function groupLessonsByChapter(lessons: any[], chaptersById: Record<string, any>) {
+  const groups: { key: string; title: string; order: number; lessons: any[] }[] = []
+  const byKey: Record<string, any> = {}
+  lessons.forEach((lesson: any) => {
+    const chapter = lesson.chapter_id ? chaptersById[lesson.chapter_id] : null
+    const key = chapter?.id || 'no-chapter'
+    if (!byKey[key]) {
+      byKey[key] = {
+        key,
+        title: chapter?.title || 'دروس أخرى',
+        order: chapter ? (chapter.order_index ?? 9998) : 9999,
+        lessons: [],
+      }
+      groups.push(byKey[key])
+    }
+    byKey[key].lessons.push(lesson)
+  })
+  return groups.sort((a, b) => a.order - b.order)
+}
+
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth()
   const navigate = useNavigate()
@@ -70,6 +92,8 @@ export default function Dashboard() {
   const [fetching, setFetching] = useState(true)
   const [toastMsg, setToastMsg] = useState<{ title: string; body: string } | null>(null)
 
+  const [chaptersById, setChaptersById] = useState<Record<string, any>>({})
+  const [openChapterIds, setOpenChapterIds] = useState<Record<string, boolean>>({})
   const [courses, setCourses] = useState<any[]>([]) // per-enrollment { enrollment, course, lessons, progressMap, completedCount, pct, currentLesson }
   const [quizResults, setQuizResults] = useState<any[]>([])
   const [upcomingQuiz, setUpcomingQuiz] = useState<any>(null)
@@ -186,11 +210,15 @@ export default function Dashboard() {
     })
     const contentCourseIds = Array.from(new Set(Object.values(contentCourseIdsByEnrollment).flat()))
 
-    const [{ data: allLessons }, { data: allProgress }, { data: allQuizzes }] = await Promise.all([
+    const [{ data: allLessons }, { data: allProgress }, { data: allQuizzes }, { data: allChapters }] = await Promise.all([
       contentCourseIds.length ? supabase.from('lessons').select('*').in('course_id', contentCourseIds).order('order_index') : Promise.resolve({ data: [] as any[] }),
       supabase.from('lesson_progress').select('*').eq('student_id', user!.id),
       contentCourseIds.length ? supabase.from('quizzes').select('*').in('course_id', contentCourseIds).eq('is_published', true) : Promise.resolve({ data: [] as any[] }),
+      contentCourseIds.length ? supabase.from('chapters').select('id, title, order_index, course_id').in('course_id', contentCourseIds).order('order_index') : Promise.resolve({ data: [] as any[] }),
     ])
+    const chapterMap: Record<string, any> = {}
+    ;(allChapters || []).forEach((ch: any) => { chapterMap[ch.id] = ch })
+    setChaptersById(chapterMap)
 
     const progressByLesson: Record<string, any> = {}
     ;(allProgress || []).forEach((p: any) => { progressByLesson[p.lesson_id] = p })
@@ -535,27 +563,56 @@ export default function Dashboard() {
                         {c.lessons.length === 0 ? (
                           <p className="course-accordion-empty">لا توجد دروس منشورة في هذا المسار بعد</p>
                         ) : (
-                          <ul className="lesson-progress-list">
-                            {c.lessons.map((lesson: any, index: number) => {
-                              const pct = lessonPct(lesson)
+                          // الدروس تُعرض داخل أبوابها: عنوان الباب ورقمه وعدد دروسه،
+                          // والباب الذي فيه الدرس الحالي يُفتح تلقائيًا.
+                          <div className="chapter-stack">
+                            {groupLessonsByChapter(c.lessons, chaptersById).map((group: any) => {
+                              const hasCurrent = group.lessons.some((l: any) => l.id === c.currentLesson?.id)
+                              const isOpen = openChapterIds[group.key] ?? hasCurrent
+                              const doneInChapter = group.lessons.filter((l: any) => lessonPct(l) === 100).length
                               return (
-                                <li key={lesson.id}>
-                                  <Link to={lessonPath(lesson)}>
-                                    <span
-                                      className="lesson-progress-ring"
-                                      style={{ background: `conic-gradient(#7c35df 0 ${pct}%, #ece5f1 ${pct}%)` }}
-                                    >
-                                      <strong>{pct}%</strong>
+                                <section className={`chapter-group${isOpen ? ' open' : ''}`} key={group.key}>
+                                  <button
+                                    type="button"
+                                    className="chapter-group-head"
+                                    aria-expanded={isOpen}
+                                    onClick={() => setOpenChapterIds((prev) => ({ ...prev, [group.key]: !isOpen }))}
+                                  >
+                                    <span className="chapter-group-title">
+                                      <b>{group.title}</b>
+                                      <small>{doneInChapter} من {group.lessons.length} درسًا مكتملًا</small>
                                     </span>
-                                    <span className="lesson-progress-info">
-                                      <b>{lesson.title}</b>
-                                      <small>الدرس {index + 1}{pct === 100 ? ' · مكتمل' : pct > 0 ? ' · قيد المتابعة' : ''}</small>
+                                    <span className="chapter-group-chevron" aria-hidden="true">
+                                      <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
                                     </span>
-                                  </Link>
-                                </li>
+                                  </button>
+                                  {isOpen && (
+                                    <ul className="lesson-progress-list">
+                                      {group.lessons.map((lesson: any, index: number) => {
+                                        const pct = lessonPct(lesson)
+                                        return (
+                                          <li key={lesson.id}>
+                                            <Link to={lessonPath(lesson)}>
+                                              <span
+                                                className="lesson-progress-ring"
+                                                style={{ background: `conic-gradient(#7c35df 0 ${pct}%, #ece5f1 ${pct}%)` }}
+                                              >
+                                                <strong>{pct}%</strong>
+                                              </span>
+                                              <span className="lesson-progress-info">
+                                                <b>{lesson.title}</b>
+                                                <small>الدرس {index + 1}{pct === 100 ? ' · مكتمل' : pct > 0 ? ' · قيد المتابعة' : ''}</small>
+                                              </span>
+                                            </Link>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  )}
+                                </section>
                               )
                             })}
-                          </ul>
+                          </div>
                         )}
                         <Link to={c.currentLesson?.chapter_id
                           ? `/learn/${c.currentLesson.course_id}/${c.currentLesson.chapter_id}/${c.currentLesson.id}`
