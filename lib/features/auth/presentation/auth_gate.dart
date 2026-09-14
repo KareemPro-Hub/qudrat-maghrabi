@@ -5,6 +5,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/features/account/data/account_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/biometric_lock_service.dart';
+import 'package:qudrat_maghrabi_app/features/auth/data/remember_me_service.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/login_screen.dart';
@@ -26,6 +27,7 @@ class AuthGate extends StatefulWidget {
     required this.subscriptionRepository,
     required this.notificationRepository,
     this.biometricLock,
+    this.rememberMe,
     super.key,
   });
 
@@ -37,6 +39,7 @@ class AuthGate extends StatefulWidget {
   final SubscriptionRepository subscriptionRepository;
   final NotificationRepository notificationRepository;
   final BiometricLockService? biometricLock;
+  final RememberMeService? rememberMe;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -53,6 +56,8 @@ class _AuthGateState extends State<AuthGate> {
   StreamSubscription<void>? _passwordRecoverySubscription;
   late final BiometricLockService _biometricLock =
       widget.biometricLock ?? BiometricLockService();
+  late final RememberMeService _rememberMe =
+      widget.rememberMe ?? RememberMeService();
 
   @override
   void initState() {
@@ -78,6 +83,15 @@ class _AuthGateState extends State<AuthGate> {
   Future<void> _restoreSession() async {
     // من غير try/catch كان أي خطأ شبكة أثناء استعادة الجلسة (نت ضعيف أو مقطوع)
     // بيخلي المستخدم على شاشة التحميل للأبد من غير أي طريقة يخرج بيها.
+    // «تذكرني» مشيل ⇒ الجلسة المحفوظة من تشغيل سابق تُسقط قبل استعادتها،
+    // فيبدأ الطالب من شاشة الدخول. Supabase وحده يحفظ الجلسة دائمًا.
+    if (!await _rememberMe.isEnabled()) {
+      try {
+        await widget.authRepository.signOut();
+      } catch (_) {
+        // فشل الخروج (نت مقطوع) لا يجوز أن يعلّق شاشة البداية.
+      }
+    }
     AuthProfile? profile;
     try {
       profile = await widget.authRepository.restoreSession();
@@ -191,6 +205,7 @@ class _AuthGateState extends State<AuthGate> {
     if (profile == null) {
       return LoginScreen(
         authRepository: widget.authRepository,
+        rememberMe: _rememberMe,
         onSignedIn: (signedInProfile) {
           setState(() => _profile = signedInProfile);
         },

@@ -280,6 +280,7 @@ class _CourseHero extends StatelessWidget {
             )
           : Image.network(
               url,
+              cacheWidth: 900,
               fit: BoxFit.contain,
               errorBuilder: (_, _, _) => const DecoratedBox(
                 decoration: BoxDecoration(gradient: QmGradients.brand),

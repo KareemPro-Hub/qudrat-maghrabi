@@ -1144,6 +1144,7 @@ class _CourseImage extends StatelessWidget {
       borderRadius: BorderRadius.circular(borderRadius),
       child: Image.network(
         url,
+        cacheWidth: 900,
         width: width,
         height: height,
         fit: fit,

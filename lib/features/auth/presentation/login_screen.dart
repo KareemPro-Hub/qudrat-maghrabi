@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
+import 'package:qudrat_maghrabi_app/features/auth/data/remember_me_service.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 import 'package:qudrat_maghrabi_app/features/auth/presentation/forgot_password_screen.dart';
@@ -14,11 +15,13 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({
     required this.authRepository,
     required this.onSignedIn,
+    this.rememberMe,
     super.key,
   });
 
   final AuthRepository authRepository;
   final ValueChanged<AuthProfile> onSignedIn;
+  final RememberMeService? rememberMe;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,6 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _rememberMe = true;
+  late final RememberMeService _rememberMeService =
+      widget.rememberMe ?? RememberMeService();
   bool _obscurePassword = true;
   bool _isSubmitting = false;
 
@@ -63,6 +68,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       TextInput.finishAutofillContext();
+      // يُحفظ بعد نجاح الدخول فقط، لتقرأه AuthGate عند الإقلاع القادم.
+      await _rememberMeService.setEnabled(_rememberMe);
       if (!mounted) return;
       widget.onSignedIn(profile);
     } on AuthFailure catch (failure) {

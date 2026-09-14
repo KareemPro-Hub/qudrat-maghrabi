@@ -29,7 +29,7 @@ class _BrandLaunchGateState extends State<BrandLaunchGate>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 6600),
+      duration: const Duration(milliseconds: 2500),
       animationBehavior: AnimationBehavior.preserve,
     );
     _markOpacity = CurvedAnimation(

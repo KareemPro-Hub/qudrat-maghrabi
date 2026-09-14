@@ -375,6 +375,7 @@ class _QuestionView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 child: Image.network(
                   question.imageUrl!,
+                  cacheWidth: 1080,
                   fit: BoxFit.contain,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
