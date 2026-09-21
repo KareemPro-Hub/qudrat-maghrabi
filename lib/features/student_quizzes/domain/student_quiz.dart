@@ -46,6 +46,7 @@ class QuizQuestion {
     this.imageUrl,
     this.linkUrl,
     this.linkText,
+    this.explanationVideoId,
   });
 
   final String id;
@@ -57,6 +58,10 @@ class QuizQuestion {
   final String? imageUrl;
   final String? linkUrl;
   final String? linkText;
+
+  /// فيديو شرح الإجابة — يظهر زره بعد أن يجيب الطالب على السؤال أثناء الاختبار.
+  /// الإجابة الصحيحة نفسها تبقى مخفية حتى التسليم.
+  final String? explanationVideoId;
 }
 
 class QuizAttemptResult {

@@ -5,6 +5,7 @@ import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_gradients.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/data/student_quiz_repository.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/domain/student_quiz.dart';
+import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/explanation_video_screen.dart';
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_result_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -103,6 +104,22 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
       index,
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// فيديو شرح الإجابة — يُفتح بعد أن يجيب الطالب على السؤال، وهو لسه في
+  /// الاختبار، فيتعلّم فورًا بدل انتظار شاشة النتيجة.
+  void _openExplanationVideo({required String videoId}) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => ExplanationVideoScreen(
+          repository: widget.repository,
+          courseId: widget.quiz.courseId,
+          videoId: videoId,
+          watermark: widget.watermark,
+        ),
+      ),
     );
   }
 
@@ -313,6 +330,9 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
               onSelected: (answer) {
                 setState(() => _answers[questions[index].id] = answer);
               },
+              onExplain: () => _openExplanationVideo(
+                videoId: questions[index].explanationVideoId!,
+              ),
             ),
           ),
         ),
@@ -337,12 +357,14 @@ class _QuestionView extends StatelessWidget {
     required this.number,
     required this.selected,
     required this.onSelected,
+    required this.onExplain,
   });
 
   final QuizQuestion question;
   final int number;
   final String? selected;
   final ValueChanged<String> onSelected;
+  final VoidCallback onExplain;
 
   @override
   Widget build(BuildContext context) {
@@ -411,6 +433,22 @@ class _QuestionView extends StatelessWidget {
                 onTap: () => onSelected(entry.key),
               ),
               if (entry.key != 'd') const SizedBox(height: 11),
+            ],
+            // يظهر بعد الإجابة فقط، ولو كان للسؤال فيديو شرح.
+            if (selected != null && question.explanationVideoId != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onExplain,
+                  icon: const Icon(Icons.play_circle_fill_rounded),
+                  label: const Text('عرفني الإجابة الصحيحة'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: QmColors.purple,
+                    minimumSize: const Size.fromHeight(46),
+                  ),
+                ),
+              ),
             ],
           ],
         ),

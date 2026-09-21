@@ -186,6 +186,7 @@ class SupabaseStudentQuizRepository implements StudentQuizRepository {
       imageUrl: _text(row['question_image_url']),
       linkUrl: _text(row['question_link_url']),
       linkText: _text(row['question_link_text']),
+      explanationVideoId: _text(row['explanation_video_id']),
     );
   }
 
