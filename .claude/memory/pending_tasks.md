@@ -111,6 +111,32 @@ type: project
 **ترشيحي:** 2 و3 و5 و6 و7 معًا — كلها صغيرة ومأمونة.
 تفاصيل 1 و8 في [screenshot_protection](screenshot_protection.md)، وباقي البنود من [audit_2026_08_31](audit_2026_08_31.md).
 
+## ⏭️ نقطة التوقف — 2026-09-21 (كريم انتقل للجهاز الآخر)
+
+### الوضع
+| | آخر commit | ملاحظة |
+|---|---|---|
+| التطبيق `flutter-app` | **`0ead96a`** | النسخة لسه `1.1.4+16` وهي **منشورة فعلًا** ⇒ قبل أي بناء ارفعها لـ`1.1.5+17` في `pubspec.yaml` و`app_metadata.dart` |
+| المنصة `main` | **`b48b250`** | — |
+
+- **المنشور حاليًا:** 1.1.4 على App Store وعلى موقع المنصة (أندرويد). كل ما بعده غير منشور.
+
+### 🔴 الخطوة التالية فورًا
+`flutter analyze && flutter test` **لم يُشغَّلا بعد** على تعديلات اليوم (العلامة المائية).
+وكان كريم في منتصف **`flutter upgrade`** ولم يكتمل — Flutter كان 3.47.2.
+لذلك على الجهاز الآخر: `flutter clean && flutter pub get && flutter analyze && flutter test` **قبل أي شيء**.
+
+### ما أُنجز اليوم وغير مبنيّ
+1. **علامة مائية على فيديو شرح الإجابة** — التطبيق (`0ead96a`) والمنصة (`b48b250`). الهوية تُمرَّر: `StudentHomeScreen → QuizListScreen → QuizAttemptScreen → QuizResultScreen → شاشة الشرح`، ومن `LessonPlayerScreen` للواجب داخل الدرس. ⚠️ أي شاشة جديدة تبني `QuizAttemptScreen` أو `QuizResultScreen` لازم تمرّر `watermark`.
+2. **حذف حساب الطالب** من لوحة الأدمن — منشور على الموقع ومختبَر بالكامل.
+3. **قاعدة اللوج** — كل أمر ترمنال يكتب في `_logs/` وأقرأه بنفسي ([working_style](working_style.md)).
+4. **[Xcode Cloud](xcode_cloud.md)** — وُثِّق ومؤجَّل بقرار كريم.
+5. **حيلة منع لقطة الشاشة** — نُفِّذت ثم أُزيلت بطلبه (لا آيفون للتجربة). التفاصيل في [screenshot_protection](screenshot_protection.md).
+
+### بنود سابقة اتقفلت (اتعملت في شغل الماك بوك اير)
+`WebView dispose` ✅ (`fb36994`) · `Image.network cacheWidth` ✅ · الكود الميت `subscription_screen.dart` و`foundation_screen.dart` و`signed_in_checkpoint_screen.dart` ✅ · «تذكرني» ✅ · تقصير شاشة البداية ✅.
+**يعني قائمة الـ12 بندًا خلصت كلها** ما عدا حيلة اللقطة (مؤجَّلة بطلبه).
+
 ## 📦 نسخة 1.1.4 (16) — أُرسلت للمراجعة ونُشرت على أندرويد (2026-09-12)
 - **iOS: «Waiting for Review»**، إصدار تلقائي بعد الموافقة، بلا Phased Release.
 - **Android: منشورة على موقع المنصة** ✅ — commit `94a5d90` على `main`. md5 القديم `606cd389…` والجديد `670edf56…`، و`android-version.json` بقى 1.1.4/16.
