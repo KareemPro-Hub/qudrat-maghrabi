@@ -11,6 +11,7 @@ class ExplanationVideoScreen extends StatefulWidget {
     required this.courseId,
     required this.videoId,
     required this.watermark,
+    super.key,
   });
 
   final StudentQuizRepository repository;

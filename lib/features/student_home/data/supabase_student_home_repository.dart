@@ -29,6 +29,13 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
           .select('course_id, payment_status, expires_at, enrolled_at')
           .eq('student_id', studentId)
           .eq('payment_status', 'paid'),
+      // محاولة اشتراك ما اكتملتش: بنستخدمها لتذكير الدفع بس، مش للوصول.
+      _client
+          .from('enrollments')
+          .select('id')
+          .eq('student_id', studentId)
+          .eq('payment_status', 'pending')
+          .limit(1),
       _client
           .from('lesson_progress')
           .select('lesson_id, completed, watch_percentage, last_watched_at')
@@ -59,10 +66,11 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
     final courseRows = _rows(responses[0]);
     final statsRows = _rows(responses[1]);
     final enrollmentRows = _rows(responses[2]);
-    final progressRows = _rows(responses[3]);
-    final notificationRows = _rows(responses[4]);
-    final lessonRows = _rows(responses[5]);
-    final storeSubscriptionRows = _rows(responses[6]);
+    final pendingEnrollmentRows = _rows(responses[3]);
+    final progressRows = _rows(responses[4]);
+    final notificationRows = _rows(responses[5]);
+    final lessonRows = _rows(responses[6]);
+    final storeSubscriptionRows = _rows(responses[7]);
 
     final statsByCourse = <String, Map<String, dynamic>>{
       for (final row in statsRows) row['course_id'] as String: row,
@@ -209,6 +217,7 @@ class SupabaseStudentHomeRepository implements StudentHomeRepository {
       myCourses: myCourses,
       unreadNotifications: notificationRows.length,
       subscription: activeSubscription,
+      hasPendingCheckout: pendingEnrollmentRows.isNotEmpty,
     );
   }
 

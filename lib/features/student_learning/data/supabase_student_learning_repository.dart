@@ -241,6 +241,82 @@ class SupabaseStudentLearningRepository implements StudentLearningRepository {
   }
 
   @override
+  Future<List<LessonVideoPart>> loadLessonParts({
+    required String lessonId,
+    required String studentId,
+  }) async {
+    try {
+      final rows = await _client
+          .from('lesson_videos')
+          .select('id, lesson_id, title, video_id, order_index, duration_minutes')
+          .eq('lesson_id', lessonId)
+          .order('order_index', ascending: true);
+      final list = (rows as List).cast<Map<String, dynamic>>();
+      if (list.isEmpty) return const <LessonVideoPart>[];
+
+      // علامات الإكمال تُقرأ مرة واحدة لكل أجزاء الدرس.
+      final doneIds = <String>{};
+      try {
+        final progressRows = await _client
+            .from('lesson_video_progress')
+            .select('lesson_video_id, completed')
+            .eq('student_id', studentId)
+            .inFilter(
+              'lesson_video_id',
+              list.map((row) => row['id'] as String).toList(),
+            );
+        for (final row in (progressRows as List).cast<Map<String, dynamic>>()) {
+          if (row['completed'] == true) {
+            doneIds.add(row['lesson_video_id'] as String);
+          }
+        }
+      } catch (_) {
+        // تعذّر قراءة التقدّم مايمنعش عرض الأجزاء.
+      }
+
+      final parts = <LessonVideoPart>[];
+      for (final row in list) {
+        final videoId = (row['video_id'] as String?)?.trim() ?? '';
+        if (videoId.isEmpty) continue;
+        final id = row['id'] as String;
+        parts.add(
+          LessonVideoPart(
+            id: id,
+            lessonId: row['lesson_id'] as String,
+            videoId: videoId,
+            title: (row['title'] as String?)?.trim(),
+            durationMinutes: (row['duration_minutes'] as num?)?.toInt(),
+            orderIndex: (row['order_index'] as num?)?.toInt() ?? 0,
+            completed: doneIds.contains(id),
+          ),
+        );
+      }
+      return parts;
+    } catch (_) {
+      // الدرس لازم يفضل شغّال بالفيديو الواحد حتى لو فشل تحميل الأجزاء.
+      return const <LessonVideoPart>[];
+    }
+  }
+
+  @override
+  Future<void> completeLessonPart({
+    required String studentId,
+    required String lessonVideoId,
+  }) async {
+    try {
+      await _client.from('lesson_video_progress').upsert({
+        'student_id': studentId,
+        'lesson_video_id': lessonVideoId,
+        'watch_percentage': 100,
+        'completed': true,
+        'last_watched_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'student_id,lesson_video_id');
+    } catch (_) {
+      // فشل الحفظ مايوقفش الانتقال للجزء التالي.
+    }
+  }
+
+  @override
   Future<List<LessonFile>> loadLessonFiles({required String lessonId}) async {
     try {
       final rows = await _client

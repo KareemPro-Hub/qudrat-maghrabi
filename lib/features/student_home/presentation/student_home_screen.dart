@@ -58,6 +58,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   // تطبيق أندرويد بيتوزّع من الموقع مش من متجر، فمفيش تحديث تلقائي
   AppUpdateInfo? _availableUpdate;
   bool _updateDismissed = false;
+  bool _paymentReminderDismissed = false;
 
   @override
   void initState() {
@@ -231,6 +232,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     update: _availableUpdate!,
                     onUpdate: () => _openUpdateLink(_availableUpdate!),
                     onDismiss: () => setState(() => _updateDismissed = true),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                if (snapshot.shouldRemindPayment &&
+                    !_paymentReminderDismissed) ...[
+                  _PaymentReminderBanner(
+                    onComplete: _showSubscriptions,
+                    onDismiss: () =>
+                        setState(() => _paymentReminderDismissed = true),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -1347,6 +1357,80 @@ class _EmptyCoursesCard extends StatelessWidget {
 }
 
 /// تنبيه بسيط بتحديث التطبيق، بيظهر على أندرويد بس ويقدر الطالب يخفيه.
+/// تذكير لطيف للطالب اللي بدأ الاشتراك وحاجة عطّلته قبل ما يكمّل الدفع.
+/// بيودّيه لشاشة الاشتراك جوّه التطبيق نفسه — مش لأي دفع بره.
+class _PaymentReminderBanner extends StatelessWidget {
+  const _PaymentReminderBanner({
+    required this.onComplete,
+    required this.onDismiss,
+  });
+
+  final Future<void> Function() onComplete;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('payment-reminder-banner'),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: QmColors.pinkTint,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QmColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              gradient: QmGradients.brand,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.lock_open_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'تبقّت خطوة واحدة لتفتح كل الدروس',
+                  style: TextStyle(
+                    color: QmColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'اشتراكك لسه ما اكتملش — كمّله وابدأ من حيث توقفت.',
+                  style: TextStyle(color: QmColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            key: const Key('payment-reminder-button'),
+            onPressed: () => onComplete(),
+            child: const Text('أكمله الآن'),
+          ),
+          IconButton(
+            key: const Key('payment-reminder-dismiss'),
+            onPressed: onDismiss,
+            icon: Icon(Icons.close_rounded, size: 18, color: QmColors.textMuted),
+            tooltip: 'إخفاء',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _UpdateBanner extends StatelessWidget {
   const _UpdateBanner({
     required this.update,

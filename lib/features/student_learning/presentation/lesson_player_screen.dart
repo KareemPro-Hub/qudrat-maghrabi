@@ -58,6 +58,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   late Future<List<StudentQuiz>> _quizzesFuture;
   late Future<List<LessonFile>> _filesFuture;
 
+  /// أجزاء فيديو الدرس الحالي. فاضية ⇒ الدرس فيديو واحد (الوضع القديم).
+  List<LessonVideoPart> _parts = const <LessonVideoPart>[];
+  int _activePart = 0;
+
   /// قناة الجانب الأصلي: iOS بيبلّغنا بعد ما الطالب ياخد لقطة شاشة (أبل مابتتيحش
   /// منعها). أندرويد مابيوصلش هنا أصلًا لأن FLAG_SECURE بيمنع اللقطة من الأساس.
   static const _screenCaptureChannel = MethodChannel('qudrat/screen_capture');
@@ -81,6 +85,76 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     _quizzesFuture = widget.quizRepository.loadAvailableQuizzes();
     _filesFuture = widget.repository.loadLessonFiles(lessonId: _lesson.id);
     _screenCaptureChannel.setMethodCallHandler(_handleScreenCaptureCall);
+    unawaited(_loadParts(_lesson.id));
+  }
+
+  /// تحميل أجزاء الدرس والبدء من أول جزء لسه ما اتشافش.
+  Future<void> _loadParts(String lessonId) async {
+    final parts = await widget.repository.loadLessonParts(
+      lessonId: lessonId,
+      studentId: widget.studentId,
+    );
+    if (!mounted || _lesson.id != lessonId) return;
+    final firstUnseen = parts.indexWhere((part) => !part.completed);
+    setState(() {
+      _parts = parts;
+      _activePart = firstUnseen == -1 ? 0 : firstUnseen;
+    });
+  }
+
+  LessonVideoPart? get _currentPart =>
+      _parts.isEmpty || _activePart >= _parts.length ? null : _parts[_activePart];
+
+  void _selectPart(int index) {
+    if (index < 0 || index >= _parts.length || index == _activePart) return;
+    setState(() {
+      _activePart = index;
+      _latestSeconds = 0;
+      _durationSeconds = 0;
+    });
+  }
+
+  /// إنهاء جزء: يتسجّل، وبعدين الجزء اللي بعده يبدأ تلقائيًا.
+  /// آخر جزء ⇒ الدرس كله يتعلّم مكتمل.
+  Future<void> _completePart() async {
+    final part = _currentPart;
+    if (part == null) return;
+    final index = _activePart;
+    if (!part.completed) {
+      await widget.repository.completeLessonPart(
+        studentId: widget.studentId,
+        lessonVideoId: part.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _parts = [
+          for (var i = 0; i < _parts.length; i++)
+            i == index ? _parts[i].copyWith(completed: true) : _parts[i],
+        ];
+      });
+    }
+    if (!mounted) return;
+    if (index < _parts.length - 1) {
+      setState(() {
+        _activePart = index + 1;
+        _latestSeconds = 0;
+        _durationSeconds = 0;
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'بدأ ${_parts[index + 1].labelFor(index + 1)} تلقائيًا',
+              textAlign: TextAlign.center,
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    } else {
+      await _onCompleted();
+    }
   }
 
   Future<void> _handleScreenCaptureCall(MethodCall call) async {
@@ -198,10 +272,13 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     setState(() {
       _selectedIndex = index;
       _resetTracking();
+      _parts = const <LessonVideoPart>[];
+      _activePart = 0;
       _filesFuture = widget.repository.loadLessonFiles(
         lessonId: _lessons[index].id,
       );
     });
+    unawaited(_loadParts(_lessons[index].id));
   }
 
   bool _canOpenLesson(CourseLesson lesson) =>
@@ -229,7 +306,14 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
     if (duration <= 0) return;
     _durationSeconds = math.max(_durationSeconds, duration);
     _latestSeconds = seconds.clamp(0, duration);
-    final percentage = ((seconds / duration) * 100).floor().clamp(0, 99);
+    var percentage = ((seconds / duration) * 100).floor().clamp(0, 99);
+    if (_parts.isNotEmpty) {
+      // مع الأجزاء، تقدّم الدرس = الأجزاء المكتملة + نسبة الجزء الحالي.
+      final done = _parts.where((part) => part.completed).length;
+      percentage = (((done + (percentage / 100)) / _parts.length) * 100)
+          .floor()
+          .clamp(0, 99);
+    }
     _latestPercentage = math.max(_latestPercentage, percentage);
     final milestone = (_latestPercentage ~/ 5) * 5;
     if (milestone >= _lastSavedMilestone + 5) {
@@ -388,14 +472,24 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 34),
             children: [
               _ProtectedVideoPlayer(
-                key: ValueKey(_lesson.id),
+                key: ValueKey('${_lesson.id}:${_currentPart?.id ?? ''}'),
                 lesson: _lesson,
+                partVideoId: _currentPart?.videoId,
                 repository: widget.repository,
                 watermark: widget.watermark,
                 onProgress: _onPlaybackProgress,
                 onPaused: _saveCurrentPosition,
-                onCompleted: _onCompleted,
+                onCompleted: _parts.isEmpty ? _onCompleted : _completePart,
               ),
+              if (_parts.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _LessonPartsBar(
+                  parts: _parts,
+                  activeIndex: _activePart,
+                  onSelect: _selectPart,
+                  onFinishPart: _completePart,
+                ),
+              ],
               const SizedBox(height: 20),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,6 +629,162 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   }
 }
 
+/// قائمة أجزاء الدرس: الجزء المكتمل بعلامة ✓، والحالي متظلّل،
+/// وزر لإنهاء الجزء يدويًا لو الطالب خلّص قبل نهاية الفيديو.
+class _LessonPartsBar extends StatelessWidget {
+  const _LessonPartsBar({
+    required this.parts,
+    required this.activeIndex,
+    required this.onSelect,
+    required this.onFinishPart,
+  });
+
+  final List<LessonVideoPart> parts;
+  final int activeIndex;
+  final void Function(int index) onSelect;
+  final Future<void> Function() onFinishPart;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLast = activeIndex >= parts.length - 1;
+    final currentDone = activeIndex < parts.length && parts[activeIndex].completed;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QmColors.lavender),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.playlist_play_rounded, size: 20),
+              const SizedBox(width: 6),
+              Text(
+                'أجزاء الدرس',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${parts.where((part) => part.completed).length} من ${parts.length}',
+                style: TextStyle(
+                  color: QmColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (var index = 0; index < parts.length; index++)
+            _PartRow(
+              part: parts[index],
+              index: index,
+              active: index == activeIndex,
+              onTap: () => onSelect(index),
+            ),
+          if (!currentDone) ...[
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => onFinishPart(),
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: Text(
+                  isLast ? 'أنهيت آخر جزء' : 'أنهيت هذا الجزء — التالي',
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PartRow extends StatelessWidget {
+  const _PartRow({
+    required this.part,
+    required this.index,
+    required this.active,
+    required this.onTap,
+  });
+
+  final LessonVideoPart part;
+  final int index;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: active ? QmColors.lavender.withValues(alpha: 0.55) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: part.completed
+                        ? QmColors.success
+                        : active
+                        ? QmColors.pink
+                        : QmColors.lavender,
+                  ),
+                  child: part.completed
+                      ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                      : Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: active ? Colors.white : QmColors.textSecondary,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    part.labelFor(index),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (part.durationMinutes != null)
+                  Text(
+                    '${part.durationMinutes} د',
+                    style: TextStyle(
+                      color: QmColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ProtectedVideoPlayer extends StatefulWidget {
   const _ProtectedVideoPlayer({
     required this.lesson,
@@ -543,10 +793,14 @@ class _ProtectedVideoPlayer extends StatefulWidget {
     required this.onProgress,
     required this.onPaused,
     required this.onCompleted,
+    this.partVideoId,
     super.key,
   });
 
   final CourseLesson lesson;
+
+  /// فيديو الجزء الحالي لو الدرس متقسّم. null ⇒ فيديو الدرس الواحد.
+  final String? partVideoId;
   final StudentLearningRepository repository;
   final String watermark;
   final void Function(double seconds, double duration) onProgress;
@@ -586,8 +840,8 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
   }
 
   Future<void> _prepare() async {
-    final videoId = widget.lesson.videoId;
-    if (videoId == null) {
+    final videoId = widget.partVideoId ?? widget.lesson.videoId;
+    if (videoId == null || videoId.isEmpty) {
       setState(() => _error = 'لا يوجد فيديو لهذا الدرس حاليًا');
       return;
     }
@@ -631,8 +885,13 @@ class _ProtectedVideoPlayerState extends State<_ProtectedVideoPlayer> {
           videoId: videoId,
           token: credentials.token,
           expires: credentials.expires,
-          resumeSeconds: widget.lesson.progress.positionSeconds,
-          resumePercentage: widget.lesson.progress.watchPercentage,
+          // الاستئناف من آخر موضع للدرس الواحد فقط؛ الجزء بيبدأ من أوله.
+          resumeSeconds: widget.partVideoId == null
+              ? widget.lesson.progress.positionSeconds
+              : 0,
+          resumePercentage: widget.partVideoId == null
+              ? widget.lesson.progress.watchPercentage
+              : 0,
           watermark: widget.watermark,
         ),
         baseUrl: 'https://www.qudratmaghrabi.com',

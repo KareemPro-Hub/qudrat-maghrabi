@@ -18,6 +18,19 @@ abstract interface class StudentLearningRepository {
     required String platform,
   });
 
+  /// أجزاء فيديو الدرس مرتّبة، مع علامة إكمال كل جزء لهذا الطالب.
+  /// ترجع فاضية لو الدرس فيديو واحد (الوضع القديم).
+  Future<List<LessonVideoPart>> loadLessonParts({
+    required String lessonId,
+    required String studentId,
+  });
+
+  /// تسجيل إنهاء جزء. فشلها مايوقفش الانتقال للجزء التالي.
+  Future<void> completeLessonPart({
+    required String studentId,
+    required String lessonVideoId,
+  });
+
   /// ملفات الدرس المرفقة (PDF / أوراق عمل). ترجع فاضية لو مفيش ملفات.
   Future<List<LessonFile>> loadLessonFiles({required String lessonId});
 

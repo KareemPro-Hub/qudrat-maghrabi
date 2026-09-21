@@ -8,6 +8,7 @@ class StudentHomeSnapshot {
     required this.myCourses,
     required this.unreadNotifications,
     this.subscription,
+    this.hasPendingCheckout = false,
   });
 
   final List<StudentCourse> bundles;
@@ -15,6 +16,12 @@ class StudentHomeSnapshot {
   final List<StudentCourse> myCourses;
   final int unreadNotifications;
   final StudentSubscription? subscription;
+
+  /// الطالب بدأ اشتراك وما كمّلش الدفع، ولسه مالوش وصول. بنفكّره بلطف.
+  final bool hasPendingCheckout;
+
+  /// التذكير يظهر بس لو فعلًا مفيش اشتراك شغّال.
+  bool get shouldRemindPayment => hasPendingCheckout && subscription == null;
 
   StudentCourse? get continueCourse {
     for (final course in myCourses) {

@@ -125,6 +125,41 @@ class CourseLesson {
   }
 }
 
+/// جزء من فيديو الدرس. الدرس الطويل بيتقسّم لأجزاء متتابعة بدل فيديو واحد،
+/// والدرس اللي مالوش أجزاء بيفضل شغّال بـ [CourseLesson.videoId] زي ما هو.
+class LessonVideoPart {
+  const LessonVideoPart({
+    required this.id,
+    required this.lessonId,
+    required this.videoId,
+    required this.orderIndex,
+    this.title,
+    this.durationMinutes,
+    this.completed = false,
+  });
+
+  final String id;
+  final String lessonId;
+  final String videoId;
+  final String? title;
+  final int? durationMinutes;
+  final int orderIndex;
+  final bool completed;
+
+  LessonVideoPart copyWith({bool? completed}) => LessonVideoPart(
+    id: id,
+    lessonId: lessonId,
+    videoId: videoId,
+    orderIndex: orderIndex,
+    title: title,
+    durationMinutes: durationMinutes,
+    completed: completed ?? this.completed,
+  );
+
+  String labelFor(int index) =>
+      (title == null || title!.trim().isEmpty) ? 'الجزء ${index + 1}' : title!;
+}
+
 /// ملف مرفق بالدرس (PDF أو ورقة عمل) يظهر تحت الفيديو في التطبيق.
 class LessonFile {
   const LessonFile({
