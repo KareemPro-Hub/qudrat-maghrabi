@@ -108,6 +108,11 @@ export default function Dashboard() {
   const [lessonProgress, setLessonProgress] = useState<Record<string, any>>({})
   const [openCourseId, setOpenCourseId] = useState<string>('')
   const [latestNotification, setLatestNotification] = useState<any>(null)
+  // تذكير الدفع: الطالب بدأ اشتراك وحاجة عطّلته قبل ما يكمّله.
+  const [pendingCheckout, setPendingCheckout] = useState<any>(null)
+  const [reminderDismissed, setReminderDismissed] = useState(
+    () => sessionStorage.getItem('qm_payment_reminder_dismissed') === '1',
+  )
 
   useEffect(() => {
     if (user) fetchData()
@@ -180,6 +185,21 @@ export default function Dashboard() {
 
     const enrollments = enr || []
     const results = qr || []
+
+    // التذكير يظهر بس لو مفيش أي اشتراك فعّال أصلًا.
+    if (enrollments.length === 0) {
+      const { data: pending } = await supabase
+        .from('enrollments')
+        .select('id, course_id, courses(title)')
+        .eq('student_id', user!.id)
+        .eq('payment_status', 'pending')
+        .order('enrolled_at', { ascending: false })
+        .limit(1)
+      setPendingCheckout((pending || [])[0] || null)
+    } else {
+      setPendingCheckout(null)
+    }
+
     setQuizResults(results)
 
     const unread = (notifs || []).filter((n: any) => !n.is_read)
@@ -436,6 +456,31 @@ export default function Dashboard() {
 
         {/* ===== الرئيسية ===== */}
         <section className={`student-panel${panel === 'home' ? ' active' : ''}`} data-panel="home">
+          {pendingCheckout && !reminderDismissed && (
+            <div className="payment-reminder">
+              <span className="payment-reminder-icon">
+                <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.5-2" /></svg>
+              </span>
+              <div className="payment-reminder-copy">
+                <b>تبقّت خطوة واحدة لتفتح كل الدروس</b>
+                <small>اشتراكك لسه ما اكتملش — كمّله وابدأ من حيث توقفت.</small>
+              </div>
+              <Link className="payment-reminder-cta" to={pendingCheckout.course_id ? `/checkout/${pendingCheckout.course_id}` : '/checkout'}>
+                أكمله الآن
+              </Link>
+              <button
+                type="button"
+                className="payment-reminder-close"
+                aria-label="إخفاء التذكير"
+                onClick={() => {
+                  sessionStorage.setItem('qm_payment_reminder_dismissed', '1')
+                  setReminderDismissed(true)
+                }}
+              >
+                <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+              </button>
+            </div>
+          )}
           {primary ? (
             <>
               <article className="continue-card">
