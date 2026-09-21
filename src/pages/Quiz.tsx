@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
-import { Clock, ChevronRight, ChevronLeft, CheckCircle, Send, ExternalLink } from 'lucide-react'
+import { Clock, ChevronRight, ChevronLeft, CheckCircle, Send, ExternalLink, Play } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
+import ExplanationVideo from '../components/ExplanationVideo'
 
 export default function Quiz() {
   const { quizId } = useParams<{ quizId: string }>()
@@ -18,10 +19,22 @@ export default function Quiz() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const timerRef = useRef<any>(null)
+  // زر «عرفني الإجابة الصحيحة» يظهر بعد إجابة كل سؤال، فيتعلّم الطالب فورًا
+  // بدل انتظار نهاية الاختبار.
+  const [sessionToken, setSessionToken] = useState('')
+  const [watermarkLabel, setWatermarkLabel] = useState('')
+  const [explanationVideo, setExplanationVideo] = useState<{ videoId: string, courseId: string } | null>(null)
 
   useEffect(() => {
     if (!authLoading && user) fetchQuiz()
   }, [user, authLoading])
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSessionToken(session?.access_token || '')
+      setWatermarkLabel((session?.user?.email || '').trim())
+    })
+  }, [])
 
   useEffect(() => {
     if (quiz?.time_limit_minutes) {
@@ -175,6 +188,17 @@ export default function Quiz() {
               )
             })}
           </div>
+
+          {/* يظهر بعد إجابة السؤال فقط، ولو كان له فيديو شرح */}
+          {answers[q.id] && q.explanation_video_id && (
+            <button
+              type="button"
+              onClick={() => setExplanationVideo({ videoId: q.explanation_video_id, courseId: quiz.course_id })}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-purple text-white font-black text-sm transition-colors hover:bg-brand-purple/90"
+            >
+              <Play size={15} /> عرفني الإجابة الصحيحة
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -215,6 +239,16 @@ export default function Quiz() {
         </div>
 
       </div>
+
+      {explanationVideo && (
+        <ExplanationVideo
+          videoId={explanationVideo.videoId}
+          courseId={explanationVideo.courseId}
+          sessionToken={sessionToken}
+          watermark={watermarkLabel}
+          onClose={() => setExplanationVideo(null)}
+        />
+      )}
     </div>
   )
 }
