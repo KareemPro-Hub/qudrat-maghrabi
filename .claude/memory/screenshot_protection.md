@@ -29,6 +29,18 @@ type: project
 - **ناقص:** صفحة في لوحة الأدمن تعرض السجل. البيانات موجودة في القاعدة، بس مفيش واجهة. (يحتاج موافقة كريم لأنها صفحة جديدة.)
 
 ## ⏳ مؤجَّل بطلب كريم — «حيلة تطبيقات البنوك» (فكّره بها)
+
+> **حالة 2026-09-21:** نُفِّذت بالكامل ثم **أُزيلت بطلب كريم** لأنه لا يملك آيفون
+> حاليًا ليجرّبها. **لا تُعاد إلا بطلبه.** التنفيذ الذي أُزيل كان:
+> - ملف واحد `ios/Runner/ScreenshotProtection.swift` فيه `enum ScreenshotProtection`
+>   بمفتاح `isEnabled` للإيقاف الفوري، يأخذ `secureField.layer.sublayers?.first`
+>   ويضع `window.layer` داخلها.
+> - استدعاء من `SceneDelegate.scene(_:willConnectTo:options:)` داخل
+>   `DispatchQueue.main.async` بعد `super`، على نافذة المشهد المفتاحية.
+> - تسجيل الملف في `ios/Runner.xcodeproj/project.pbxproj` في أربعة مواضع
+>   (PBXBuildFile · PBXFileReference · مجموعة Runner · PBXSourcesBuildPhase) —
+>   **بدون هذه الخطوة لا يُترجَم الملف أصلًا.**
+
 كريم عجبته الفكرة وطلب حفظها لتنفيذها لاحقًا (2026-09-02). دي الحاجة الوحيدة اللي **بتمنع** اللقطة فعلًا على iOS.
 
 **الفكرة:** iOS بيرفض يصوّر أي محتوى جوّه `UITextField` بـ`isSecureTextEntry = true`. الحيلة: ناخد الطبقة الداخلية للحقل ده (`_UITextLayoutCanvasView` = أول subview) ونحط نافذة التطبيق كلها جوّاها → **اللقطة والتسجيل الاتنين يطلعوا أسود** والمستخدم شايف عادي. دي اللي بتعملها تطبيقات البنوك وحزم زي `screen_protector`.
