@@ -142,6 +142,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     if (_selectedNavigationIndex == 2) {
       return QuizListScreen(
         repository: widget.quizRepository,
+        watermark: _watermarkLabel,
         onBack: () => _onNavigationTap(0),
       );
     }

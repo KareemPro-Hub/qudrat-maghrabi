@@ -9,9 +9,17 @@ import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_a
 import 'package:qudrat_maghrabi_app/features/student_quizzes/presentation/quiz_attempt_history_screen.dart';
 
 class QuizListScreen extends StatefulWidget {
-  const QuizListScreen({required this.repository, this.onBack, super.key});
+  const QuizListScreen({
+    required this.repository,
+    required this.watermark,
+    this.onBack,
+    super.key,
+  });
 
   final StudentQuizRepository repository;
+
+  /// هوية الطالب — تُمرَّر لفيديو شرح الإجابة داخل شاشة النتيجة.
+  final String watermark;
   final VoidCallback? onBack;
 
   @override
@@ -54,8 +62,11 @@ class _QuizListScreenState extends State<QuizListScreen> {
     }
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) =>
-            QuizAttemptScreen(quiz: quiz, repository: widget.repository),
+        builder: (_) => QuizAttemptScreen(
+          quiz: quiz,
+          repository: widget.repository,
+          watermark: widget.watermark,
+        ),
       ),
     );
     if (mounted) await _refresh();

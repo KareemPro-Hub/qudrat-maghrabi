@@ -12,11 +12,15 @@ class QuizAttemptScreen extends StatefulWidget {
   const QuizAttemptScreen({
     required this.quiz,
     required this.repository,
+    required this.watermark,
     super.key,
   });
 
   final StudentQuiz quiz;
   final StudentQuizRepository repository;
+
+  /// هوية الطالب — تُمرَّر لشاشة النتيجة لتُكتب فوق فيديو شرح الإجابة.
+  final String watermark;
 
   @override
   State<QuizAttemptScreen> createState() => _QuizAttemptScreenState();
@@ -145,6 +149,7 @@ class _QuizAttemptScreenState extends State<QuizAttemptScreen>
             quiz: widget.quiz,
             result: result,
             repository: widget.repository,
+            watermark: widget.watermark,
           ),
         ),
       );

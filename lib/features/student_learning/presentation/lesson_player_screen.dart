@@ -147,8 +147,11 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen>
   Future<void> _openHomework(StudentQuiz quiz) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) =>
-            QuizAttemptScreen(quiz: quiz, repository: widget.quizRepository),
+        builder: (_) => QuizAttemptScreen(
+          quiz: quiz,
+          repository: widget.quizRepository,
+          watermark: widget.watermark,
+        ),
       ),
     );
     if (mounted) _reloadQuizzes();
