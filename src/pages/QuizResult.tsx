@@ -3,10 +3,18 @@ import { useParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Trophy, RotateCcw, Home, BookOpen, Play, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoId: string, courseId: string, sessionToken: string, onClose: () => void }) {
+function ExplanationVideo({ videoId, courseId, sessionToken, watermark, onClose }: { videoId: string, courseId: string, sessionToken: string, watermark: string, onClose: () => void }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [src, setSrc] = useState('')
+  // نفس علامة مشغّل الدرس: بتتنقّل بين أربع زوايا كل 12 ثانية عشان ما تتقصّش من الصورة.
+  const [wmSpot, setWmSpot] = useState(0)
+
+  useEffect(() => {
+    if (!watermark) return
+    const timer = setInterval(() => setWmSpot((spot) => (spot + 1) % 4), 12000)
+    return () => clearInterval(timer)
+  }, [watermark])
 
   useEffect(() => {
     // من غير الفحص ده كان الطلب بيتبعت بتوكن فاضي لو الجلسة لسه بتتحمّل،
@@ -48,12 +56,39 @@ function ExplanationVideo({ videoId, courseId, sessionToken, onClose }: { videoI
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
             />
+            {watermark && (
+              <span
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  ...EXPLANATION_WM_SPOTS[wmSpot],
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  color: 'rgba(255,255,255,.42)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textShadow: '0 1px 3px rgba(0,0,0,.85)',
+                  whiteSpace: 'nowrap',
+                  transition: 'top .8s ease, left .8s ease',
+                  zIndex: 5,
+                }}
+              >
+                {watermark}
+              </span>
+            )}
           </div>
         )}
       </div>
     </div>
   )
 }
+
+const EXPLANATION_WM_SPOTS = [
+  { top: '8%', left: '6%' },
+  { top: '8%', left: '58%' },
+  { top: '78%', left: '58%' },
+  { top: '78%', left: '6%' },
+] as const
 
 export default function QuizResult() {
   const { quizId, resultId } = useParams<{ quizId: string; resultId: string }>()
@@ -63,11 +98,16 @@ export default function QuizResult() {
   const [loading, setLoading] = useState(true)
   const [sessionToken, setSessionToken] = useState('')
   const [explanationVideo, setExplanationVideo] = useState<{ videoId: string, courseId: string } | null>(null)
+  // هوية الطالب فوق فيديو الشرح — نفس منطق صفحة الدرس (Learn.tsx).
+  const [watermarkLabel, setWatermarkLabel] = useState('')
   const emailSent = useRef(false)
 
   useEffect(() => {
     fetchResult()
-    supabase.auth.getSession().then(({ data: { session } }) => setSessionToken(session?.access_token || ''))
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSessionToken(session?.access_token || '')
+      setWatermarkLabel((session?.user?.email || '').trim())
+    })
   }, [])
 
   async function fetchResult() {
@@ -247,6 +287,7 @@ export default function QuizResult() {
         videoId={explanationVideo.videoId}
         courseId={explanationVideo.courseId}
         sessionToken={sessionToken}
+        watermark={watermarkLabel}
         onClose={() => setExplanationVideo(null)}
       />
     )}
