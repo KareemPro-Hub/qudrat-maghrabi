@@ -165,11 +165,13 @@ export default function AdminLessons() {
   function openAdd() {
     setEditing(null)
     setForm({ ...emptyForm, order_index: currentLessons.length + 1 })
+    setDraftParts([])
     setShowModal(true)
   }
 
-  function openEdit(lesson: any) {
+  async function openEdit(lesson: any) {
     setEditing(lesson)
+    setDraftParts([])
     setForm({
       title: lesson.title,
       description: lesson.description || '',
@@ -180,18 +182,30 @@ export default function AdminLessons() {
       is_free_preview: lesson.is_free_preview || false,
     })
     setShowModal(true)
+    const { data } = await supabase.from('lesson_videos').select('*').eq('lesson_id', lesson.id).order('order_index')
+    setDraftParts((data || []).map((p: any) => ({
+      id: p.id,
+      title: p.title || '',
+      video_id: p.video_id,
+      duration_minutes: p.duration_minutes ? String(p.duration_minutes) : '',
+    })))
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!form.title) return toast.error('عنوان الدرس مطلوب')
     setSaving(true)
+    const activeParts = draftParts.filter(p => (p.video_id || '').trim())
+    const partsDuration = activeParts.reduce((sum, p) => sum + (Number(p.duration_minutes) || 0), 0)
     const payload = {
       title: form.title,
       description: form.description,
-      video_id: form.video_id,
+      // لما يكون فيه أجزاء، بنخلّي video_id = أول جزء عشان أي شاشة قديمة تفضل شغّالة.
+      video_id: activeParts.length ? activeParts[0].video_id.trim() : form.video_id,
       thumbnail_url: form.thumbnail_url || null,
-      duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
+      duration_minutes: activeParts.length && partsDuration > 0
+        ? partsDuration
+        : (form.duration_minutes ? Number(form.duration_minutes) : null),
       order_index: Number(form.order_index),
       is_free_preview: form.is_free_preview,
       course_id: courseId,
@@ -200,11 +214,17 @@ export default function AdminLessons() {
     if (editing) {
       const { error } = await supabase.from('lessons').update(payload).eq('id', editing.id)
       if (error) toast.error('حدث خطأ')
-      else { toast.success('تم التعديل ✅'); fetchData(); setShowModal(false) }
+      else {
+        await syncDraftParts(editing.id)
+        toast.success('تم التعديل ✅'); fetchData(); setShowModal(false)
+      }
     } else {
-      const { error } = await supabase.from('lessons').insert(payload)
+      const { data: inserted, error } = await supabase.from('lessons').insert(payload).select('id').single()
       if (error) toast.error('حدث خطأ')
-      else { toast.success('تمت الإضافة ✅'); fetchData(); setShowModal(false) }
+      else {
+        if (inserted?.id) await syncDraftParts(inserted.id)
+        toast.success('تمت الإضافة ✅'); fetchData(); setShowModal(false)
+      }
     }
     setSaving(false)
   }
@@ -243,6 +263,66 @@ export default function AdminLessons() {
   async function toggleFreePreview(lesson: any) {
     await supabase.from('lessons').update({ is_free_preview: !lesson.is_free_preview }).eq('id', lesson.id)
     fetchData()
+  }
+
+  // ===== أجزاء الفيديو جوّه نافذة الدرس نفسها =====
+  const [draftParts, setDraftParts] = useState<any[]>([])
+  const [fetchingPart, setFetchingPart] = useState<number | null>(null)
+
+  function addDraftPart() {
+    setDraftParts(prev => [...prev, { title: '', video_id: '', duration_minutes: '' }])
+  }
+
+  function updateDraftPart(index: number, patch: any) {
+    setDraftParts(prev => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
+  }
+
+  function removeDraftPart(index: number) {
+    setDraftParts(prev => prev.filter((_, i) => i !== index))
+  }
+
+  async function fetchPartDuration(index: number) {
+    const part = draftParts[index]
+    if (!part?.video_id?.trim()) return toast.error('اكتب رقم فيديو Bunny الأول')
+    setFetchingPart(index)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/bunny-video-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ videoId: part.video_id.trim() }),
+      })
+      const json = await res.json()
+      if (!res.ok) { toast.error(json.error || 'فشل جلب بيانات الفيديو'); return }
+      if (json.duration_minutes != null) updateDraftPart(index, { duration_minutes: String(json.duration_minutes) })
+      toast.success('تم جلب المدة ✅')
+    } catch {
+      toast.error('فشل الاتصال بـ Bunny')
+    } finally {
+      setFetchingPart(null)
+    }
+  }
+
+  // بيزامن أجزاء الدرس مع اللي اتكتب في النافذة: يمسح المحذوف، يعدّل الموجود، ويضيف الجديد.
+  async function syncDraftParts(lessonId: string) {
+    const rows = draftParts.filter(p => (p.video_id || '').trim())
+    const { data: existing } = await supabase.from('lesson_videos').select('id').eq('lesson_id', lessonId)
+    const keep = new Set(rows.filter(r => r.id).map(r => r.id))
+    const toDelete = (existing || []).filter(r => !keep.has(r.id)).map(r => r.id)
+    if (toDelete.length) await supabase.from('lesson_videos').delete().in('id', toDelete)
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]
+      const payload = {
+        lesson_id: lessonId,
+        title: (r.title || '').trim() || null,
+        video_id: r.video_id.trim(),
+        duration_minutes: r.duration_minutes ? Number(r.duration_minutes) : null,
+        order_index: i + 1,
+      }
+      if (r.id) await supabase.from('lesson_videos').update(payload).eq('id', r.id)
+      else await supabase.from('lesson_videos').insert(payload)
+    }
+    setPartCounts(prev => ({ ...prev, [lessonId]: rows.length }))
   }
 
   // ===== أجزاء فيديو الدرس =====
@@ -634,15 +714,57 @@ export default function AdminLessons() {
           <form onSubmit={handleSave} className="admin-form">
             <label>عنوان الدرس *<input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: مقدمة في النسب والتناسب" /></label>
             <label>ملخص الدرس<textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="اكتب نقاط الملخص، كل نقطة في سطر مستقل..." /></label>
-            <label>
-              رقم الفيديو (Bunny Video ID)
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" style={{ flex: 1 }} />
-                <button type="button" className="ghost-button" onClick={fetchFromBunny} disabled={fetchingBunny} style={{ whiteSpace: 'nowrap' }}>
-                  {fetchingBunny ? 'جاري الجلب...' : 'جلب المدة من Bunny'}
+            {draftParts.length === 0 && (
+              <label>
+                رقم الفيديو (Bunny Video ID)
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input value={form.video_id} onChange={e => setForm({ ...form, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" style={{ flex: 1 }} />
+                  <button type="button" className="ghost-button" onClick={fetchFromBunny} disabled={fetchingBunny} style={{ whiteSpace: 'nowrap' }}>
+                    {fetchingBunny ? 'جاري الجلب...' : 'جلب المدة من Bunny'}
+                  </button>
+                </div>
+              </label>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 12, borderRadius: 12, background: '#f8f6fb', border: '1px solid #ece6f3' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span>
+                  <b style={{ display: 'block', fontSize: 12 }}>أجزاء الفيديو</b>
+                  <small style={{ display: 'block', color: '#8a7d91', fontSize: 10 }}>
+                    {draftParts.length === 0
+                      ? 'الدرس الطويل تقدر تقسّمه لأجزاء متتابعة — الجزء اللي بعده بيبدأ تلقائيًا للطالب.'
+                      : 'الأجزاء بتتشغّل بالترتيب ده، والمدة الكلية بتتحسب تلقائيًا.'}
+                  </small>
+                </span>
+                <button type="button" className="ghost-button" onClick={addDraftPart} style={{ whiteSpace: 'nowrap' }}>
+                  <Plus size={14} /> إضافة جزء
                 </button>
               </div>
-            </label>
+
+              {draftParts.map((part, i) => (
+                <div key={part.id || `new-${i}`} style={{ display: 'flex', gap: 6, alignItems: 'flex-end', flexWrap: 'wrap', background: '#fff', padding: 8, borderRadius: 10, border: '1px solid #ece6f3' }}>
+                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#efe7f7', color: '#6b3fa0', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', marginBottom: 6 }}>{i + 1}</span>
+                  <label style={{ flex: '1 1 130px', margin: 0, fontSize: 10 }}>
+                    عنوان الجزء (اختياري)
+                    <input value={part.title} onChange={e => updateDraftPart(i, { title: e.target.value })} placeholder="الجزء الأول" />
+                  </label>
+                  <label style={{ flex: '1 1 190px', margin: 0, fontSize: 10 }}>
+                    رقم فيديو Bunny *
+                    <input value={part.video_id} onChange={e => updateDraftPart(i, { video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+                  </label>
+                  <label style={{ flex: '0 0 74px', margin: 0, fontSize: 10 }}>
+                    دقائق
+                    <input type="number" min={1} value={part.duration_minutes} onChange={e => updateDraftPart(i, { duration_minutes: e.target.value })} />
+                  </label>
+                  <button type="button" className="ghost-button" onClick={() => fetchPartDuration(i)} disabled={fetchingPart === i} style={{ whiteSpace: 'nowrap', marginBottom: 2 }}>
+                    {fetchingPart === i ? '...' : 'جلب المدة'}
+                  </button>
+                  <button type="button" className="row-action" onClick={() => removeDraftPart(i)} style={{ color: '#d33b55', marginBottom: 2 }} title="حذف الجزء">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
             <label>
               غلاف الدرس
               {form.thumbnail_url ? (
