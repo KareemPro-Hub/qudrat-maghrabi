@@ -4,12 +4,48 @@ import { Lock, BookOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
-function BunnyPlayer({ videoId, courseId, sessionToken, watermark }: { videoId: string, courseId: string, sessionToken: string, watermark: string }) {
+function BunnyPlayer({ videoId, courseId, sessionToken, watermark, onEnded }: { videoId: string, courseId: string, sessionToken: string, watermark: string, onEnded?: () => void }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [src, setSrc] = useState('')
   // العلامة المائية بتتنقّل بين أربع زوايا كل 12 ثانية عشان ما تتقصّش من الصورة.
   const [wmSpot, setWmSpot] = useState(0)
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+
+  // مشغّل Bunny بيبعت رسائل playerjs عبر postMessage. بنسمع لحدث "ended" بس
+  // عشان ننتقل للجزء التالي تلقائيًا — من غير ما نلمس أي شيء آخر في المشغّل.
+  useEffect(() => {
+    if (!onEnded || !src) return
+    const frame = frameRef.current
+    if (!frame) return
+    function handleMessage(event: MessageEvent) {
+      if (event.source !== frame?.contentWindow) return
+      try {
+        const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+        if (payload?.event === 'ended') onEnded?.()
+        if (payload?.event === 'ready') {
+          frame?.contentWindow?.postMessage(
+            JSON.stringify({ context: 'player.js', method: 'addEventListener', value: 'ended' }),
+            '*',
+          )
+        }
+      } catch {
+        // رسائل غير متوقعة من المشغّل تُتجاهل.
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    // بعض النسخ بتكون جاهزة قبل ما نسمع، فبنطلب الاشتراك مرة كمان.
+    const kick = setTimeout(() => {
+      frame.contentWindow?.postMessage(
+        JSON.stringify({ context: 'player.js', method: 'addEventListener', value: 'ended' }),
+        '*',
+      )
+    }, 1500)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearTimeout(kick)
+    }
+  }, [src, onEnded])
 
   useEffect(() => {
     if (!watermark) return
@@ -67,6 +103,7 @@ function BunnyPlayer({ videoId, courseId, sessionToken, watermark }: { videoId: 
       )}
       {src && !error && (
         <iframe
+          ref={frameRef}
           src={src}
           style={{ border: 0, position: 'absolute', top: 0, left: 0, height: '100%', width: '100%' }}
           allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;"
@@ -117,6 +154,10 @@ export default function Learn() {
   const [chapter, setChapter] = useState<any>(null)
   const [lessons, setLessons] = useState<any[]>([])
   const [progress, setProgress] = useState<Record<string, boolean>>({})
+  // أجزاء فيديو كل درس، وأي جزء أنهاه الطالب، والجزء المعروض حاليًا.
+  const [lessonParts, setLessonParts] = useState<Record<string, any[]>>({})
+  const [partProgress, setPartProgress] = useState<Record<string, boolean>>({})
+  const [activePartIndex, setActivePartIndex] = useState(0)
   const [currentLesson, setCurrentLesson] = useState<any>(null)
   const [enrolled, setEnrolled] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -158,6 +199,24 @@ export default function Learn() {
       supabase.from('quizzes').select('*').eq('course_id', courseId!).not('lesson_id', 'is', null),
       supabase.from('quiz_results').select('quiz_id').eq('student_id', user!.id).eq('passed', true),
     ])
+    // أجزاء الفيديو: الدرس الطويل يتقسّم لأجزاء متتابعة. الدرس اللي مالوش
+    // أجزاء بيفضل شغّال بـ video_id زي ما هو.
+    const lessonIds = (playable || []).map((lesson: any) => lesson.id)
+    const [{ data: parts }, { data: partProgress }] = lessonIds.length
+      ? await Promise.all([
+          supabase.from('lesson_videos').select('*').in('lesson_id', lessonIds).order('order_index'),
+          supabase.from('lesson_video_progress').select('lesson_video_id, completed').eq('student_id', user!.id),
+        ])
+      : [{ data: [] as any[] }, { data: [] as any[] }]
+    const partsByLesson: Record<string, any[]> = {}
+    ;(parts || []).forEach((part: any) => {
+      if (!partsByLesson[part.lesson_id]) partsByLesson[part.lesson_id] = []
+      partsByLesson[part.lesson_id].push(part)
+    })
+    setLessonParts(partsByLesson)
+    const donePartIds: Record<string, boolean> = {}
+    ;(partProgress || []).forEach((row: any) => { donePartIds[row.lesson_video_id] = row.completed })
+    setPartProgress(donePartIds)
     // دمج الاتنين: الدرس المتاح بياخد بياناته الكاملة، وغير المتاح بيفضل
     // بعنوانه ومدته بس (من غير video_id) فيتقفل في الواجهة.
     const playableById: Record<string, any> = {}
@@ -239,6 +298,34 @@ export default function Learn() {
       .then(({ data }) => setQuestionCount(data?.length || 0))
   }, [currentLesson?.id, quizByLesson])
 
+  // أول جزء غير مكتمل هو نقطة البداية عند فتح الدرس.
+  useEffect(() => {
+    if (!currentLesson) return
+    const parts = lessonParts[currentLesson.id] || []
+    if (parts.length === 0) { setActivePartIndex(0); return }
+    const firstUnseen = parts.findIndex((part: any) => !partProgress[part.id])
+    setActivePartIndex(firstUnseen === -1 ? 0 : firstUnseen)
+  }, [currentLesson?.id, lessonParts, partProgress])
+
+  /// إنهاء جزء: يُسجَّل، ثم يبدأ الجزء التالي تلقائيًا. آخر جزء ⇒ الدرس مكتمل.
+  async function completePart(part: any, parts: any[], index: number) {
+    if (!partProgress[part.id]) {
+      await supabase.from('lesson_video_progress').upsert({
+        student_id: user!.id,
+        lesson_video_id: part.id,
+        watch_percentage: 100,
+        completed: true,
+        last_watched_at: new Date().toISOString(),
+      }, { onConflict: 'student_id,lesson_video_id' })
+      setPartProgress(prev => ({ ...prev, [part.id]: true }))
+    }
+    if (index < parts.length - 1) {
+      setActivePartIndex(index + 1)
+    } else if (currentLesson && !progress[currentLesson.id]) {
+      void markComplete(currentLesson.id)
+    }
+  }
+
   async function markComplete(lessonId: string) {
     const { data: existing } = await supabase
       .from('lesson_progress')
@@ -319,6 +406,7 @@ export default function Learn() {
   // الصفحة كلها على مستوى الكورس فقط، بدون استثناء للدروس المجانية، وده كان بيمنع
   // مشاهدة أي درس مجاني لأي طالب مش مشترك.
   const currentLessonIsFree = !!currentLesson?.is_free_preview
+  const currentParts = currentLesson ? (lessonParts[currentLesson.id] || []) : []
   if (!enrolled && !currentLessonIsFree && course) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
@@ -392,8 +480,49 @@ export default function Learn() {
               <p><span></span>فيديو الدرس <i>•</i> الملفات <i>•</i> التدريب</p>
             </div>
           </div>
+          {currentParts.length > 0 && (
+            <div className="lesson-parts">
+              <p className="lesson-parts-head">أجزاء الدرس</p>
+              <ul>
+                {currentParts.map((part: any, index: number) => {
+                  const done = !!partProgress[part.id]
+                  const active = index === activePartIndex
+                  return (
+                    <li key={part.id}>
+                      <button
+                        type="button"
+                        className={`lesson-part${active ? ' active' : ''}${done ? ' done' : ''}`}
+                        onClick={() => setActivePartIndex(index)}
+                      >
+                        <span className="lesson-part-mark">{done ? '✓' : index + 1}</span>
+                        <span className="lesson-part-title">{part.title || `الجزء ${index + 1}`}</span>
+                        {part.duration_minutes ? <small>{part.duration_minutes} د</small> : null}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 10 }}>
-            {isCurrentCompleted ? (
+            {currentParts.length > 0 && !isCurrentCompleted && (
+              <button
+                className="mark-complete-button"
+                type="button"
+                onClick={() => void completePart(currentParts[activePartIndex], currentParts, activePartIndex)}
+              >
+                <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>
+                {activePartIndex < currentParts.length - 1 ? 'أنهيت هذا الجزء — التالي' : 'أنهيت آخر جزء'}
+              </button>
+            )}
+            {currentParts.length > 0 ? (
+              isCurrentCompleted ? (
+                <span className="mark-complete-button done">
+                  <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>مكتمل
+                </span>
+              ) : null
+            ) : isCurrentCompleted ? (
               <span className="mark-complete-button done">
                 <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>مكتمل
               </span>
@@ -430,7 +559,16 @@ export default function Learn() {
 
           <article className="hub-video-player">
             <div className="hub-video-stage">
-              {currentLesson.video_id ? (
+              {currentParts.length > 0 ? (
+                <BunnyPlayer
+                  key={currentParts[activePartIndex]?.id || currentLesson.id}
+                  videoId={currentParts[activePartIndex]?.video_id || ''}
+                  courseId={courseId!}
+                  sessionToken={sessionToken}
+                  watermark={watermarkLabel}
+                  onEnded={() => void completePart(currentParts[activePartIndex], currentParts, activePartIndex)}
+                />
+              ) : currentLesson.video_id ? (
                 <BunnyPlayer key={currentLesson.id} videoId={currentLesson.video_id} courseId={courseId!} sessionToken={sessionToken} watermark={watermarkLabel} />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.55)' }}>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText, Upload, Layers, LayoutGrid, Rows3, Table2 } from 'lucide-react'
+import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText, Upload, Layers, LayoutGrid, Rows3, Table2, ListVideo } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { SectionToolbar, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
@@ -14,6 +14,7 @@ const emptyForm = {
   title: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
 }
 const emptyFileForm = { title: '', file_url: '', size_label: '', file_type: 'pdf', order_index: 0 }
+const emptyPartForm = { title: '', video_id: '', duration_minutes: '', order_index: 0 }
 
 const UNASSIGNED = { id: null as string | null, title: 'دروس بدون باب' }
 
@@ -244,6 +245,91 @@ export default function AdminLessons() {
     fetchData()
   }
 
+  // ===== أجزاء فيديو الدرس =====
+  // الدرس الطويل يتقسّم لأجزاء متتابعة بدل فيديو واحد. الدرس اللي مالوش
+  // أجزاء بيفضل شغّال بـ lessons.video_id زي ما هو.
+  const [partsLesson, setPartsLesson] = useState<any>(null)
+  const [lessonParts, setLessonParts] = useState<any[]>([])
+  const [partsLoading, setPartsLoading] = useState(false)
+  const [showPartModal, setShowPartModal] = useState(false)
+  const [editingPart, setEditingPart] = useState<any>(null)
+  const [partForm, setPartForm] = useState(emptyPartForm)
+  const [savingPart, setSavingPart] = useState(false)
+  const [partCounts, setPartCounts] = useState<Record<string, number>>({})
+
+  async function refreshParts(lesson: any) {
+    const { data } = await supabase.from('lesson_videos').select('*').eq('lesson_id', lesson.id).order('order_index')
+    setLessonParts(data || [])
+    setPartCounts(prev => ({ ...prev, [lesson.id]: (data || []).length }))
+    return data || []
+  }
+
+  async function openParts(lesson: any) {
+    setPartsLesson(lesson)
+    setPartsLoading(true)
+    const data = await refreshParts(lesson)
+    setPartsLoading(false)
+    if (data.length === 0) {
+      setEditingPart(null)
+      setPartForm({ ...emptyPartForm, order_index: 1 })
+      setShowPartModal(true)
+    }
+  }
+
+  function closePartModal() {
+    setShowPartModal(false)
+    if (lessonParts.length === 0) setPartsLesson(null)
+  }
+
+  function openAddPart() {
+    setEditingPart(null)
+    setPartForm({ ...emptyPartForm, order_index: lessonParts.length + 1 })
+    setShowPartModal(true)
+  }
+
+  function openEditPart(part: any) {
+    setEditingPart(part)
+    setPartForm({
+      title: part.title || '',
+      video_id: part.video_id,
+      duration_minutes: part.duration_minutes ? String(part.duration_minutes) : '',
+      order_index: part.order_index || 0,
+    })
+    setShowPartModal(true)
+  }
+
+  async function handleSavePart(e: React.FormEvent) {
+    e.preventDefault()
+    if (!partForm.video_id.trim()) return toast.error('رقم فيديو Bunny مطلوب')
+    setSavingPart(true)
+    const payload = {
+      title: partForm.title.trim() || null,
+      video_id: partForm.video_id.trim(),
+      duration_minutes: partForm.duration_minutes ? Number(partForm.duration_minutes) : null,
+      order_index: Number(partForm.order_index),
+      lesson_id: partsLesson.id,
+    }
+    if (editingPart) {
+      const { error } = await supabase.from('lesson_videos').update(payload).eq('id', editingPart.id)
+      if (error) toast.error('حدث خطأ')
+      else { await refreshParts(partsLesson); toast.success('تم التعديل ✅'); setShowPartModal(false) }
+    } else {
+      const { error } = await supabase.from('lesson_videos').insert(payload)
+      if (error) toast.error('حدث خطأ')
+      else { await refreshParts(partsLesson); toast.success('تمت الإضافة ✅'); setShowPartModal(false) }
+    }
+    setSavingPart(false)
+  }
+
+  async function deletePart(id: string) {
+    if (!confirm('حذف هذا الجزء ؟')) return
+    const { error } = await supabase.from('lesson_videos').delete().eq('id', id)
+    if (error) return toast.error('حدث خطأ')
+    const remaining = await refreshParts(partsLesson)
+    toast.success('تم الحذف')
+    if (remaining.length === 0) setPartsLesson(null)
+  }
+
   // ===== ملفات الدرس =====
   const [filesLesson, setFilesLesson] = useState<any>(null)
   const [lessonFiles, setLessonFiles] = useState<any[]>([])
@@ -422,7 +508,8 @@ export default function AdminLessons() {
               </div>
               <div className="lm-actions lr-actions">
                 <button className="lm-action" onClick={() => openEdit(lesson)}><Edit size={13} />تعديل</button>
-                <button className="lm-action" onClick={() => openFiles(lesson)}><FileText size={13} />الملفات</button>
+                <button className="lm-action" onClick={() => openParts(lesson)}><ListVideo size={13} />الأجزاء</button>
+                  <button className="lm-action" onClick={() => openFiles(lesson)}><FileText size={13} />الملفات</button>
                 <button
                   className={`lm-action${lesson.is_free_preview ? ' is-on' : ''}`}
                   onClick={() => toggleFreePreview(lesson)}
@@ -463,6 +550,7 @@ export default function AdminLessons() {
                           {lesson.is_free_preview ? <Eye size={12} /> : <EyeOff size={12} />}
                         </button>
                         <button className="row-action" onClick={() => openEdit(lesson)} title="تعديل"><Edit size={12} /></button>
+                        <button className="row-action" onClick={() => openParts(lesson)} title="أجزاء الفيديو"><ListVideo size={12} /></button>
                         <button className="row-action" onClick={() => openFiles(lesson)} title="ملفات الدرس"><FileText size={12} /></button>
                         <button className="row-action" onClick={() => deleteLesson(lesson.id)} title="حذف" style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
                       </div>
@@ -495,6 +583,7 @@ export default function AdminLessons() {
                 <h3>{lesson.title}</h3>
                 <div className="lm-actions">
                   <button className="lm-action" onClick={() => openEdit(lesson)}><Edit size={13} />تعديل</button>
+                  <button className="lm-action" onClick={() => openParts(lesson)}><ListVideo size={13} />الأجزاء</button>
                   <button className="lm-action" onClick={() => openFiles(lesson)}><FileText size={13} />الملفات</button>
                   <button
                     className={`lm-action${lesson.is_free_preview ? ' is-on' : ''}`}
@@ -629,6 +718,64 @@ export default function AdminLessons() {
               </div>
             )}
           </div>
+        </Modal>
+      )}
+
+      {partsLesson && !showPartModal && (partsLoading || lessonParts.length > 0) && (
+        <Modal title={`أجزاء درس: ${partsLesson.title}`} onClose={() => setPartsLesson(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#8d8195' }}>
+              الطالب يشوف الأجزاء بالترتيب، ولما يخلّص جزء يبدأ اللي بعده تلقائيًا.
+              لو الدرس فيديو واحد، سيبه بدون أجزاء.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="primary-admin" onClick={openAddPart}><Plus size={16} /> إضافة جزء</button>
+            </div>
+            {partsLoading ? (
+              <Spinner />
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>#</th><th>الجزء</th><th>رقم الفيديو</th><th>المدة</th><th>الإجراءات</th></tr>
+                  </thead>
+                  <tbody>
+                    {lessonParts.map((part, i) => (
+                      <tr key={part.id}>
+                        <td><span className="table-course c3" style={{ fontSize: 11 }}>{i + 1}</span></td>
+                        <td><b>{part.title || `الجزء ${i + 1}`}</b></td>
+                        <td><span className="cell-sub" dir="ltr">{part.video_id}</span></td>
+                        <td>{part.duration_minutes ? `${part.duration_minutes} دقيقة` : '—'}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="row-action" onClick={() => openEditPart(part)}><Edit size={12} /></button>
+                            <button className="row-action" onClick={() => deletePart(part.id)} style={{ color: '#d33b55' }}><Trash2 size={12} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {showPartModal && (
+        <Modal title={editingPart ? 'تعديل الجزء' : 'إضافة جزء جديد'} onClose={closePartModal}>
+          <form onSubmit={handleSavePart} className="admin-form">
+            <label>عنوان الجزء (اختياري)<input value={partForm.title} onChange={e => setPartForm({ ...partForm, title: e.target.value })} placeholder="مثال: الجزء الأول — التعريف" /></label>
+            <label>رقم فيديو Bunny *<input value={partForm.video_id} onChange={e => setPartForm({ ...partForm, video_id: e.target.value })} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" /></label>
+            <div className="form-grid">
+              <label>المدة بالدقائق (اختياري)<input type="number" value={partForm.duration_minutes} onChange={e => setPartForm({ ...partForm, duration_minutes: e.target.value })} min={1} /></label>
+              <label>الترتيب<input type="number" value={partForm.order_index} onChange={e => setPartForm({ ...partForm, order_index: Number(e.target.value) })} min={1} /></label>
+            </div>
+            <div className="form-row">
+              <button type="submit" className="primary-admin" disabled={savingPart}>{savingPart ? 'جاري الحفظ...' : editingPart ? 'حفظ التعديلات' : 'إضافة الجزء'}</button>
+              <button type="button" className="ghost-button" onClick={closePartModal}>إلغاء</button>
+            </div>
+          </form>
         </Modal>
       )}
 
