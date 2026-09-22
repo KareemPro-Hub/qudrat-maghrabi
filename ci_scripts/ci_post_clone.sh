@@ -68,8 +68,13 @@ echo "▸ تجهيز مشروع iOS"
 flutter build ios --release --no-codesign --config-only \
   --dart-define-from-file="$CONFIG_FILE"
 
-echo "▸ CocoaPods"
-cd "$REPO_ROOT/ios"
-pod install
+# المشروع بيستخدم SwiftPM مش CocoaPods؛ الخطوة دي بتتنفّذ لو بس فيه Podfile.
+if [ -f "$REPO_ROOT/ios/Podfile" ]; then
+  echo "▸ CocoaPods"
+  cd "$REPO_ROOT/ios"
+  pod install
+else
+  echo "▸ مفيش Podfile — تخطّي CocoaPods"
+fi
 
 echo "✓ جاهز للبناء"
