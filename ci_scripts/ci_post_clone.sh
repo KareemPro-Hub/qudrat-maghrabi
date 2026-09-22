@@ -1,0 +1,56 @@
+#!/bin/sh
+# Xcode Cloud — يشتغل بعد استنساخ المستودع وقبل البناء.
+# مهمته: تثبيت Flutter (سيرفر أبل مفيهوش Flutter)، وتوليد إعدادات Supabase
+# من المتغيّرات السرية المحفوظة في App Store Connect.
+#
+# المتغيّرات السرية المطلوبة في Xcode Cloud (Environment Variables، Secret):
+#   SUPABASE_URL
+#   SUPABASE_PUBLISHABLE_KEY
+#   PLATFORM_BASE_URL            (اختياري — الافتراضي موقع المنصة)
+#   FLUTTER_VERSION              (اختياري — الافتراضي 3.47.2 = نفس نسخة الماك)
+#
+# القيم لا تُكتب في المستودع أبدًا — الملف المولَّد متجاهَل في .gitignore.
+
+set -e
+
+REPO_ROOT="$CI_PRIMARY_REPOSITORY_PATH"
+FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.2}"
+
+echo "▸ تثبيت Flutter $FLUTTER_VERSION"
+git clone --depth 1 --branch "$FLUTTER_VERSION" \
+  https://github.com/flutter/flutter.git "$HOME/flutter"
+export PATH="$HOME/flutter/bin:$PATH"
+flutter --version
+
+echo "▸ التحقق من المتغيّرات السرية"
+if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+  echo "✗ SUPABASE_URL أو SUPABASE_PUBLISHABLE_KEY غير مضبوط في Xcode Cloud." >&2
+  echo "  بدونهما التطبيق يُبنى ثم يسقط عند الإقلاع:" >&2
+  echo "  StateError: Supabase configuration is missing" >&2
+  exit 1
+fi
+
+echo "▸ توليد ملف الإعدادات"
+CONFIG_FILE="$REPO_ROOT/config/supabase.ci.json"
+mkdir -p "$REPO_ROOT/config"
+cat > "$CONFIG_FILE" <<JSON
+{
+  "SUPABASE_URL": "$SUPABASE_URL",
+  "SUPABASE_PUBLISHABLE_KEY": "$SUPABASE_PUBLISHABLE_KEY",
+  "PLATFORM_BASE_URL": "${PLATFORM_BASE_URL:-https://www.qudratmaghrabi.com}"
+}
+JSON
+
+echo "▸ تجهيز Secrets.xcconfig (نفس سكربت البناء المحلي)"
+/bin/zsh "$REPO_ROOT/tool/configure_ios_release.sh" "$CONFIG_FILE"
+
+echo "▸ جلب الحزم"
+cd "$REPO_ROOT"
+flutter precache --ios
+flutter pub get
+
+echo "▸ CocoaPods"
+cd "$REPO_ROOT/ios"
+pod install
+
+echo "✓ جاهز للبناء"
