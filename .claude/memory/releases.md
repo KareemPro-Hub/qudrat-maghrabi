@@ -52,7 +52,8 @@ type: project
 8. لوحة **Draft Submission** بتفتح من اليمين → **Submit for Review** → الحالة تبقى «Waiting for Review».
 
 ## البناء والنشر
-- **iOS:** `cd "<مجلد التطبيق>" && ./tool/build_ios_release.sh` ← كريم يرفع الـ IPA من `build/ios/ipa/*.ipa` عبر **Transporter** ← **وأنا أكمّل من App Store Connect بنفسي**.
+- **iOS (الطريقة المعتمدة من 2026-09-22): Xcode Cloud** — الدفع على `flutter-app` وأبل تبني وترفع لـTestFlight لوحدها. التفاصيل والأخطاء المعروفة في [xcode_cloud](xcode_cloud.md). لو الدفع ما بدأش بناء: **Integrate ▸ Runner ▸ Start Build… ← Default ← flutter-app**.
+- **iOS (خطة بديلة، لسه شغّالة):** `cd "<مجلد التطبيق>" && ./tool/build_ios_release.sh` ← كريم يرفع الـ IPA من `build/ios/ipa/*.ipa` عبر **Transporter** ← **وأنا أكمّل من App Store Connect بنفسي**.
 - **Android:** `flutter build apk --release` ← الـ APK بيتوزّع **من موقع المنصة مش من المتجر بس**:
   1. انسخ `build/app/outputs/flutter-apk/app-release.apk` إلى `public/downloads/qudrat-maghrabi.apk` في مشروع المنصة.
   2. حدّث `public/downloads/android-version.json` **في نفس الوقت**.
