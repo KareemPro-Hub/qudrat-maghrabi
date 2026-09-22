@@ -12,7 +12,12 @@ type: project
 
 - التطبيق: `com.alimaghrabi.qudrat.ios` · الفريق: Ali Maghrabi (`ZJ9N48228T`)
 - المستودع: `KareemPro-Hub/qudrat-maghrabi` (GitHub App مثبَّت على الريبو ده بس)
-- الفرع: `flutter-app` · الـWorkflow: **Default** · Action: Archive → TestFlight
+- الفرع: `flutter-app` · الـWorkflow: **Default**
+- **Action: Archive - iOS** (Scheme: Runner · Distribution Preparation: **App Store Connect**)
+  — ودي اللي بترفع البناء لـApp Store Connect/TestFlight لوحدها.
+- **Post-Actions: فاضي عن قصد.** TestFlight post-action بيطلب مجموعة مختبرين
+  («Deployments must be configured with testers») ومفيش مجموعات، وهو أصلًا
+  مش مطلوب للرفع.
 - مجانية ضمن عضوية Apple Developer (25 ساعة بناء شهريًا).
 
 ## متغيّرات البيئة في الـWorkflow (Xcode ▸ Integrate ▸ Manage Workflows ▸ Environment)
@@ -57,9 +62,11 @@ type: project
 ## ملاحظات تشغيلية
 - **الطابور عند أبل** بيوصل 12-20 دقيقة قبل ما البناء يبدأ؛ المدة ظاهرة في
   Overview («Queuing (Nmin)»).
-- **الدفع لوحده ما بدأش بناء** — شرط «Branch Changes» في الـWorkflow لسه محتاج
-  يتظبط على `flutter-app`. لحد ما يتظبط، البناء يدوي:
-  **Integrate ▸ Runner ▸ Start Build… ← Default ← flutter-app**.
+- ✅ **شرط «Branch Changes» اتظبط على `flutter-app`** (2026-09-22). كان على `main`
+  فكان أي دفع على المنصة يبدأ بناء iOS فاشل، والدفع على `flutter-app` ما يبدأش حاجة.
+- **الـWorkflow يتعدّل من الويب أسهل بكتير من Xcode:**
+  App Store Connect ▸ Xcode Cloud ▸ Runner ▸ Workflows ▸ Default.
+  هناك الكتابة والقوائم شغّالة عادي (على عكس Xcode).
 - «Completed with 50 issues» = 50 تحذير من المكتبات، مش أخطاء. البناء ناجح.
 - TestFlight فوري بلا مراجعة؛ النشر على App Store لسه محتاج مراجعة أبل (1-3 أيام).
 
@@ -71,5 +78,5 @@ type: project
 - **اختيار صف في جدول/قائمة داخل نافذة Xcode مش ممكن** من الخلفية.
 - النتيجة: أي خطوة في Xcode فيها **كتابة أو اختيار من قائمة** → كريم يعملها،
   وClaude يقول له الخيار والزر بس.
-- App Store Connect على المتصفح كان بيطلع **صفحات فاضية** بعد تسجيل الدخول في
-  Xcode (الفريق بقى «Ali Maghrabi» الشخصي).
+- App Store Connect على المتصفح كان بيطلع **صفحات فاضية** لفترة بعد تسجيل الدخول
+  في Xcode، وبعدين رجع طبيعي. لو حصلت تاني: استنى دقايق وحدّث الصفحة.
