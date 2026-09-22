@@ -11,18 +11,27 @@
 #
 # القيم لا تُكتب في المستودع أبدًا — الملف المولَّد متجاهَل في .gitignore.
 #
-# ⚠️ النسخة دي موجودة في مكانين: جذر المستودع و ios/ci_scripts — لأن أبل
-# بتدوّر على السكربت جنب مشروع Xcode، والمشروع هنا جوّه ios/.
+# ⚠️ المكان الصح: جذر المستودع (أبل بتدوّر على ci_scripts/ci_post_clone.sh)،
+# ولازم يكون executable في Git (100755) وإلا أبل تقول "script not found".
 
 set -e
+
+# لو Flutter موجود من محاولة سابقة على نفس العامل، ما نستنسخهوش تاني.
+if [ -d "$HOME/flutter/bin" ]; then
+  export PATH="$HOME/flutter/bin:$PATH"
+  echo "▸ Flutter موجود بالفعل"
+  SKIP_FLUTTER_CLONE=1
+fi
 
 REPO_ROOT="$CI_PRIMARY_REPOSITORY_PATH"
 FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.2}"
 
-echo "▸ تثبيت Flutter $FLUTTER_VERSION"
-git clone --depth 1 --branch "$FLUTTER_VERSION" \
-  https://github.com/flutter/flutter.git "$HOME/flutter"
-export PATH="$HOME/flutter/bin:$PATH"
+if [ -z "$SKIP_FLUTTER_CLONE" ]; then
+  echo "▸ تثبيت Flutter $FLUTTER_VERSION"
+  git clone --depth 1 --branch "$FLUTTER_VERSION" \
+    https://github.com/flutter/flutter.git "$HOME/flutter"
+  export PATH="$HOME/flutter/bin:$PATH"
+fi
 flutter --version
 
 echo "▸ التحقق من المتغيّرات السرية"
