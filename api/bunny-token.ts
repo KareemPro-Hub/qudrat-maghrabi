@@ -53,13 +53,36 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
 
   // لا نوقّع أي فيديو قبل التأكد أنه تابع فعلًا للكورس المطلوب.
-  const { data: lesson } = await supabase
+  const { data: directLesson } = await supabase
     .from('lessons')
     .select('id, course_id, is_free_preview, is_published')
     .eq('video_id', safeVideoId)
     .eq('course_id', safeCourseId)
     .eq('is_published', true)
     .maybeSingle()
+
+  // الدرس المقسوم لأجزاء: فيديو الجزء محفوظ في lesson_videos مش في lessons،
+  // فبندوّر على درسه وبياخد صلاحيته بالحرف (نفس الكورس، منشور، مجاني/اشتراك).
+  let lesson = directLesson
+  if (!lesson) {
+    const { data: partRows } = await supabase
+      .from('lesson_videos')
+      .select('lesson_id')
+      .eq('video_id', safeVideoId)
+    const partLessonIds = ((partRows ?? []) as { lesson_id: string }[]).map((row) => row.lesson_id)
+    if (partLessonIds.length > 0) {
+      const { data: partLesson } = await supabase
+        .from('lessons')
+        .select('id, course_id, is_free_preview, is_published')
+        .in('id', partLessonIds)
+        .eq('course_id', safeCourseId)
+        .eq('is_published', true)
+        .order('is_free_preview', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      lesson = partLesson
+    }
+  }
 
   const { data: course } = await supabase
     .from('courses')
