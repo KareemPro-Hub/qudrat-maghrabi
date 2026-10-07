@@ -18,15 +18,15 @@ export default function LessonFileDownload() {
     setError('')
 
     async function openFile() {
+      if (!user) {
+        navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true })
+        return
+      }
       try {
         const { data: file, error: fileError } = await supabase.from('lesson_files')
           .select('storage_path').eq('id', fileId).single()
         if (cancelled) return
         if (fileError || !file) {
-          if (!user) {
-            navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true })
-            return
-          }
           throw new Error('الملف غير متاح لحسابك. تأكد من صلاحية اشتراكك أو تواصل مع الدعم.')
         }
         if (!file.storage_path) throw new Error('هذا الملف يحتاج إعادة رفع. تواصل مع إدارة المنصة.')
