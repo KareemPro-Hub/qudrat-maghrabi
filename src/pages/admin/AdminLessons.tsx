@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Plus, Trash2, Edit, ArrowRight, Video, Eye, EyeOff, FileText, Upload, Layers, LayoutGrid, Rows3, Table2, ListVideo } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { assertLessonFileAvailable, LESSON_FILES_BUCKET, MAX_LESSON_FILE_BYTES, lessonFileStoragePath } from '../../lib/lessonFileDelivery'
 import toast from 'react-hot-toast'
 import { SectionToolbar, TagBadge, Spinner, EmptyState, Modal } from '../../components/admin/lightKit'
 
@@ -13,7 +14,7 @@ const emptyChapterForm = { title: '', cover_url: '', order_index: 0 }
 const emptyForm = {
   title: '', description: '', video_id: '', thumbnail_url: '', duration_minutes: '', order_index: 0, is_free_preview: false
 }
-const emptyFileForm = { title: '', file_url: '', size_label: '', file_type: 'pdf', order_index: 0 }
+const emptyFileForm = { id: '', title: '', file_url: '', storage_path: '', size_label: '', file_type: 'pdf', order_index: 0 }
 const emptyPartForm = { title: '', video_id: '', duration_minutes: '', order_index: 0 }
 
 const UNASSIGNED = { id: null as string | null, title: 'دروس بدون باب' }
@@ -121,20 +122,31 @@ export default function AdminLessons() {
   async function handleLessonFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > MAX_LESSON_FILE_BYTES) return toast.error('حجم الملف يجب ألا يتجاوز 50 ميجابايت')
+    if (!filesLesson?.id) return toast.error('اختر الدرس أولًا')
     setUploadingFile(true)
-    const data = new FormData()
-    data.append('file', file)
-    data.append('upload_preset', CLOUDINARY_PRESET)
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, { method: 'POST', body: data })
-    const json = await res.json()
-    if (json.secure_url) {
-      const sizeLabel = json.bytes ? `${(json.bytes / (1024 * 1024)).toFixed(1)} MB` : ''
-      setFileForm((f) => ({ ...f, file_url: json.secure_url, size_label: f.size_label || sizeLabel }))
-      toast.success('تم رفع الملف ✅')
-    } else {
-      toast.error(json.error?.message || 'فشل رفع الملف')
+    try {
+      const storage = supabase.storage.from(LESSON_FILES_BUCKET)
+      const path = lessonFileStoragePath(filesLesson.id, file.name)
+      const { error } = await storage.upload(path, file, {
+        contentType: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'),
+        upsert: false,
+      })
+      if (error) throw new Error('فشل رفع الملف. تحقق من اتصالك وصلاحية إدارة الدروس ثم حاول مجددًا.')
+      const { data, error: deliveryError } = await storage.createSignedUrl(path, 60)
+      if (deliveryError || !data) throw new Error('تعذّر تجهيز تنزيل الملف. حاول مجددًا.')
+      await assertLessonFileAvailable(data.signedUrl)
+      const fileId = fileForm.id || editingFile?.id || crypto.randomUUID()
+      const sizeLabel = `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      setFileForm((f) => ({ ...f, id: fileId, storage_path: path,
+        file_url: `${window.location.origin}/lesson-files/${fileId}`, size_label: f.size_label || sizeLabel }))
+      toast.success('تم رفع الملف والتحقق من تنزيله ✅')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'فشل رفع الملف')
+    } finally {
+      setUploadingFile(false)
+      e.target.value = ''
     }
-    setUploadingFile(false)
   }
 
   async function handleSaveChapter(e: React.FormEvent) {
@@ -455,8 +467,10 @@ export default function AdminLessons() {
   function openEditFile(file: any) {
     setEditingFile(file)
     setFileForm({
+      id: file.id,
       title: file.title,
       file_url: file.file_url,
+      storage_path: file.storage_path || '',
       size_label: file.size_label || '',
       file_type: file.file_type || 'pdf',
       order_index: file.order_index || 0,
@@ -468,25 +482,39 @@ export default function AdminLessons() {
     e.preventDefault()
     if (!fileForm.title || !fileForm.file_url) return toast.error('العنوان والملف مطلوبان')
     setSavingFile(true)
-    const payload = {
-      title: fileForm.title,
-      file_url: fileForm.file_url,
-      size_label: fileForm.size_label || null,
-      file_type: fileForm.file_type,
-      order_index: Number(fileForm.order_index),
-      lesson_id: filesLesson.id,
+    try {
+      if (fileForm.storage_path) {
+        const { data, error } = await supabase.storage.from(LESSON_FILES_BUCKET).createSignedUrl(fileForm.storage_path, 60)
+        if (error || !data) throw new Error('تعذّر التحقق من تنزيل الملف. لم يتم حفظه.')
+        await assertLessonFileAvailable(data.signedUrl)
+      } else {
+        await assertLessonFileAvailable(fileForm.file_url)
+      }
+      const payload = {
+        ...(fileForm.id ? { id: fileForm.id } : {}),
+        title: fileForm.title,
+        file_url: fileForm.file_url,
+        storage_path: fileForm.storage_path || null,
+        size_label: fileForm.size_label || null,
+        file_type: fileForm.file_type,
+        order_index: Number(fileForm.order_index),
+        lesson_id: filesLesson.id,
+      }
+      if (editingFile) {
+        const { error } = await supabase.from('lesson_files').update(payload).eq('id', editingFile.id)
+        if (error) toast.error('حدث خطأ')
+        // ننتظر تحديث القائمة قبل قفل النافذة، وإلا تظهر شاشة "لا توجد ملفات" للحظة بالبيانات القديمة
+        else { await refreshFiles(filesLesson); toast.success('تم التعديل ✅'); setShowFileModal(false) }
+      } else {
+        const { error } = await supabase.from('lesson_files').insert(payload)
+        if (error) toast.error('حدث خطأ')
+        else { await refreshFiles(filesLesson); toast.success('تمت الإضافة ✅'); setShowFileModal(false) }
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'تعذّر حفظ الملف. حاول مجددًا.')
+    } finally {
+      setSavingFile(false)
     }
-    if (editingFile) {
-      const { error } = await supabase.from('lesson_files').update(payload).eq('id', editingFile.id)
-      if (error) toast.error('حدث خطأ')
-      // ننتظر تحديث القائمة قبل قفل النافذة، وإلا تظهر شاشة "لا توجد ملفات" للحظة بالبيانات القديمة
-      else { await refreshFiles(filesLesson); toast.success('تم التعديل ✅'); setShowFileModal(false) }
-    } else {
-      const { error } = await supabase.from('lesson_files').insert(payload)
-      if (error) toast.error('حدث خطأ')
-      else { await refreshFiles(filesLesson); toast.success('تمت الإضافة ✅'); setShowFileModal(false) }
-    }
-    setSavingFile(false)
   }
 
   async function deleteFile(id: string) {
@@ -911,7 +939,7 @@ export default function AdminLessons() {
                 <div className="adm-file-picked">
                   <span className="adm-file-icon"><FileText size={18} /></span>
                   <span className="adm-file-name" dir="ltr">{fileForm.file_url.split('/').pop()}</span>
-                  <button type="button" onClick={() => setFileForm(f => ({ ...f, file_url: '' }))}>حذف</button>
+                  <button type="button" onClick={() => setFileForm(f => ({ ...f, file_url: '', storage_path: '' }))}>حذف</button>
                 </div>
               ) : (
                 <label className="adm-thumb-drop" style={{ height: 90 }}>

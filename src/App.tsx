@@ -68,6 +68,7 @@ const AdminTeam = lazyWithReload(() => import('./pages/admin/AdminTeam'))
 const AdminCoupons = lazyWithReload(() => import('./pages/admin/AdminCoupons'))
 const AdminSettings = lazyWithReload(() => import('./pages/admin/AdminSettings'))
 const AdminLessons = lazyWithReload(() => import('./pages/admin/AdminLessons'))
+const LessonFileDownload = lazyWithReload(() => import('./pages/LessonFileDownload'))
 
 function AdminFallback() {
   return (
@@ -158,6 +159,7 @@ export default function App() {
         <Route path="/auth/callback" element={<AuthLayout><AuthCallback /></AuthLayout>} />
 
         {/* Student */}
+        <Route path="/lesson-files/:fileId" element={<Suspense fallback={<AdminFallback />}><LessonFileDownload /></Suspense>} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/learn/:courseId" element={<Learn />} />
