@@ -260,24 +260,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
                 ),
-                const _TileDivider(),
-                _SettingTile(
-                  icon: Icons.description_outlined,
-                  title: 'تراخيص البرمجيات',
-                  subtitle: 'المكتبات مفتوحة المصدر المستخدمة',
-                  onTap: () => showLicensePage(
-                    context: context,
-                    applicationName: 'قدرات المغربي',
-                    applicationVersion: AppMetadata.versionLabel,
-                    applicationIcon: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Image.asset(
-                        'assets/brand/qudrat_maghrabi_logo.png',
-                        width: 80,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 24),
