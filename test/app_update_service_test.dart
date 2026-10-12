@@ -37,6 +37,49 @@ void main() {
     });
   });
 
+  group('Android', () {
+    setUp(() => debugDefaultTargetPlatformOverride = TargetPlatform.android);
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    AppUpdateService manifest(String version, int build) => AppUpdateService(
+      client: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'version': version,
+            'build': build,
+            'url':
+                'https://www.qudratmaghrabi.com/downloads/qudrat-maghrabi.apk',
+          }),
+          200,
+        ),
+      ),
+    );
+
+    test(
+      'new version is detected even when its build number is lower',
+      () async {
+        expect(await manifest('9.9.9', 1).checkForUpdate(), isNotNull);
+      },
+    );
+
+    test('same version with a newer build is detected', () async {
+      expect(
+        await manifest(
+          AppMetadata.versionName,
+          int.parse(AppMetadata.buildNumber) + 1,
+        ).checkForUpdate(),
+        isNotNull,
+      );
+    });
+
+    test(
+      'older version with a higher build is not offered as an update',
+      () async {
+        expect(await manifest('1.0.0', 9999).checkForUpdate(), isNull);
+      },
+    );
+  });
+
   group('iOS', () {
     setUp(() => debugDefaultTargetPlatformOverride = TargetPlatform.iOS);
     tearDown(() => debugDefaultTargetPlatformOverride = null);

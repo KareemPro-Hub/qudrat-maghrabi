@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:qudrat_maghrabi_app/core/presentation/brand_launch_gate.dart';
+import 'package:qudrat_maghrabi_app/features/app_update/data/app_update_service.dart';
+import 'package:qudrat_maghrabi_app/features/app_update/presentation/app_update_gate.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_colors.dart';
 import 'package:qudrat_maghrabi_app/core/theme/qm_theme_mode.dart';
@@ -25,6 +27,7 @@ class QudratMaghrabiApp extends StatefulWidget {
     this.subscriptionRepository = const UnavailableSubscriptionRepository(),
     this.notificationRepository = const EmptyNotificationRepository(),
     this.biometricLock,
+    this.appUpdateService = const AppUpdateService(),
     super.key,
   });
 
@@ -36,6 +39,7 @@ class QudratMaghrabiApp extends StatefulWidget {
   final SubscriptionRepository subscriptionRepository;
   final NotificationRepository notificationRepository;
   final BiometricLockService? biometricLock;
+  final AppUpdateService appUpdateService;
 
   @override
   State<QudratMaghrabiApp> createState() => _QudratMaghrabiAppState();
@@ -100,15 +104,18 @@ class _QudratMaghrabiAppState extends State<QudratMaghrabiApp> {
             );
           },
           home: BrandLaunchGate(
-            child: AuthGate(
-              authRepository: widget.authRepository,
-              accountRepository: widget.accountRepository,
-              studentHomeRepository: widget.studentHomeRepository,
-              studentLearningRepository: widget.studentLearningRepository,
-              studentQuizRepository: widget.studentQuizRepository,
-              subscriptionRepository: widget.subscriptionRepository,
-              notificationRepository: widget.notificationRepository,
-              biometricLock: widget.biometricLock,
+            child: AppUpdateGate(
+              service: widget.appUpdateService,
+              child: AuthGate(
+                authRepository: widget.authRepository,
+                accountRepository: widget.accountRepository,
+                studentHomeRepository: widget.studentHomeRepository,
+                studentLearningRepository: widget.studentLearningRepository,
+                studentQuizRepository: widget.studentQuizRepository,
+                subscriptionRepository: widget.subscriptionRepository,
+                notificationRepository: widget.notificationRepository,
+                biometricLock: widget.biometricLock,
+              ),
             ),
           ),
         ),

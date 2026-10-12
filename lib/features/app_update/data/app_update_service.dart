@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:qudrat_maghrabi_app/core/config/app_environment.dart';
 import 'package:qudrat_maghrabi_app/core/config/app_metadata.dart';
 
-/// معلومات آخر نسخة أندرويد منشورة على موقع المنصة.
+/// معلومات أحدث نسخة منشورة لأندرويد أو iOS.
 class AppUpdateInfo {
   const AppUpdateInfo({
     required this.version,
@@ -67,16 +67,19 @@ class AppUpdateService {
 
     final latestBuild = _asInt(data['build']);
     final currentBuild = int.tryParse(AppMetadata.buildNumber) ?? 0;
-    if (latestBuild <= currentBuild) return null;
+    final latestVersion = (data['version'] as String?)?.trim() ?? '';
+    final versionComparison = latestVersion.isEmpty
+        ? 0
+        : compareVersions(latestVersion, AppMetadata.versionName);
+    if (versionComparison < 0 ||
+        (versionComparison == 0 && latestBuild <= currentBuild)) {
+      return null;
+    }
 
     final url = (data['url'] as String?)?.trim();
     if (url == null || url.isEmpty) return null;
 
-    return AppUpdateInfo(
-      version: (data['version'] as String?)?.trim() ?? '',
-      build: latestBuild,
-      url: url,
-    );
+    return AppUpdateInfo(version: latestVersion, build: latestBuild, url: url);
   }
 
   Future<AppUpdateInfo?> _checkAppStore(http.Client httpClient) async {

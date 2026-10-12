@@ -1,0 +1,13 @@
+{
+  "locale": "ar-SA",
+  "metadataMatches": true,
+  "keywordCharacters": 81,
+  "eulaPresent": true,
+  "screenshots": {
+    "ipad": 7,
+    "iphone": 8
+  },
+  "version": "1.1.6",
+  "release": "AFTER_APPROVAL",
+  "state": "PREPARE_FOR_SUBMISSION"
+}
