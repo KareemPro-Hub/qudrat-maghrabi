@@ -1,15 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:qudrat_maghrabi_app/core/config/error_monitoring.dart';
 import 'package:qudrat_maghrabi_app/features/auth/data/auth_repository.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/account_role.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_failure.dart';
 import 'package:qudrat_maghrabi_app/features/auth/domain/auth_profile.dart';
 
 class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(this._client);
+  SupabaseAuthRepository(
+    this._client, {
+    void Function(AuthDiagnosticEvent event)? onDiagnostic,
+  }) : _onDiagnostic = onDiagnostic ?? ErrorMonitoring.reportAuthDiagnostic;
 
   static const _mobileAuthCallback = 'qudratmaghrabi://reset-password';
 
   final SupabaseClient _client;
+  final void Function(AuthDiagnosticEvent event) _onDiagnostic;
 
   @override
   Stream<void> get passwordRecoveryEvents => _client.auth.onAuthStateChange
@@ -31,6 +36,12 @@ class SupabaseAuthRepository implements AuthRepository {
     if (session.isExpired) {
       try {
         session = (await _client.auth.refreshSession()).session;
+      } on AuthException catch (error) {
+        _reportAuthException(
+          operation: 'restore_session_refresh',
+          error: error,
+        );
+        return null;
       } catch (_) {
         // فشل التحديث غالبًا بيكون انقطاع نت أو مهلة، ومش سبب لمسح الجلسة.
         // بنرجع بدون ملف، والطالب يقدر يعيد المحاولة بالبصمة أو يخرج بنفسه.
@@ -54,6 +65,15 @@ class SupabaseAuthRepository implements AuthRepository {
         // ملف ناقص أو دور غير مدعوم: إجابة نهائية من السيرفر.
         await _safeSignOut();
         return null;
+      } on PostgrestException catch (error) {
+        if (attempt == _restoreAttempts) {
+          _reportPostgrestException(
+            operation: 'restore_session_profile',
+            error: error,
+          );
+          return null;
+        }
+        await Future<void>.delayed(_restoreRetryDelay);
       } catch (_) {
         // أي فشل آخر (شبكة، مهلة، خطأ مؤقت من القاعدة) يستاهل إعادة محاولة،
         // ولو فشل في الآخر بنحافظ على الجلسة بدل ما نطرد الطالب.
@@ -119,11 +139,13 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthFailure {
       rethrow;
     } on AuthException catch (error) {
+      _reportAuthException(operation: 'sign_in', error: error);
       throw AuthFailure(
         code: error.code ?? 'auth_error',
         message: _arabicAuthMessage(error),
       );
-    } on PostgrestException {
+    } on PostgrestException catch (error) {
+      _reportPostgrestException(operation: 'sign_in_profile', error: error);
       await _safeSignOut();
       throw const AuthFailure(
         code: 'profile_unavailable',
@@ -170,7 +192,8 @@ class SupabaseAuthRepository implements AuthRepository {
       if (response.user!.identities?.isEmpty ?? false) {
         throw const AuthFailure(
           code: 'user_already_exists',
-          message: 'البريد الإلكتروني مسجّل مسبقًا. سجّل الدخول أو استخدم "نسيت كلمة المرور"',
+          message:
+              'البريد الإلكتروني مسجّل مسبقًا. سجّل الدخول أو استخدم "نسيت كلمة المرور"',
         );
       }
 
@@ -182,6 +205,7 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthFailure {
       rethrow;
     } on AuthException catch (error) {
+      _reportAuthException(operation: 'sign_up', error: error);
       throw AuthFailure(
         code: error.code ?? 'signup_error',
         message: _arabicSignUpMessage(error),
@@ -202,6 +226,7 @@ class SupabaseAuthRepository implements AuthRepository {
         redirectTo: _mobileAuthCallback,
       );
     } on AuthException catch (error) {
+      _reportAuthException(operation: 'password_reset', error: error);
       throw AuthFailure(
         code: error.code ?? 'recovery_error',
         message: _arabicRecoveryMessage(error),
@@ -230,6 +255,7 @@ class SupabaseAuthRepository implements AuthRepository {
     } on AuthFailure {
       rethrow;
     } on AuthException catch (error) {
+      _reportAuthException(operation: 'password_update', error: error);
       throw AuthFailure(
         code: error.code ?? 'password_update_error',
         message: _arabicPasswordUpdateMessage(error),
@@ -370,6 +396,89 @@ class SupabaseAuthRepository implements AuthRepository {
         return 'انتهت صلاحية رابط الاستعادة. اطلب رابطًا جديدًا';
       default:
         return 'تعذّر تحديث كلمة المرور. اطلب رابطًا جديدًا وحاول مجددًا';
+    }
+  }
+
+  void _reportAuthException({
+    required String operation,
+    required AuthException error,
+  }) {
+    if (error is AuthRetryableFetchException) return;
+    if (_isExpectedUserAuthError(error.code)) return;
+
+    final lowerMsg = error.message.toLowerCase();
+    final isInvalidApiKey =
+        lowerMsg.contains('invalid api key') ||
+        lowerMsg.contains('unregistered api key');
+    final diagnosticCode = isInvalidApiKey
+        ? 'invalid_api_key'
+        : (error.code?.isNotEmpty == true
+              ? error.code!
+              : 'auth_gateway_rejection');
+
+    _emitDiagnostic(
+      AuthDiagnosticEvent(
+        operation: operation,
+        errorType: error.runtimeType.toString(),
+        errorCode: ErrorMonitoring.sanitizeDiagnosticText(diagnosticCode),
+        statusCode: error.statusCode,
+        reason: isInvalidApiKey
+            ? 'Invalid API key rejection'
+            : 'Unexpected authentication service failure',
+      ),
+    );
+  }
+
+  void _reportPostgrestException({
+    required String operation,
+    required PostgrestException error,
+  }) {
+    final lowerMsg = error.message.toLowerCase();
+    final diagnosticCode = lowerMsg.contains('invalid api key')
+        ? 'invalid_api_key'
+        : (error.code?.isNotEmpty == true ? error.code! : 'postgrest_error');
+
+    _emitDiagnostic(
+      AuthDiagnosticEvent(
+        operation: operation,
+        errorType: 'PostgrestException',
+        errorCode: ErrorMonitoring.sanitizeDiagnosticText(diagnosticCode),
+        statusCode: error.code,
+        reason: 'Access profile request failed',
+      ),
+    );
+  }
+
+  void _emitDiagnostic(AuthDiagnosticEvent event) {
+    try {
+      _onDiagnostic(event);
+    } catch (_) {
+      // Reporting must preserve the original authentication failure.
+    }
+  }
+
+  bool _isExpectedUserAuthError(String? code) {
+    if (code == null || code.isEmpty) return false;
+    switch (code) {
+      case 'invalid_credentials':
+      case 'email_not_confirmed':
+      case 'phone_not_confirmed':
+      case 'user_banned':
+      case 'user_already_exists':
+      case 'email_address_invalid':
+      case 'weak_password':
+      case 'same_password':
+      case 'session_not_found':
+      case 'bad_jwt':
+      case 'refresh_token_not_found':
+      case 'refresh_token_already_used':
+      case 'over_request_rate_limit':
+      case 'over_email_send_rate_limit':
+      case 'request_timeout':
+      case 'validation_failed':
+        return true;
+      default:
+        return false;
     }
   }
 }

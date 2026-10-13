@@ -45,13 +45,19 @@ fi
 echo "▸ توليد ملف الإعدادات"
 CONFIG_FILE="$REPO_ROOT/config/supabase.ci.json"
 mkdir -p "$REPO_ROOT/config"
-cat > "$CONFIG_FILE" <<JSON
-{
-  "SUPABASE_URL": "$SUPABASE_URL",
-  "SUPABASE_PUBLISHABLE_KEY": "$SUPABASE_PUBLISHABLE_KEY",
-  "PLATFORM_BASE_URL": "${PLATFORM_BASE_URL:-https://www.qudratmaghrabi.com}"
-}
-JSON
+umask 077
+python3 - "$CONFIG_FILE" <<'PY'
+import json, os, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+path.write_text(json.dumps({
+    "SUPABASE_URL": os.environ.get("SUPABASE_URL", ""),
+    "SUPABASE_PUBLISHABLE_KEY": os.environ.get("SUPABASE_PUBLISHABLE_KEY", ""),
+    "PLATFORM_BASE_URL": os.environ.get("PLATFORM_BASE_URL") or "https://www.qudratmaghrabi.com",
+}))
+PY
+
+echo "▸ التحقق الفعلي من إعداد اتصال المنصة"
+python3 "$REPO_ROOT/tool/verify_release_config.py" "$CONFIG_FILE"
 
 echo "▸ تجهيز Secrets.xcconfig (نفس سكربت البناء المحلي)"
 /bin/zsh "$REPO_ROOT/tool/configure_ios_release.sh" "$CONFIG_FILE"
@@ -61,12 +67,24 @@ cd "$REPO_ROOT"
 flutter precache --ios
 flutter pub get
 
+# Exercise the actual Auth client against production without using a student account.
+flutter test --no-pub test/auth_flow_test.dart \
+  --plain-name 'live release probe against Supabase: valid config reaches GoTrue, invalid key rejected with 401' \
+  --dart-define=RUN_LIVE_AUTH_SMOKE=true \
+  --dart-define-from-file="$CONFIG_FILE"
+
 # لازم قبل أي خطوة Xcode: بيولّد Generated.xcconfig وحزم البلجنز المؤقتة
 # (ios/Flutter/ephemeral/Packages/...) اللي مشروع Xcode بيعتمد عليها.
 # من غيرها البناء بيفشل بـ"Could not resolve package dependencies".
 echo "▸ تجهيز مشروع iOS"
 flutter build ios --release --no-codesign --config-only \
   --dart-define-from-file="$CONFIG_FILE"
+
+echo "▸ التحقق من تطابق Secrets.xcconfig وGenerated.xcconfig"
+python3 "$REPO_ROOT/tool/verify_release_config.py" "$CONFIG_FILE" \
+  --no-network \
+  --xcconfig "$REPO_ROOT/ios/Flutter/Secrets.xcconfig" \
+  --xcconfig "$REPO_ROOT/ios/Flutter/Generated.xcconfig"
 
 # المشروع بيستخدم SwiftPM مش CocoaPods؛ الخطوة دي بتتنفّذ لو بس فيه Podfile.
 if [ -f "$REPO_ROOT/ios/Podfile" ]; then

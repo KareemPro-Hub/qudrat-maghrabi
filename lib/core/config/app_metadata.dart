@@ -1,7 +1,7 @@
 abstract final class AppMetadata {
   // لازم يفضلوا مطابقين لـ version في pubspec.yaml
-  static const versionName = '1.1.6';
-  static const buildNumber = '18';
+  static const versionName = '1.1.7';
+  static const buildNumber = '19';
   static const versionLabel = '$versionName ($buildNumber)';
   static const supportEmail = 'support@qudratmaghrabi.com';
 
