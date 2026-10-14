@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { MessageSquare, Ban, UserCheck, BookOpen, X, UserPlus, Copy, Check, RefreshCw, Trash2 } from 'lucide-react'
+import { MessageSquare, Ban, UserCheck, BookOpen, X, UserPlus, Copy, Check, RefreshCw, Trash2, KeyRound } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import StudentPasswordModal from '../../components/admin/StudentPasswordModal'
 import { SectionToolbar, StatusBadge, Spinner, EmptyState, Modal, avatarClass, initials } from '../../components/admin/lightKit'
 
 type StudentRow = {
@@ -62,6 +64,8 @@ async function functionErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function AdminStudents() {
+  const { profile } = useAuth()
+  const canResetPassword = profile?.role === 'admin' || profile?.role === 'student_manager'
   const location = useLocation()
   const navigate = useNavigate()
   const [students, setStudents] = useState<StudentRow[]>([])
@@ -87,6 +91,8 @@ export default function AdminStudents() {
   const [showAddPassword, setShowAddPassword] = useState(false)
   const [createdStudent, setCreatedStudent] = useState<{ email: string; password: string } | null>(null)
   const [copiedCreds, setCopiedCreds] = useState(false)
+
+  const [passwordTarget, setPasswordTarget] = useState<StudentRow | null>(null)
 
   const [deleteTarget, setDeleteTarget] = useState<StudentRow | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState('')
@@ -350,6 +356,7 @@ export default function AdminStudents() {
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         <button className="row-action" onClick={() => openMessage(s)}><MessageSquare size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />رسالة</button>
                         <button className="row-action" onClick={() => openEnrollments(s)}><BookOpen size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />الاشتراكات</button>
+                        {canResetPassword && <button className="row-action" onClick={() => setPasswordTarget(s)}><KeyRound size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />كلمة المرور</button>}
                         <button className="row-action" onClick={() => toggleBan(s)} style={s.is_active ? { color: '#d33b55' } : { color: '#26a879' }}>
                           {s.is_active ? <><Ban size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />حظر</> : <><UserCheck size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />تفعيل</>}
                         </button>
@@ -464,6 +471,8 @@ export default function AdminStudents() {
           )}
         </Modal>
       )}
+
+      {passwordTarget && <StudentPasswordModal key={passwordTarget.id} student={passwordTarget} onClose={() => setPasswordTarget(null)} />}
 
       {deleteTarget && (
         <Modal title={`حذف حساب ${deleteTarget.full_name}`} onClose={closeDelete}>
