@@ -6,6 +6,14 @@
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/notify-owner-payment.ts": {
+      "maxDuration": 30
+    }
+  }
 }
