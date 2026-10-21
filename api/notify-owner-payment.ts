@@ -44,7 +44,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
       async delivery(providerId) {
         const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(providerId)}`, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(10000) })
-        if (!response.ok) return 'unverified'
+        if (!response.ok) return `status_http_${response.status}`
         const data = await response.json()
         const allowed = ['sent', 'delivered', 'delivery_delayed', 'bounced', 'complained', 'opened', 'clicked', 'failed']
         return allowed.includes(data.last_event) ? data.last_event : 'unverified'
