@@ -6,4 +6,4 @@
 - 19اختبارًا ناجحًا؛ TypeScript للواجهة والخدمة والبناء ناجحة. اختبار headless Playwright بChrome المثبت لأن Browser plugin غير متاح:1440x1000 و390x844، الأزرار القديمة والتأكيد والفشل/إعادة المحاولة والتوليد/النسخ ومسح الحقول والصلاحيات.
 - اختبار حي بجلسة إدارة مؤكدة على حساب مؤقت: كلمة جديدة نجحت والقديمة رُفضت، UUID وprofiles/enrollments/store_subscriptions/lesson_progress لم تتغير، الطالب403 والزائر401. أُزيل الحساب المؤقت وتأكد0صفوف auth/profiles. لم تُغيّر كلمة مرور الطالب الأصلي. اشتراكات fixtureغيرفارغة اختُبرت في الوحدات؛ الحساب الحي المؤقت لم يملك اشتراكًا مدفوعًا.
 - الأدلة Platform/agent-work/codex-review/student-password-2026-10-14/verification.json وui-result.json وlive-result.json؛ لقطات سطح المكتب/الهاتف.
-- نشر واجهة الموقع قيد الاستكمال؛ تُحدّث الحالة بعد التأكد من الإصدار الحي. لا تحديث تطبيق أو تعديل هوية علي.
+- تم النشر على www.qudratmaghrabi.com؛ Vercel READY dpl_6KVaH9YFNPuUV29AKQxk6YDv7jeg، commit7263ff6cd9d97e1cbe291c4a59170c04e95097be علىmain. تأكد alias وملفAdminStudents الحي؛ اختبارواجهةحي بإطارمخفي فيجلسةالإدارة مؤكّد فيlive-ui-result.json، دون تغيير كلمة مرور أي طالب. لا تحديث تطبيق أو تعديل هوية علي.

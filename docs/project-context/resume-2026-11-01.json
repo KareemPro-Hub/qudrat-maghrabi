@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Africa/Cairo",
+  "platform_base": "13bd50cff1939a909240d500e0631d115c2965dc",
+  "app_head": "01c4f49b6c60add68b32135a4d244be52784fefd",
+  "app_matches_remote": true,
+  "checks": {
+    "unit": {
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "email": 17,
+      "password_handler": 19
+    },
+    "frontend_tsc_exit_code": 0,
+    "email_server_tsc_exit_code": 0
+  },
+  "production": {
+    "checked_on": "2026-11-01",
+    "id": "dpl_HFk5Wonv5stmzwX5ErThzpCRhByt",
+    "readyState": "READY",
+    "target": "production",
+    "projectId": "prj_Zxmedj3xdqEK6tkNKGazgZPoeJk6",
+    "gitCommit": "13bd50cff1939a909240d500e0631d115c2965dc",
+    "alias": [
+      "www.qudratmaghrabi.com",
+      "qudrat-maghrabi.vercel.app",
+      "qudratmaghrabi.com",
+      "qudrat-maghrabi-kareem-pro-s-projects.vercel.app",
+      "qudrat-maghrabi-git-main-kareem-pro-s-projects.vercel.app"
+    ]
+  },
+  "inbox_confirmation": "unknown; user does not know whether recipient received test",
+  "scope": "documentation and synchronization; no product code or manual deployment",
+  "not_run": [
+    "Vite build",
+    "Flutter build/analyze/test",
+    "production SQL",
+    "live payment",
+    "store inspection",
+    "recipient inbox access"
+  ]
+}
