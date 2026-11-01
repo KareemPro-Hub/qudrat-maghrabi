@@ -9,3 +9,8 @@
 - Browser plugin غير متاح؛ العمل في headless بالخلفية دون تنشيط تطبيق المستخدم. أدلة محلية /private/tmp/qudrat-awards-qa/result.json ولقطات-awards/-enlarged؛ السكربت /private/tmp/qudrat-awards-qa.mjs. روجع الشكل بصريًا للكمبيوتر والجوال.
 - فُحصت سمات وتواقيع أدوات البناء قبل تشغيلها؛ لا تحذيرات macOS جديدة أو تعطيل حماية. لا dependency/lockfile تغيّر.
 - يُحفظ علىmain مع تحققHEAD/ls-remote، ثم التحقق منREADY وalias للنطاق الرئيسي واختبار الواجهة والأصول الحية قبل إعلان النشر.
+
+## نتيجة النشر المؤكدة
+- التنفيذ0df4bfceb3a5671cfcec67c60c096d400efb3ae1 طابق GitHubmain. Vercelنشرdpl_9PoXAPGobomc1gQMMMbYjQcG45sJ صارREADY/production والـalias www.qudratmaghrabi.com يطابق مصدر التنفيذ.
+- اختبار الواجهة الحية على النطاق الرئيسي نجح في1440/390/320 بكل حالات التكبير والتنقل والترتيب والموضع وحصر/استعادة التركيز والتمرير والفحوص المرتبطة، دون أخطاءconsole/page. الأدلة /private/tmp/qudrat-awards-live-qa/result.json ولقطاته.
+- SHA256 لكل شهادة منشورة تطابق بايتات أصل المستخدم المحلية؛ لا إعادة ضغط أو قص. معاينة محفوظة في مجلد visualizations الخاص بهذه المحادثة باسم instructor-awards-desktop.png.
