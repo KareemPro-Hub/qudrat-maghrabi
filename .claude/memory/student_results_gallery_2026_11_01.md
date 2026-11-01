@@ -8,3 +8,8 @@
 - الأدلة المحلية خارج Git: /private/tmp/qudrat-results-qa/result.json و1440-results.png و390-results.png ولقطتا dialog، والسكربت /private/tmp/qudrat-results-qa.mjs. فحص بصري صحح قصّ الصور قبل الاعتماد النهائي.
 - واجه البناء أولًا مكتبات Rollup/esbuild منقولة تحمل quarantine فظهر تحذير macOS. أُوقفت المحاولات، وأعيد تثبيت الملفين الأصليين من registry بنفس نسخ package-lock وSHA512 المطابق، بملفات جديدة نظيفة ثم فحص codesign قبل التشغيل. البناء والفحص نجحا بعدها؛ لم يُعطّل Gatekeeper أو تُزل الحماية عالميًا. النسخ السابقة في /private/tmp/qudrat-results-native-backup. لا تغييرات dependency/lockfile.
 - يُحفظ التنفيذ على main، ثم يُتحقق من HEAD مقابل GitHub ومن نشر Vercel READY وalias قبل إعلان النشر. بند تأكيد وصول بريد الاختبار السابق ما زال غير مؤكد؛ لا تغيير له أو للخدمات/التطبيق.
+
+## تحقق النشر النهائي
+- commit التنفيذ 601b42425daa01d5763a005da7920b3a372f627e طابق ls-remote على main. النشر dpl_QUTN4s3woePqweE3QRY7FyeqekKF صار READY/production مع alias www.qudratmaghrabi.com ومصدر التنفيذ نفسه.
+- أُعيد فحص السلوك نفسه على النطاق الرئيسي بالكمبيوتر والجوال: كل الصور والتكبير والتنقل والإغلاق واستعادة التركيز/التمرير ناجحة، دون أخطاء console/page أو تجاوز أفقي. دليل الواجهة الحية /private/tmp/qudrat-results-live-qa/result.json ولقطاته.
+- قورنت SHA256 للصور الأربع المُحمّلة من النطاق الرئيسي بالأصول المستعادة من المحادثة: تطابق كامل لكل الملفات، لا إعادة ضغط أو قص.
