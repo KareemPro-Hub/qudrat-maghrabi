@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import CurrencySymbol from '../components/CurrencySymbol'
+import StudentResults from '../components/StudentResults'
 
 const trustStats = [
   { icon: 'student', target: 2000, suffix: '+', label: 'طالب مسجّل' },
@@ -429,6 +430,7 @@ export default function Home() {
             </article>
           ))}
         </div>
+        <StudentResults />
       </section>
 
       {/* ===== زر واتساب ثابت ===== */}
