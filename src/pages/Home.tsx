@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import CurrencySymbol from '../components/CurrencySymbol'
 import StudentResults from '../components/StudentResults'
+import InstructorAwards from '../components/InstructorAwards'
 
 const trustStats = [
   { icon: 'student', target: 2000, suffix: '+', label: 'طالب مسجّل' },
@@ -388,6 +389,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <InstructorAwards />
 
       {/* ===== Reviews ===== */}
       <section id="qm-reviews" className="qm-reviews qm-wrap qm-section">
